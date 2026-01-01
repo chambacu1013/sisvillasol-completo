@@ -146,7 +146,7 @@ CREATE TABLE sisvillasol.ventas (
 -- ==========================================
 -- Usuario Admin por defecto (Clave: 3102266204 - Ojo, en prod debe ir encriptada)
 INSERT INTO sisvillasol.roles (nombre) VALUES ('ADMIN'), ('AGRICULTOR');
-INSERT INTO select * from sisvillasol.usuarios (id_rol, nombre, apellido, documento, telefono, password_hash)
+INSERT INTO sisvillasol.usuarios (id_rol, nombre, apellido, documento, telefono, password_hash)
 VALUES (1, 'Jaime', 'Rodriguez', '88164381', '3102266204','3102266204');
 INSERT INTO sisvillasol.unidades (id_unidad, nombre_unidad) VALUES
 (1, 'Litros'),

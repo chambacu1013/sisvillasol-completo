@@ -154,6 +154,47 @@ const obtenerDatosFormulario = async (req, res) => {
     res.status(500).send("Error cargando listas");
   }
 };
+//historial completo de actividades
+const getHistorial = async (req, res) => {
+  try {
+    const query = `
+            SELECT 
+                t.id_tarea, 
+                t.descripcion, 
+                t.fecha_programada, 
+                t.fecha_ejecucion, 
+                t.estado,
+                u.nombre AS nombre_agricultor,
+                l.nombre_lote,
+                c.nombre_variedad AS nombre_cultivo,
+                ta.nombre_tipo_actividad,
+                -- Aquí traemos los insumos usados como una lista JSON
+                (
+                    SELECT json_agg(json_build_object(
+                        'nombre', i.nombre, 
+                        'cantidad', ci.cantidad_usada, 
+                        'unidad', un.nombre_unidad
+                    ))
+                    FROM sisvillasol.consumo_insumos ci
+                    JOIN sisvillasol.insumos i ON ci.id_insumo_consumo = i.id_insumo
+                    JOIN sisvillasol.unidades un ON i.id_unidad = un.id_unidad
+                    WHERE ci.id_tarea_consumo = t.id_tarea
+                ) AS insumos_usados
+            FROM sisvillasol.tareas t
+            JOIN sisvillasol.usuarios u ON t.id_usuario_asignado = u.id_usuario
+            JOIN sisvillasol.lotes l ON t.id_lote_tarea = l.id_lote
+            JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+            JOIN sisvillasol.tipos_actividad ta ON t.id_tipo_actividad_tarea = ta.id_tipo_actividad
+            ORDER BY t.fecha_ejecucion DESC, t.fecha_programada DESC;
+        `;
+
+    const response = await pool.query(query);
+    res.json(response.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error obteniendo el historial" });
+  }
+};
 // 5. OBTENER INFORMACIÓN DETALLADA DE LOTES (NUEVO)
 const obtenerLotesDetallados = async (req, res) => {
   try {
@@ -262,4 +303,5 @@ module.exports = {
   obtenerLotesDetallados,
   obtenerInsumos,
   finalizarTarea,
+  getHistorial,
 };
