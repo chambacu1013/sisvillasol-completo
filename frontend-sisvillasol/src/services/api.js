@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: "https://backend-villasol.onrender.com/api",
 });
 
 // 1. INTERCEPTOR DE SALIDA (REQUEST)
