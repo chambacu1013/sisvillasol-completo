@@ -70,10 +70,13 @@ function Calendario() {
 
     useEffect(() => {
         if (tareaEditar) {
+            // Simplemente cortamos el string. Si es "2026-01-15T00:00:00.000Z", nos quedamos con "2026-01-15"
+        const fechaRaw = tareaEditar.resource.fecha_programada;
+        const fechaSimple = fechaRaw ? fechaRaw.split('T')[0] : '';
             setDatos({
                 id_tipo_actividad: tareaEditar.resource.id_tipo_actividad_tarea || '',
                 descripcion: tareaEditar.resource.descripcion || '',
-                fecha_programada: tareaEditar.resource.fecha_programada ? new Date(tareaEditar.resource.fecha_programada).toISOString().split('T')[0] : '',
+                fecha_programada: fechaSimple,
                 id_lote: tareaEditar.resource.id_lote_tarea || '',
                 id_usuario: tareaEditar.resource.id_usuario_asignado || '',
                 estado: tareaEditar.resource.estado || 'PENDIENTE',
@@ -89,16 +92,29 @@ function Calendario() {
     }, [tareaEditar, modalOpen]);
 
     // --- FUNCIONES DE CARGA ---
-    const cargarDatos = async () => {
+ const cargarDatos = async () => {
         try {
             const res = await api.get('/actividades');
+            
             const eventosFormatoCalendario = res.data.map(tarea => {
-                const fecha = new Date(tarea.fecha_programada);
-                fecha.setHours(fecha.getHours() + 5); 
+                // TRUCO INFALIBLE:
+                // 1. Tomamos solo la parte de la fecha "2026-01-01" (quitamos la hora si viene)
+                const fechaString = tarea.fecha_programada.split('T')[0];
+                
+                // 2. La partimos en [año, mes, dia]
+                const [anio, mes, dia] = fechaString.split('-');
+
+                // 3. Creamos la fecha localmente. 
+                // OJO: En Javascript los meses van de 0 a 11 (Enero es 0), por eso restamos 1 al mes.
+                const fechaFixed = new Date(anio, mes - 1, dia);
+
                 return {
                     title: `${tarea.nombre_tipo_actividad || 'Tarea'} - ${tarea.nombre_lote || 'Sin Lote'} (${tarea.nombre_responsable || '?'})`,
-                    start: new Date(tarea.fecha_programada), end: new Date(tarea.fecha_programada),   
-                    allDay: true, resource: tarea 
+                    // AQUÍ ESTÁ EL CAMBIO: Usamos 'fechaFixed' en lugar de crear una nueva Date
+                    start: fechaFixed, 
+                    end: fechaFixed,   
+                    allDay: true, 
+                    resource: tarea 
                 };
             });
             setEventos(eventosFormatoCalendario);
