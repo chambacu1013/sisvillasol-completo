@@ -17,5 +17,5 @@ router.get("/grafica", verificarToken, obtenerGraficaAnual);
 router.post("/ventas", verificarToken, crearVenta); // Crear
 router.delete("/ventas/:id", verificarToken, eliminarVenta); // Borrar
 router.put("/ventas/:id", verificarToken, actualizarVenta);
-router.get("/finanzas/distribucion", obtenerDistribucionFinanciera);
+router.get("/distribucion", obtenerDistribucionFinanciera);
 module.exports = router;
