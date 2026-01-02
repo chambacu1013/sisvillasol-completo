@@ -247,7 +247,7 @@ const obtenerInsumos = async (req, res) => {
 // 7. FINALIZAR TAREA (Con tu estructura SQL exacta)
 const finalizarTarea = async (req, res) => {
   const { id } = req.params; // ID de la tarea
-  const { insumosUsados } = req.body; // Array: [{id_insumo: 1, cantidad: 5}, ...]
+  const { insumosUsados, jornada } = req.body; // Array: [{id_insumo: 1, cantidad: 5}, ...]
 
   const client = await pool.connect(); // Iniciamos transacción
 
@@ -256,8 +256,9 @@ const finalizarTarea = async (req, res) => {
 
     // 1. Marcar tarea como HECHO
     await client.query(
-      `UPDATE sisvillasol.tareas SET estado = 'HECHO' WHERE id_tarea = $1`,
-      [id]
+      `UPDATE sisvillasol.tareas SET estado = 'HECHO',
+       jornada = $1, fecha_ejecucion = NOW() WHERE id_tarea = $2`,
+      [jornada || "COMPLETA", id]
     );
 
     // 2. Procesar Insumos (Si hubo gasto)
