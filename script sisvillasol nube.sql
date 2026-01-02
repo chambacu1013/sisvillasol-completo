@@ -148,7 +148,7 @@ CREATE TABLE sisvillasol.ventas (
 -- ==========================================
 -- Usuario Admin por defecto (Clave: 3102266204 - Ojo, en prod debe ir encriptada)
 INSERT INTO sisvillasol.roles (nombre) VALUES ('ADMIN'), ('AGRICULTOR');
-INSERT INTO select * from sisvillasol.usuarios (id_rol, nombre, apellido, documento, telefono, password_hash)
+INSERT INTO sisvillasol.usuarios (id_rol, nombre, apellido, documento, telefono, password_hash)
 VALUES (1, 'Jaime', 'Rodriguez', '88164381', '3102266204','3102266204');
 INSERT INTO sisvillasol.unidades (id_unidad, nombre_unidad) VALUES 
 (1, 'Litros'),
@@ -181,6 +181,7 @@ VALUES ('Lote 1',1,0.45,'-72.669772, 7.146497'),('Lote 2',1,0.22,'-72.669516, 7.
 ('Lote 5',4,0.26,'-72.668822, 7.1477556'),('Lote 6',3,0.25,'-72.670203, 7.1468889'),
 ('Lote 7',6,0.1,'-72.669978, 7.1480111'),('Lote 7',7,0.1,'-72.669978, 7.1480111'),
 ('Lote 8',5,0.1,'-72.670494, 7.1466556'),('Lote 9',3,2.16,'-72.66745, 7.146558'),
-('Lote Virtual',3,0.0,'Áreas comunes, pozos, caminos, cunetas, casa');
+('Lote Virtual',7,0.0,'Áreas comunes, pozos, caminos, cunetas, casa');
 
 select * from sisvillasol.usuarios
+SELECT SUM(costo_calculado) as total FROM sisvillasol.consumo_insumos
