@@ -177,7 +177,45 @@ const eliminarVenta = async (req, res) => {
     res.status(500).send("Error");
   }
 };
+// En tu controlador de Finanzas (Backend)
 
+const obtenerDistribucionFinanciera = async (req, res) => {
+  try {
+    // 1. DISTRIBUCIÓN DE VENTAS POR CULTIVO (¿Cuál da más plata?)
+    const cultivosQuery = await pool.query(`
+            SELECT 
+                c.nombre_variedad as name, 
+                SUM(v.precio_total) as value
+            FROM sisvillasol.ventas v
+            JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
+            JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+            GROUP BY c.nombre_variedad
+        `);
+
+    // 2. DISTRIBUCIÓN DE GASTOS (¿En qué se va la plata?)
+    // A. Sumar Mano de Obra
+    const manoObra = await pool.query(
+      "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas"
+    );
+    // B. Sumar Insumos Usados
+    const insumos = await pool.query(
+      "SELECT SUM(costo_calculado) as total FROM sisvillasol.consumo_insumos"
+    );
+
+    const gastosData = [
+      { name: "Mano de Obra", value: parseFloat(manoObra.rows[0].total || 0) },
+      { name: "Insumos", value: parseFloat(insumos.rows[0].total || 0) },
+    ];
+
+    res.json({
+      cultivos: cultivosQuery.rows, // Array para la Torta 1
+      gastos: gastosData, // Array para la Torta 2
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error en reportes de torta");
+  }
+};
 module.exports = {
   obtenerResumenFinanciero,
   obtenerGraficaAnual,
@@ -185,4 +223,5 @@ module.exports = {
   crearVenta,
   actualizarVenta,
   eliminarVenta,
+  obtenerDistribucionFinanciera,
 };

@@ -7,6 +7,7 @@ const {
   eliminarVenta,
   obtenerGraficaAnual,
   actualizarVenta,
+  obtenerDistribucionFinanciera,
 } = require("../controllers/finanzasController");
 const verificarToken = require("../middleware/authMiddleware");
 
@@ -16,5 +17,5 @@ router.get("/grafica", verificarToken, obtenerGraficaAnual);
 router.post("/ventas", verificarToken, crearVenta); // Crear
 router.delete("/ventas/:id", verificarToken, eliminarVenta); // Borrar
 router.put("/ventas/:id", verificarToken, actualizarVenta);
-
+router.get("/finanzas/distribucion", obtenerDistribucionFinanciera);
 module.exports = router;

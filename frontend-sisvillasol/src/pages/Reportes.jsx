@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { 
     Box, Typography, Grid, Card, CardContent, Button, Paper, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, InputAdornment, IconButton, MenuItem, Chip 
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, InputAdornment,
+     IconButton, MenuItem, Chip, PieChart, Pie, Cell
 } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -52,14 +53,27 @@ function Reportes() {
         fecha_venta: new Date().toISOString().split('T')[0],
         id_lote: '', cliente: '', kilos_vendidos: '', precio_total: ''
     });
+    // ESTADOS PARA LAS TORTAS
+    const [dataTortas, setDataTortas] = useState({ cultivos: [], gastos: [] });
 
+    // COLORES PARA LAS GRÁFICAS
+    const COLORES_CULTIVOS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+    const COLORES_GASTOS = ['#FF8042', '#0088FE']; // Naranja (Mano Obra) y Azul (Insumos)
     useEffect(() => {
         cargarKPIs();
         cargarVentas();
         cargarLotes();
-        obtenerClima(); 
+        obtenerClima();
+        cargarDatosTortas();
     }, []);
-
+    // FUNCIÓN PARA CARGAR LOS DATOS
+    const cargarDatosTortas = async () => {
+        try {
+            // Asegúrate de crear esta ruta en tu backend como te mostré en el PASO 1
+            const res = await api.get('/finanzas/distribucion');
+            setDataTortas(res.data);
+        } catch (error) { console.error("Error cargando tortas", error); }
+    };
     useEffect(() => { cargarGrafica(anioSeleccionado); }, [anioSeleccionado]);
 
     // --- CARGAS DE DATOS ---
@@ -304,7 +318,63 @@ function Reportes() {
                     </TableBody>
                 </Table>
             </TableContainer>
+            {/* --- 2.5 GRÁFICAS DE PASTEL (NUEVO BLOQUE) --- */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                
+                {/* TORTA 1: DISTRIBUCIÓN DE CULTIVOS */}
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2, height: 350, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
+                            🌱 Ingresos por Cultivo
+                        </Typography>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={dataTortas.cultivos}
+                                    cx="50%" cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={100}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {dataTortas.cultivos.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORES_CULTIVOS[index % COLORES_CULTIVOS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(val) => `$${Number(val).toLocaleString()}`} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </Paper>
+                </Grid>
 
+                {/* TORTA 2: INVERSIÓN (INSUMOS VS MANO DE OBRA) */}
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2, height: 350, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
+                            💸 ¿En qué se va la plata?
+                        </Typography>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={dataTortas.gastos}
+                                    cx="50%" cy="50%"
+                                    innerRadius={60} // Hace que sea una "Dona" (hueco en el centro)
+                                    outerRadius={100}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {dataTortas.gastos.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORES_GASTOS[index % COLORES_GASTOS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(val) => `$${Number(val).toLocaleString()}`} />
+                                <Legend verticalAlign="bottom" height={36}/>
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </Paper>
+                </Grid>
+            </Grid>
             {/* --- MODAL --- */}
             <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ bgcolor: '#1b5e20', color: 'white', display: 'flex', justifyContent: 'space-between' }}>
