@@ -323,35 +323,43 @@ function Reportes() {
                     </TableBody>
                 </Table>
             </TableContainer>
-            {/* --- 2.5 GRÁFICAS DE PASTEL (MEJORADAS) --- */}
-            {/* Agregamos 'mt: 4' (arriba) y 'mb: 6' (abajo) para separar de la tabla */}
-            <Grid container spacing={4} justifyContent="center" sx={{ mb: 6, mt: 4 }}>
+            {/* --- 2.5 GRÁFICAS DE PASTEL (VERSIÓN FINAL: LEYENDA Y MÁS GRANDE) --- */}
+            <Grid container spacing={4} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
 
                 {/* TORTA 1: DISTRIBUCIÓN DE CULTIVOS */}
                 <Grid item xs={12} md={6}>
-                    {/* Aumentamos height a 400 para dar más espacio vertical */}
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
-                            🌱 Ingresos por Cultivos
+                    {/* Aumentamos altura a 450px para la leyenda */}
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                            🌱 Ingresos por Cultivo
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#777', mb: 2 }}>
+                            (Pasa el mouse para ver valores)
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="50%"
-                                    labelLine={true}
-                                    // CLAVE: Bajamos el radio a 80 para que quepan las letras alrededor
-                                    outerRadius={80} 
+                                    cx="50%" cy="45%" // Subimos un poquito el centro para dejar espacio abajo
+                                    // QUITALOS LAS ETIQUETAS DIRECTAS
+                                    labelLine={false}
+                                    // AUMENTAMOS EL TAMAÑO: Ahora es mucho más ancha
+                                    outerRadius={120} 
                                     fill="#8884d8"
                                     dataKey="value"
-                                    // Etiqueta personalizada: Nombre + Porcentaje
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} 
                                 >
                                     {dataTortas.cultivos.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORES_CULTIVOS[index % COLORES_CULTIVOS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(val) => `$${Number(val).toLocaleString()}`} />
+                                {/* TOOLTIP MEJORADO: Muestra valor y porcentaje al pasar el mouse */}
+                                <Tooltip formatter={(value, name, props) => {
+                                    const total = dataTortas.cultivos.reduce((a, b) => a + b.value, 0);
+                                    const percent = ((value / total) * 100).toFixed(1);
+                                    return [`$${Number(value).toLocaleString()} (${percent}%)`, name];
+                                }} />
+                                {/* LEYENDA AGREGADA AQUI */}
+                                <Legend verticalAlign="bottom" height={60} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -359,17 +367,20 @@ function Reportes() {
 
                 {/* TORTA 2: INVERSIÓN (INSUMOS VS MANO DE OBRA) */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             💸 Inversion Económica
+                        </Typography>
+                         <Typography variant="caption" sx={{ color: '#777', mb: 2 }}>
+                            (Distribución de Gastos)
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80} // También lo ajustamos para que se vean parejas
+                                    cx="50%" cy="45%"
+                                    innerRadius={70}
+                                    outerRadius={120} // Aumentado para que coincida con la otra
                                     paddingAngle={5}
                                     dataKey="value"
                                 >
@@ -377,8 +388,13 @@ function Reportes() {
                                         <Cell key={`cell-${index}`} fill={COLORES_GASTOS[index % COLORES_GASTOS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(val) => `$${Number(val).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36}/>
+                                {/* TOOLTIP MEJORADO TAMBIÉN AQUÍ */}
+                                <Tooltip formatter={(value, name) => {
+                                     const total = dataTortas.gastos.reduce((a, b) => a + b.value, 0);
+                                     const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                     return [`$${Number(value).toLocaleString()} (${percent}%)`, name];
+                                }} />
+                                <Legend verticalAlign="bottom" height={36} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
