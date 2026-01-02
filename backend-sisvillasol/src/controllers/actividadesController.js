@@ -245,21 +245,21 @@ const obtenerInsumos = async (req, res) => {
     res.status(500).send("Error cargando insumos");
   }
 };
-// 7. FINALIZAR TAREA (Con tu estructura SQL exacta)
+// 7. FINALIZAR TAREA
 const finalizarTarea = async (req, res) => {
   const { id } = req.params; // ID de la tarea
-  const { insumosUsados, jornada } = req.body; // Array: [{id_insumo: 1, cantidad: 5}, ...]
+  const { insumosUsados, jornada, fecha_ejecucion } = req.body; // Array: [{id_insumo: 1, cantidad: 5}, ...]
 
   const client = await pool.connect(); // Iniciamos transacción
 
   try {
     await client.query("BEGIN");
-
+    const fechaReal = fecha_ejecucion || new Date();
     // 1. Marcar tarea como HECHO
     await client.query(
       `UPDATE sisvillasol.tareas SET estado = 'HECHO',
-       jornada = $1, fecha_ejecucion = NOW() WHERE id_tarea = $2`,
-      [jornada || "COMPLETA", id]
+       jornada = $1, fecha_ejecucion = $2 WHERE id_tarea = $3`,
+      [jornada || "COMPLETA", fechaReal, id]
     );
 
     // 2. Procesar Insumos (Si hubo gasto)
