@@ -323,25 +323,29 @@ function Reportes() {
                     </TableBody>
                 </Table>
             </TableContainer>
-            {/* --- 2.5 GRÁFICAS DE PASTEL (NUEVO BLOQUE) --- */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                
+            {/* --- 2.5 GRÁFICAS DE PASTEL (MEJORADAS) --- */}
+            {/* Agregamos 'mt: 4' (arriba) y 'mb: 6' (abajo) para separar de la tabla */}
+            <Grid container spacing={4} justifyContent="center" sx={{ mb: 6, mt: 4 }}>
+
                 {/* TORTA 1: DISTRIBUCIÓN DE CULTIVOS */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2, height: 350, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {/* Aumentamos height a 400 para dar más espacio vertical */}
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
-                            🌱 Ingresos por Cultivo
+                            🌱 Ingresos por Cultivos
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
-                                    labelLine={false}
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                    outerRadius={100}
+                                    labelLine={true}
+                                    // CLAVE: Bajamos el radio a 80 para que quepan las letras alrededor
+                                    outerRadius={80} 
                                     fill="#8884d8"
                                     dataKey="value"
+                                    // Etiqueta personalizada: Nombre + Porcentaje
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} 
                                 >
                                     {dataTortas.cultivos.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORES_CULTIVOS[index % COLORES_CULTIVOS.length]} />
@@ -355,17 +359,17 @@ function Reportes() {
 
                 {/* TORTA 2: INVERSIÓN (INSUMOS VS MANO DE OBRA) */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 2, height: 350, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
-                            💸 ¿En qué se va la plata?
+                            💸 Inversion Económica
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
-                                    innerRadius={60} // Hace que sea una "Dona" (hueco en el centro)
-                                    outerRadius={100}
+                                    innerRadius={60}
+                                    outerRadius={80} // También lo ajustamos para que se vean parejas
                                     paddingAngle={5}
                                     dataKey="value"
                                 >
