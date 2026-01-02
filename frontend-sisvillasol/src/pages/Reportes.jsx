@@ -264,7 +264,7 @@ function Reportes() {
                             <YAxis />
                             <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
                             <Legend />
-                            <Bar dataKey="Egresos" fill="#008f39" name="Egresos" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="Costos" fill="#008f39" name="Egresos" radius={[4, 4, 0, 0]} />
                             <Bar dataKey="Ingresos" fill="#e91e63" name="Ingresos" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
