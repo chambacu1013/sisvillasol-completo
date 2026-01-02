@@ -27,6 +27,13 @@ api.interceptors.response.use(
       error.response &&
       (error.response.status === 401 || error.response.status === 403)
     ) {
+      // Evitar redirección automática cuando es la petición de login (para que el componente Login
+      // pueda manejar el error y mostrar su alerta). Si la petición es otra, sí forzamos logout.
+      const requestUrl = error.config && error.config.url ? error.config.url : '';
+      if (requestUrl && requestUrl.includes('/auth/login')) {
+        return Promise.reject(error);
+      }
+
       // A. Borramos el token viejo (ya no sirve)
       localStorage.removeItem("token");
       localStorage.removeItem("usuarioNombre");
