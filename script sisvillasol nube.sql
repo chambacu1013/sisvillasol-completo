@@ -162,7 +162,7 @@ INSERT INTO sisvillasol.unidades (id_unidad, nombre_unidad) VALUES
 INSERT INTO select * from sisvillasol.categorias(nombre_categoria) VALUES 
 ('Fungicida'), ('Insecticida'), ('Fertilizante'), ('Regulador'), ('Herbicida'), ('Herramienta'), ('General'),('Maquinaria');
 --las que hay actualmente en la finca villasol
-INSERT INTO sisvillasol.cultivos (nombre_variedad,nombre_cientifico, dias_estimados_cosecha) 
+INSERT INTO select * from sisvillasol.cultivos (nombre_variedad,nombre_cientifico, dias_estimados_cosecha) 
 VALUES ('Manzana Anna','Malus domestica', 100), ('Ciruela Horvin','Prunus domestica', 120),
 ('Durazno Gran Jarillo','Prunus persica', 90), ('Aguacates hass','Persea americana', 240), 
 ('Morauva Silvestre','Rubus glaucus',90),('Feijoa sellowiana','Acca sellowiana',150),
@@ -177,9 +177,9 @@ VALUES ('Fumigacion'),('Poda'),('Cercar'),('Sembrar'),('Guarañar'),
 INSERT INTO sisvillasol.lotes (nombre_lote,id_cultivo_actual,area_hectareas,ubicacion)
 VALUES ('Lote 1',1,0.45,'-72.669772, 7.146497'),('Lote 2',1,0.22,'-72.669516, 7.1468806'),
 ('Lote 3',1,0.43,'-72.669586, 7.147692'),('Lote 4',2,0.46,'-72.669892, 7.1474222'),
-('Lote 4',3,0.46,'-72.669892, 7.1474222'),('Lote 4',8,0.46,'-72.669892, 7.1474222'),
+('Lote 4',3,0.46,'-72.669892, 7.1474222'),('Lote 4',6,0.46,'-72.669892, 7.1474222'),
 ('Lote 5',4,0.26,'-72.668822, 7.1477556'),('Lote 6',3,0.25,'-72.670203, 7.1468889'),
-('Lote 7',6,0.1,'-72.669978, 7.1480111'),('Lote 7',7,0.1,'-72.669978, 7.1480111'),
+('Lote 7',8,0.1,'-72.669978, 7.1480111'),('Lote 7',9,0.1,'-72.669978, 7.1480111'),
 ('Lote 8',5,0.1,'-72.670494, 7.1466556'),('Lote 9',3,2.16,'-72.66745, 7.146558'),
 ('Lote Virtual',7,0.0,'Áreas comunes, pozos, caminos, cunetas, casa');
 

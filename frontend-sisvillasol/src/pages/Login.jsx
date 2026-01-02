@@ -3,7 +3,7 @@ import { TextField, Button, Container, Paper,
     Typography, Box, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
-
+import Swal from 'sweetalert2';
 // Importamos los iconos que necesitas
 import PersonIcon from '@mui/icons-material/Person'; // El muñequito
 import Visibility from '@mui/icons-material/Visibility'; // Ojo abierto
@@ -29,22 +29,44 @@ const [loading, setLoading] = useState(false);
             // Si el rol NO es 1 (Admin), lo bloqueamos
             if (usuario.id_rol !== 1) {
                 setLoading(false);
-                alert('⛔ ACCESO DENEGADO ⛔\n\nEsta plataforma web es exclusiva para Administradores.\nPor favor ingresa desde la Aplicación Móvil.');
+                // ALERTA DE ERROR (ACCESO DENEGADO)
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acceso Denegado',
+                    text: 'Esta plataforma es exclusiva para Administradores. Usa la App Móvil.',
+                    confirmButtonColor: '#d32f2f', // Rojo
+                    confirmButtonText: 'Entendido'
+                });
                 return; // ¡Aquí muere el intento! No guardamos token ni redireccionamos.
             }
 
-            // SI PASÓ EL FILTRO (Es Admin), ENTONCES SÍ GUARDAMOS TODO:
+            // ÉXITO - GUARDAR DATOS
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('usuarioNombre', usuario.nombre);
             localStorage.setItem('usuarioApellido', usuario.apellido);
             localStorage.setItem('usuarioRol', usuario.rol || 'Administrador'); 
             
-            // Redirigir al inicio
-            navigate('/inicio');
+            // ALERTA DE BIENVENIDA (Opcional, pero se ve genial)
+            Swal.fire({
+                icon: 'success',
+                title: `¡Bienvenido, ${usuario.nombre}!`,
+                text: 'Iniciando sesión...',
+                timer: 1500, // Se cierra sola en 1.5 segundos
+                showConfirmButton: false
+            }).then(() => {
+                // Redirigir cuando se cierre la alerta
+                navigate('/inicio');
+            });
 
         } catch (error) {
             console.error(error);
-            alert('Error: Credenciales incorrectas ❌');
+            // ALERTA DE ERROR (CREDENCIALES)
+            Swal.fire({
+                icon: 'warning',
+                title: 'Credenciales Incorrectas',
+                text: 'Revisa tu número de documento o contraseña.',
+                confirmButtonColor: '#1b5e20' // Verde oscuro
+            });
         }
     };
 
