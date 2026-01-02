@@ -11,6 +11,7 @@ const obtenerActividades = async (req, res) => {
                 t.estado,
                 t.costo_mano_obra,
                 t.origen, 
+                t.jornada,
                 t.id_lote_tarea,
                 t.id_usuario_asignado, 
                 t.id_tipo_actividad_tarea,
@@ -43,12 +44,13 @@ const crearActividad = async (req, res) => {
     costo_mano_obra,
     estado,
     origen,
+    jornada,
   } = req.body;
   try {
     await pool.query(
       `INSERT INTO sisvillasol.tareas 
-            (id_tipo_actividad_tarea, descripcion, fecha_programada, id_lote_tarea, id_usuario_asignado, estado, origen, costo_mano_obra)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            (id_tipo_actividad_tarea, descripcion, fecha_programada, id_lote_tarea, id_usuario_asignado, estado, origen, costo_mano_obra,jornada)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         id_tipo_actividad,
         descripcion,
@@ -58,6 +60,7 @@ const crearActividad = async (req, res) => {
         estado || "PENDIENTE",
         origen || "CALENDARIO",
         costo_mano_obra || 0,
+        jornada || "COMPLETA",
       ]
     );
     res.json({ mensaje: "¡Tarea asignada exitosamente! 📅" });
@@ -78,6 +81,7 @@ const actualizarTarea = async (req, res) => {
     id_usuario,
     estado,
     costo_mano_obra,
+    jornada,
   } = req.body;
 
   try {
@@ -89,8 +93,9 @@ const actualizarTarea = async (req, res) => {
                  id_lote_tarea = $4, 
                  id_usuario_asignado = $5,
                  estado = $6,
-                 costo_mano_obra = $7
-             WHERE id_tarea = $8`,
+                 costo_mano_obra = $7,
+                  jornada = $8
+             WHERE id_tarea = $9`,
       [
         id_tipo_actividad,
         descripcion,
@@ -99,6 +104,7 @@ const actualizarTarea = async (req, res) => {
         id_usuario,
         estado,
         costo_mano_obra || 0,
+        jornada || "COMPLETA",
         id,
       ]
     );

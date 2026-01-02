@@ -44,7 +44,19 @@ const formatosEspanol = {
     dayFormat: (date, culture, localizer) => 
         localizer.format(date, 'DD', culture),
 };
-
+// Este componente decide qué mostrar en la columna "Hora" de la Agenda
+const CustomAgendaTime = ({ event }) => {
+    const jornada = event.resource.jornada;
+    
+    if (jornada === 'MANANA') {
+        return <span style={{ color: '#f57c00', fontWeight: 'bold' }}>🌅 Mañana</span>;
+    }
+    if (jornada === 'TARDE') {
+        return <span style={{ color: '#5d4037', fontWeight: 'bold' }}>🌇 Tarde</span>;
+    }
+    // Por defecto (COMPLETA)
+    return <span style={{ color: '#2e7d32', fontWeight: 'bold' }}>☀️ Todo el día</span>;
+};
 function Calendario() {
     // --- ESTADOS DEL CALENDARIO ---
     const [eventos, setEventos] = useState([]);
@@ -55,7 +67,8 @@ function Calendario() {
     const [listas, setListas] = useState({ lotes: [], usuarios: [], tipos: [] });
     const [datos, setDatos] = useState({
         id_tipo_actividad: '', descripcion: '', fecha_programada: '', 
-        id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: '' 
+        id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: '',
+        jornada: 'COMPLETA' 
     });
 
     // --- ESTADOS DE LAS NOTAS ---
@@ -80,13 +93,14 @@ function Calendario() {
                 id_lote: tareaEditar.resource.id_lote_tarea || '',
                 id_usuario: tareaEditar.resource.id_usuario_asignado || '',
                 estado: tareaEditar.resource.estado || 'PENDIENTE',
-                costo_mano_obra: tareaEditar.resource.costo_mano_obra || ''
+                costo_mano_obra: tareaEditar.resource.costo_mano_obra || '',
+                jornada: tareaEditar.resource.jornada || 'COMPLETA',
             });
         } else {
             setDatos(prev => ({ 
                 ...prev, 
                 id_tipo_actividad: '', descripcion: '', 
-                id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: '' 
+                id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: '', jornada: 'COMPLETA' 
             }));
         }
     }, [tareaEditar, modalOpen]);
@@ -179,7 +193,7 @@ function Calendario() {
         setDatos({
             id_tipo_actividad: '', descripcion: '', 
             fecha_programada: moment(start).format('YYYY-MM-DD'), 
-            id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: ''
+            id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: '', jornada: 'COMPLETA'
         });
         setModalOpen(true);
     };
@@ -218,6 +232,11 @@ function Calendario() {
                         eventPropGetter={eventStyleGetter}
                         onSelectEvent={handleSelectEvent} onSelectSlot={handleSelectSlot}
                         selectable={true} views={['month', 'agenda']}
+                        components={{
+                            agenda: {
+                            time: CustomAgendaTime, // <--- Aquí le decimos que use nuestro diseño
+                            }
+                        }}
                     />
                 </Box>
             </Box>
@@ -350,7 +369,7 @@ function Calendario() {
                                 ))}
                             </TextField>
                         </Box>
-
+                        
                         {/* 3. FILA DE RESPONSABLE Y COSTO */}
                         <Box sx={{ display: 'flex', gap: 2 }}>
                             <TextField 
@@ -376,6 +395,17 @@ function Calendario() {
                                 InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} 
                                 placeholder="0" 
                             />
+                            <TextField
+                            select
+                            fullWidth
+                            label="Jornada Laboral"
+                            value={datos.jornada}
+                            onChange={(e) => setDatos({ ...datos, jornada: e.target.value })}
+                            >
+                            <MenuItem value="COMPLETA">Jornada Completa ☀️</MenuItem>
+                            <MenuItem value="MANANA">Media - Mañana 🌅</MenuItem>
+                            <MenuItem value="TARDE">Media - Tarde 🌇</MenuItem>
+                            </TextField>
                         </Box>
 
                         {/* 4. ESTADO (Solo si se edita) */}
