@@ -32,8 +32,8 @@ function Reportes() {
     // --- ESTADOS ---
     const [kpis, setKpis] = useState({ 
         ingresos: 0, gastos: 0, ganancia: 0, 
-        mejorLote: { nombre_lote: '---', nombre_variedad: '', total: 0 }, 
-        peorLote: { nombre_lote: '---', nombre_variedad: '', total: 0 } 
+        mejorLote: { nombre_lote: '---', nombre_cultivo: '', total: 0 }, 
+        peorLote: { nombre_lote: '---', nombre_cultivo: '', total: 0 } 
     });
     const [ventas, setVentas] = useState([]);
     const [datosGrafica, setDatosGrafica] = useState([]);
