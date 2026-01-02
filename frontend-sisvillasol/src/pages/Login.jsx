@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { TextField, Button, Container, Paper, Typography, Box, InputAdornment, IconButton } from '@mui/material';
+import { TextField, Button, Container, Paper, 
+    Typography, Box, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,9 +15,10 @@ function Login() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false); // Estado para controlar el ojo
     const navigate = useNavigate();
-
+const [loading, setLoading] = useState(false);
  const handleLogin = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const response = await api.post('/auth/login', { documento, password });
             
@@ -26,6 +28,7 @@ function Login() {
             // 🔒 RESTRICCIÓN DE SEGURIDAD: SOLO ADMINS (ID_ROL = 1)
             // Si el rol NO es 1 (Admin), lo bloqueamos
             if (usuario.id_rol !== 1) {
+                setLoading(false);
                 alert('⛔ ACCESO DENEGADO ⛔\n\nEsta plataforma web es exclusiva para Administradores.\nPor favor ingresa desde la Aplicación Móvil.');
                 return; // ¡Aquí muere el intento! No guardamos token ni redireccionamos.
             }
@@ -143,16 +146,25 @@ function Login() {
                             type="submit"
                             fullWidth
                             variant="contained"
+                            disabled={loading}
                             sx={{ 
                                 mt: 3, 
                                 mb: 2, 
                                 py: 1.5,
                                 backgroundColor: '#1b5e20', // Verde Institucional
                                 fontSize: '1.1rem',
-                                '&:hover': { backgroundColor: '#2e7d32' }
+                                '&:hover': { backgroundColor: '#2e7d32' },
+                                // Mantiene el tamaño del botón estable
+                                height: '56px'
                             }}
                         >
-                            INGRESAR
+                            {loading ? (
+                                // SI ESTÁ CARGANDO: Muestra el círculo blanco
+                                <CircularProgress size={24} sx={{ color: 'white' }} />
+                            ) : (
+                                // SI NO: Muestra el texto normal
+                                "INGRESAR"
+                            )}
                         </Button>
 
                         <Box textAlign="center">
