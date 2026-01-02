@@ -47,15 +47,39 @@ const formatosEspanol = {
 // Este componente decide qué mostrar en la columna "Hora" de la Agenda
 const CustomAgendaTime = ({ event }) => {
     const jornada = event.resource.jornada;
-    
+    // Estilo "Pastilla": Fondo blanco, bordes redondeados.
+    // Esto garantiza contraste perfecto sobre CUALQUIER color de fila.
+    const containerStyle = {
+        backgroundColor: 'white',
+        padding: '2px 8px',
+        borderRadius: '10px',
+        display: 'inline-block', // Para que la cajita se ajuste al texto
+        boxShadow: '0px 1px 2px rgba(0,0,0,0.1)' // Sombrita suave
+    };
+
     if (jornada === 'MANANA') {
-        return <span style={{ color: '#f57c00', fontWeight: 'bold' }}>🌅 Mañana</span>;
+        return (
+            <span style={containerStyle}>
+                <span style={{ color: '#f57c00', fontWeight: 'bold' }}>🌅 Mañana</span>
+            </span>
+        );
     }
+    
     if (jornada === 'TARDE') {
-        return <span style={{ color: '#5d4037', fontWeight: 'bold' }}>🌇 Tarde</span>;
+        return (
+             <span style={containerStyle}>
+                <span style={{ color: '#5d4037', fontWeight: 'bold' }}>🌇 Tarde</span>
+            </span>
+        );
     }
-    // Por defecto (COMPLETA)
-    return <span style={{ color: '#2e7d32', fontWeight: 'bold' }}>☀️ Todo el día</span>;
+    
+    // CASO POR DEFECTO (TODO EL DÍA)
+    // Aquí usamos el NEGRO que pediste, sobre el fondo blanco.
+    return (
+        <span style={containerStyle}>
+            <span style={{ color: 'black', fontWeight: 'bold' }}>☀️ Todo el día</span>
+        </span>
+    );
 };
 function Calendario() {
     // --- ESTADOS DEL CALENDARIO ---
