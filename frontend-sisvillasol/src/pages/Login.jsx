@@ -60,13 +60,14 @@ const [loading, setLoading] = useState(false);
 
         } catch (error) {
             console.error(error);
+            setLoading(false);
             // ALERTA DE ERROR (CREDENCIALES)
             Swal.fire({
                 icon: 'warning',
                 title: 'Credenciales Incorrectas',
                 text: 'Revisa tu número de documento o contraseña.',
                 confirmButtonColor: '#1b5e20', // Verde oscuro
-                confirmButtonText: '#Entendido',
+                confirmButtonText: 'Intentar de nuevo',
             });
         }
     };
