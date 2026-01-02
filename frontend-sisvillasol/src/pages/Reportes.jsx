@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
+
+// 1. MATERIAL UI (Solo cosas de diseño: Botones, Textos, Tablas...)
 import { 
     Box, Typography, Grid, Card, CardContent, Button, Paper, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, InputAdornment,
-     IconButton, MenuItem, Chip, PieChart, Pie, Cell
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, InputAdornment, IconButton, MenuItem, Chip 
 } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+// 2. RECHARTS (Aquí van TODAS las gráficas: Barras y Tortas)
+import { 
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    PieChart, Pie, Cell  // <--- ¡ELLOS VAN AQUÍ!
+} from 'recharts';
 // ICONOS FINANCIEROS
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
