@@ -161,9 +161,9 @@ function Inventario() {
                 <Table>
                     <TableHead sx={{ bgcolor: '#f5f5f5' }}>
                         <TableRow>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Producto</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Insumo</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Categoría</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Stock Actual</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Stock Actual/dosis</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Stock Mínimo</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Precio Unit</TableCell>

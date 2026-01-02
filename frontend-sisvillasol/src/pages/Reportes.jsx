@@ -249,7 +249,7 @@ function Reportes() {
             {/* --- 2. GRÁFICA --- */}
             <Paper sx={{ p: 3, mb: 4, borderRadius: 2, boxShadow: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555' }}>Costos vs. Ingresos</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555' }}>Ingresos vs. Egresos</Typography>
                     <TextField select size="small" value={anioSeleccionado} onChange={(e) => setAnioSeleccionado(e.target.value)} sx={{ width: 100 }}>
                         <MenuItem value={2024}>2024</MenuItem>
                         <MenuItem value={2025}>2025</MenuItem>
@@ -264,7 +264,7 @@ function Reportes() {
                             <YAxis />
                             <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
                             <Legend />
-                            <Bar dataKey="Costos" fill="#008f39" name="Costos" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="Egresos" fill="#008f39" name="Egresos" radius={[4, 4, 0, 0]} />
                             <Bar dataKey="Ingresos" fill="#e91e63" name="Ingresos" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
