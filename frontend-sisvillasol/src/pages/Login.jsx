@@ -65,7 +65,8 @@ const [loading, setLoading] = useState(false);
                 icon: 'warning',
                 title: 'Credenciales Incorrectas',
                 text: 'Revisa tu número de documento o contraseña.',
-                confirmButtonColor: '#1b5e20' // Verde oscuro
+                confirmButtonColor: '#1b5e20', // Verde oscuro
+                confirmButtonText: '#Entendido',
             });
         }
     };
