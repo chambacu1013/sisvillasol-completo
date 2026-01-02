@@ -306,38 +306,102 @@ function Calendario() {
                     <IconButton onClick={() => setModalOpen(false)} sx={{ color: 'white' }}><CloseIcon /></IconButton>
                 </DialogTitle>
 
-                <DialogContent>
+               <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
-                        <TextField select fullWidth label="Lote de Trabajo" value={datos.id_lote} onChange={(e) => setDatos({...datos, id_lote: e.target.value})}>
-                            {listas.lotes.map(l => (
-                                <MenuItem key={l.id_lote} value={l.id_lote}>
-                                    {/* AHORA SÍ: Lote - Cultivo */}
-                                    {l.nombre_lote} - {l.nombre_cultivo || 'Sin Cultivo'}
+                        
+                        {/* 1. TIPO DE ACTIVIDAD (Este era el que se te había borrado) */}
+                        <TextField 
+                            select 
+                            fullWidth 
+                            label="Tipo de Actividad" 
+                            value={datos.id_tipo_actividad} 
+                            onChange={(e) => setDatos({...datos, id_tipo_actividad: e.target.value})}
+                        >
+                            {listas.tipos.map(t => (
+                                <MenuItem key={t.id_tipo_actividad} value={t.id_tipo_actividad}>
+                                    {t.nombre_tipo_actividad}
                                 </MenuItem>
                             ))}
                         </TextField>
 
+                        {/* 2. FILA DE FECHA Y LOTE (Aquí va el Lote corregido con Cultivo) */}
                         <Box sx={{ display: 'flex', gap: 2 }}> 
-                            <TextField fullWidth type="date" label="Fecha Programada" InputLabelProps={{ shrink: true }} value={datos.fecha_programada} onChange={(e) => setDatos({...datos, fecha_programada: e.target.value})} />
-                            <TextField select fullWidth label="Lote de Trabajo" value={datos.id_lote} onChange={(e) => setDatos({...datos, id_lote: e.target.value})}>
-                                {listas.lotes.map(l => <MenuItem key={l.id_lote} value={l.id_lote}>{l.nombre_lote}</MenuItem>)}
+                            <TextField 
+                                fullWidth 
+                                type="date" 
+                                label="Fecha Programada" 
+                                InputLabelProps={{ shrink: true }} 
+                                value={datos.fecha_programada} 
+                                onChange={(e) => setDatos({...datos, fecha_programada: e.target.value})} 
+                            />
+                            
+                            <TextField 
+                                select 
+                                fullWidth 
+                                label="Lote de Trabajo" 
+                                value={datos.id_lote} 
+                                onChange={(e) => setDatos({...datos, id_lote: e.target.value})}
+                            >
+                                {listas.lotes.map(l => (
+                                    <MenuItem key={l.id_lote} value={l.id_lote}>
+                                        {/* AHORA SÍ: Muestra Lote - Cultivo */}
+                                        {l.nombre_lote} - {l.nombre_cultivo || 'Sin Cultivo'}
+                                    </MenuItem>
+                                ))}
                             </TextField>
                         </Box>
 
+                        {/* 3. FILA DE RESPONSABLE Y COSTO */}
                         <Box sx={{ display: 'flex', gap: 2 }}>
-                            <TextField select fullWidth label="Responsable" value={datos.id_usuario} onChange={(e) => setDatos({...datos, id_usuario: e.target.value})}>
-                                {listas.usuarios.map(u => <MenuItem key={u.id_usuario} value={u.id_usuario}>{u.nombre} {u.apellido}</MenuItem>)}
+                            <TextField 
+                                select 
+                                fullWidth 
+                                label="Responsable" 
+                                value={datos.id_usuario} 
+                                onChange={(e) => setDatos({...datos, id_usuario: e.target.value})}
+                            >
+                                {listas.usuarios.map(u => (
+                                    <MenuItem key={u.id_usuario} value={u.id_usuario}>
+                                        {u.nombre} {u.apellido}
+                                    </MenuItem>
+                                ))}
                             </TextField>
-                            <TextField fullWidth label="Costo Mano de Obra" type="number" value={datos.costo_mano_obra} onChange={(e) => setDatos({...datos, costo_mano_obra: e.target.value})} InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} placeholder="0" />
+
+                            <TextField 
+                                fullWidth 
+                                label="Costo Mano de Obra" 
+                                type="number" 
+                                value={datos.costo_mano_obra} 
+                                onChange={(e) => setDatos({...datos, costo_mano_obra: e.target.value})} 
+                                InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} 
+                                placeholder="0" 
+                            />
                         </Box>
 
+                        {/* 4. ESTADO (Solo si se edita) */}
                         {tareaEditar && (
-                            <TextField select fullWidth label="Estado Actual" value={datos.estado} onChange={(e) => setDatos({...datos, estado: e.target.value})} sx={{ bgcolor: datos.estado === 'HECHO' ? '#e8f5e9' : '#fff3e0' }}>
+                            <TextField 
+                                select 
+                                fullWidth 
+                                label="Estado Actual" 
+                                value={datos.estado} 
+                                onChange={(e) => setDatos({...datos, estado: e.target.value})} 
+                                sx={{ bgcolor: datos.estado === 'HECHO' ? '#e8f5e9' : '#fff3e0' }}
+                            >
                                 <MenuItem value="PENDIENTE">PENDIENTE ⏳</MenuItem>
                                 <MenuItem value="HECHO">HECHO ✅</MenuItem>
                             </TextField>
                         )}
-                        <TextField fullWidth multiline rows={3} label="Observaciones" value={datos.descripcion} onChange={(e) => setDatos({...datos, descripcion: e.target.value})} />
+
+                        {/* 5. OBSERVACIONES */}
+                        <TextField 
+                            fullWidth 
+                            multiline 
+                            rows={3} 
+                            label="Observaciones" 
+                            value={datos.descripcion} 
+                            onChange={(e) => setDatos({...datos, descripcion: e.target.value})} 
+                        />
                     </Box>
                 </DialogContent>
 
