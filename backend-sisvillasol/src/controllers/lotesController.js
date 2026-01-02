@@ -11,7 +11,7 @@ const obtenerLotes = async (req, res) => {
                 l.nombre_lote, 
                 l.area_hectareas, 
                 l.estado_sanitario,
-                c.nombre_variedad as cultivo,
+                c.nombre_variedad,
                 l.ubicacion as coordenadas
             FROM sisvillasol.lotes l
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo

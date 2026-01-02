@@ -32,8 +32,8 @@ function Reportes() {
     // --- ESTADOS ---
     const [kpis, setKpis] = useState({ 
         ingresos: 0, gastos: 0, ganancia: 0, 
-        mejorLote: { nombre_lote: '---', nombre_cultivo: '', total: 0 }, 
-        peorLote: { nombre_lote: '---', nombre_cultivo: '', total: 0 } 
+        mejorLote: { nombre_lote: '---', nombre_variedad: '', total: 0 }, 
+        peorLote: { nombre_lote: '---', nombre_variedad: '', total: 0 } 
     });
     const [ventas, setVentas] = useState([]);
     const [datosGrafica, setDatosGrafica] = useState([]);
@@ -205,7 +205,7 @@ function Reportes() {
                                 <Typography variant="caption" fontWeight="bold">Mejor Lote</Typography>
                             </Box>
                             <Typography variant="body2" noWrap title={kpis.mejorLote.nombre_lote}>{kpis.mejorLote.nombre_lote}</Typography>
-                            <Typography variant="caption" display="block" color="textSecondary" noWrap>{kpis.mejorLote.nombre_cultivo || 'Sin Cultivo'}</Typography>
+                            <Typography variant="caption" display="block" color="textSecondary" noWrap>{kpis.mejorLote.nombre_variedad || 'Sin Cultivo'}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -219,7 +219,7 @@ function Reportes() {
                                 <Typography variant="caption" fontWeight="bold">Menor Rend.</Typography>
                             </Box>
                             <Typography variant="body2" noWrap title={kpis.peorLote.nombre_lote}>{kpis.peorLote.nombre_lote}</Typography>
-                            <Typography variant="caption" display="block" color="textSecondary" noWrap>{kpis.peorLote.nombre_cultivo || 'Sin Cultivo'}</Typography>
+                            <Typography variant="caption" display="block" color="textSecondary" noWrap>{kpis.peorLote.nombre_variedad || 'Sin Cultivo'}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -290,7 +290,7 @@ function Reportes() {
                                 <TableCell>{new Date(venta.fecha_venta).toLocaleDateString()}</TableCell>
                                 <TableCell>
                                     <Typography variant="body2" fontWeight="bold">{venta.nombre_lote}</Typography>
-                                    <Chip label={venta.nombre_cultivo || 'Sin Cultivo'} size="small" variant="outlined" />
+                                    <Chip label={venta.nombre_variedad || 'Sin Cultivo'} size="small" variant="outlined" />
                                 </TableCell>
                                 <TableCell>{venta.cliente || '---'}</TableCell>
                                 <TableCell>{venta.kilos_vendidos} Kg</TableCell>
@@ -316,7 +316,7 @@ function Reportes() {
                         <TextField label="Fecha" type="date" fullWidth InputLabelProps={{ shrink: true }} value={nuevaVenta.fecha_venta} onChange={(e) => setNuevaVenta({...nuevaVenta, fecha_venta: e.target.value})} />
                         <TextField select fullWidth label="Lote Cosechado" value={nuevaVenta.id_lote} onChange={(e) => setNuevaVenta({...nuevaVenta, id_lote: e.target.value})}>
                             {listaLotes.map((lote) => (
-                                <MenuItem key={lote.id_lote} value={lote.id_lote}>{lote.nombre_lote} - {lote.nombre_cultivo|| 'Sin Cultivo'}</MenuItem>
+                                <MenuItem key={lote.id_lote} value={lote.id_lote}>{lote.nombre_lote} - {lote.nombre_variedad|| 'Sin Cultivo'}</MenuItem>
                             ))}
                         </TextField>
                         <TextField label="Cliente" fullWidth value={nuevaVenta.cliente} onChange={(e) => setNuevaVenta({...nuevaVenta, cliente: e.target.value})} />

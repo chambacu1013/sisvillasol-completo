@@ -388,7 +388,7 @@ function Calendario() {
                                 {listas.lotes.map(l => (
                                     <MenuItem key={l.id_lote} value={l.id_lote}>
                                         {/* AHORA SÍ: Muestra Lote - Cultivo */}
-                                        {l.nombre_lote} - {l.nombre_cultivo || 'Sin Cultivo'}
+                                        {l.nombre_lote} - {l.nombre_variedad || 'Sin Cultivo'}
                                     </MenuItem>
                                 ))}
                             </TextField>

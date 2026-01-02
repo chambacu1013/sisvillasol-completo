@@ -18,23 +18,23 @@ const obtenerResumenFinanciero = async (req, res) => {
 
     // MEJOR LOTE (Con nombre del cultivo)
     const mejorLoteRes = await pool.query(`
-        SELECT l.nombre_lote, c.nombre_variedad AS nombre_cultivo, SUM(v.precio_total) as total 
-        FROM sisvillasol.ventas v
-        JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
-        LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
-        GROUP BY l.nombre_lote, c.nombre_variedad
-        ORDER BY total DESC LIMIT 1
-      `);
+            SELECT l.nombre_lote, c.nombre_variedad, SUM(v.precio_total) as total 
+            FROM sisvillasol.ventas v
+            JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
+            LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+            GROUP BY l.nombre_lote, c.nombre_variedad
+            ORDER BY total DESC LIMIT 1
+        `);
 
     // PEOR LOTE (Con nombre del cultivo)
     const peorLoteRes = await pool.query(`
-        SELECT l.nombre_lote, c.nombre_variedad AS nombre_cultivo, SUM(v.precio_total) as total 
-        FROM sisvillasol.ventas v
-        JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
-        LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
-        GROUP BY l.nombre_lote, c.nombre_variedad
-        ORDER BY total ASC LIMIT 1
-      `);
+            SELECT l.nombre_lote, c.nombre_variedad, SUM(v.precio_total) as total 
+            FROM sisvillasol.ventas v
+            JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
+            LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+            GROUP BY l.nombre_lote, c.nombre_variedad
+            ORDER BY total ASC LIMIT 1
+        `);
 
     res.json({
       ingresos: totalIngresos,
@@ -42,12 +42,12 @@ const obtenerResumenFinanciero = async (req, res) => {
       ganancia: gananciaNeta,
       mejorLote: mejorLoteRes.rows[0] || {
         nombre_lote: "N/A",
-        nombre_cultivo: "",
+        nombre_variedad: "",
         total: 0,
       },
       peorLote: peorLoteRes.rows[0] || {
         nombre_lote: "N/A",
-        nombre_cultivo: "",
+        nombre_variedad: "",
         total: 0,
       },
     });
@@ -115,12 +115,12 @@ const obtenerGraficaAnual = async (req, res) => {
 const obtenerVentas = async (req, res) => {
   try {
     const response = await pool.query(`
-        SELECT v.*, l.nombre_lote, c.nombre_variedad AS nombre_cultivo
-        FROM sisvillasol.ventas v
-        JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
-        LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
-        ORDER BY v.fecha_venta DESC
-      `);
+            SELECT v.*, l.nombre_lote, c.nombre_variedad
+            FROM sisvillasol.ventas v
+            JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
+            LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+            ORDER BY v.fecha_venta DESC
+        `);
     res.json(response.rows);
   } catch (error) {
     console.error(error);

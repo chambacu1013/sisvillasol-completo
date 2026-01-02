@@ -16,7 +16,7 @@ const obtenerActividades = async (req, res) => {
                 t.id_usuario_asignado, 
                 t.id_tipo_actividad_tarea,
                 l.nombre_lote,
-                c.nombre_variedad as nombre_cultivo,
+                c.nombre_variedad,
                 ta.nombre_tipo_actividad,
                 u.nombre as nombre_responsable,
                 u.apellido as apellido_responsable
@@ -136,7 +136,7 @@ const obtenerDatosFormulario = async (req, res) => {
     SELECT 
                 l.id_lote, 
                 l.nombre_lote, 
-                c.nombre_variedad as nombre_cultivo
+                c.nombre_variedad
             FROM sisvillasol.lotes l
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
             ORDER BY l.nombre_lote ASC
@@ -173,7 +173,7 @@ const getHistorial = async (req, res) => {
                 t.jornada,
                 u.nombre AS nombre_agricultor,
                 l.nombre_lote,
-                c.nombre_variedad AS nombre_cultivo,
+                c.nombre_variedad,
                 ta.nombre_tipo_actividad,
                 -- Aquí traemos los insumos usados como una lista JSON
                 (
