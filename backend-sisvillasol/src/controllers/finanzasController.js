@@ -192,12 +192,17 @@ const obtenerDistribucionFinanciera = async (req, res) => {
             GROUP BY c.nombre_variedad
         `);
 
-    // 2. DISTRIBUCIÓN DE GASTOS (¿En qué se va la plata?)
-    // A. Sumar Mano de Obra
+    // --- CORRECCIÓN AQUÍ ---
+    // Convertimos el "value" de String a Número para que la gráfica entienda
+    const cultivosData = cultivosQuery.rows.map((dato) => ({
+      name: dato.name,
+      value: Number(dato.value), // <--- ESTA ES LA CLAVE MÁGICA
+    }));
+
+    // 2. DISTRIBUCIÓN DE GASTOS
     const manoObra = await pool.query(
       "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas"
     );
-    // B. Sumar Insumos Usados
     const insumos = await pool.query(
       "SELECT SUM(costo_calculado) as total FROM sisvillasol.consumo_insumos"
     );
@@ -208,8 +213,8 @@ const obtenerDistribucionFinanciera = async (req, res) => {
     ];
 
     res.json({
-      cultivos: cultivosQuery.rows, // Array para la Torta 1
-      gastos: gastosData, // Array para la Torta 2
+      cultivos: cultivosData, // Enviamos los datos ya corregidos (números)
+      gastos: gastosData,
     });
   } catch (error) {
     console.error(error);
