@@ -170,6 +170,7 @@ const getHistorial = async (req, res) => {
                 t.fecha_programada, 
                 t.fecha_ejecucion, 
                 t.estado,
+                t.jornada,
                 u.nombre AS nombre_agricultor,
                 l.nombre_lote,
                 c.nombre_variedad AS nombre_cultivo,
