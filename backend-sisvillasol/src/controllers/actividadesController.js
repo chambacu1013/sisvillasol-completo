@@ -33,6 +33,7 @@ const obtenerActividades = async (req, res) => {
     res.status(500).send("Error al consultar tareas");
   }
 };
+
 // 2. CREAR TAREA
 const crearActividad = async (req, res) => {
   const {
@@ -49,7 +50,7 @@ const crearActividad = async (req, res) => {
   try {
     await pool.query(
       `INSERT INTO sisvillasol.tareas 
-            (id_tipo_actividad_tarea, descripcion, fecha_programada, id_lote_tarea, id_usuario_asignado, estado, origen, costo_mano_obra,jornada)
+            (id_tipo_actividad_tarea, descripcion, fecha_programada, id_lote_tarea, id_usuario_asignado, estado, origen, costo_mano_obra, jornada)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         id_tipo_actividad,
@@ -70,7 +71,7 @@ const crearActividad = async (req, res) => {
   }
 };
 
-// 3. ACTUALIZAR TAREA (¡ESTA ES LA CRÍTICA!)
+// 3. ACTUALIZAR TAREA
 const actualizarTarea = async (req, res) => {
   const { id } = req.params;
   const {
@@ -94,7 +95,7 @@ const actualizarTarea = async (req, res) => {
                  id_usuario_asignado = $5,
                  estado = $6,
                  costo_mano_obra = $7,
-                  jornada = $8
+                 jornada = $8
              WHERE id_tarea = $9`,
       [
         id_tipo_actividad,
@@ -129,27 +130,65 @@ const eliminarActividad = async (req, res) => {
   }
 };
 
-// 5. DATOS FORMULARIO
+// --- FUNCIÓN DE MANTENIMIENTO AUTOMÁTICO DE LOTES (CORREGIDA) ---
+// Esta función ahora usa 'id_lote_tarea' que es el nombre real en la BD.
+const actualizarEstadosLotes = async () => {
+  try {
+    // 1. CASTIGO 😡: Si hay tareas viejas (> 4 días), poner en RIESGO
+    await pool.query(`
+            UPDATE sisvillasol.lotes l
+            SET estado_sanitario = 'RIESGO'
+            FROM sisvillasol.tareas t
+            WHERE l.id_lote = t.id_lote_tarea  -- CORREGIDO AQUÍ
+            AND t.estado = 'PENDIENTE' 
+            AND t.fecha_programada < (CURRENT_DATE - INTERVAL '4 days')
+            AND l.estado_sanitario = 'OPTIMO';
+        `);
+
+    // 2. PREMIO 😇: Si YA NO hay tareas viejas, volver a OPTIMO
+    await pool.query(`
+            UPDATE sisvillasol.lotes l
+            SET estado_sanitario = 'OPTIMO'
+            WHERE l.estado_sanitario = 'RIESGO'
+            AND NOT EXISTS (
+                SELECT 1 FROM sisvillasol.tareas t
+                WHERE t.id_lote_tarea = l.id_lote -- CORREGIDO AQUÍ TAMBIÉN
+                AND t.estado = 'PENDIENTE'
+                AND t.fecha_programada < (CURRENT_DATE - INTERVAL '4 days')
+            );
+        `);
+
+    console.log("✅ Estados de lotes actualizados automáticamente.");
+  } catch (error) {
+    console.error("Error actualizando estados de lotes:", error);
+    // No lanzamos error para que no bloquee el formulario, solo avisamos en consola
+  }
+};
+
+// 5. DATOS FORMULARIO (LIMPIO Y SIN DUPLICADOS)
 const obtenerDatosFormulario = async (req, res) => {
   try {
-    // 1. PRIMERO ACTUALIZAMOS LOS ESTADOS (¡Aquí está la magia!) ✨
+    // 1. Ejecutar mantenimiento (ahora es seguro)
     await actualizarEstadosLotes();
 
+    // 2. Consultar Lotes (Una sola vez)
     const lotes = await pool.query(`
-    SELECT 
-                l.id_lote, 
-                l.nombre_lote, 
-                c.nombre_variedad
-                l.estado_sanitario
-            FROM sisvillasol.lotes l
-            LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
-            ORDER BY l.nombre_lote ASC
-`);
-    // Usuarios
+        SELECT 
+            l.id_lote, 
+            l.nombre_lote, 
+            c.nombre_variedad,
+            l.estado_sanitario
+        FROM sisvillasol.lotes l
+        LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+        ORDER BY l.nombre_lote ASC
+    `);
+
+    // 3. Consultar Usuarios
     const usuarios = await pool.query(
       "SELECT id_usuario, nombre, apellido FROM sisvillasol.usuarios WHERE estado = true ORDER BY nombre ASC"
     );
 
+    // 4. Consultar Tipos de Actividad (Una sola vez)
     const tipos = await pool.query(
       "SELECT * FROM sisvillasol.tipos_actividad ORDER BY nombre_tipo_actividad ASC"
     );
@@ -157,14 +196,15 @@ const obtenerDatosFormulario = async (req, res) => {
     res.json({
       lotes: lotes.rows,
       usuarios: usuarios.rows,
-      tipos: tipos.rows, // <--- ¡AQUÍ ESTÁ LA CLAVE!
+      tipos: tipos.rows,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error en obtenerDatosFormulario:", error);
     res.status(500).send("Error cargando listas");
   }
 };
-//historial completo de actividades
+
+// 6. HISTORIAL DE ACTIVIDADES
 const getHistorial = async (req, res) => {
   try {
     const query = `
@@ -179,7 +219,6 @@ const getHistorial = async (req, res) => {
                 l.nombre_lote,
                 c.nombre_variedad,
                 ta.nombre_tipo_actividad,
-                -- Aquí traemos los insumos usados como una lista JSON
                 (
                     SELECT json_agg(json_build_object(
                         'nombre', i.nombre, 
@@ -198,7 +237,6 @@ const getHistorial = async (req, res) => {
             JOIN sisvillasol.tipos_actividad ta ON t.id_tipo_actividad_tarea = ta.id_tipo_actividad
             ORDER BY t.fecha_ejecucion DESC, t.fecha_programada DESC;
         `;
-
     const response = await pool.query(query);
     res.json(response.rows);
   } catch (error) {
@@ -206,7 +244,8 @@ const getHistorial = async (req, res) => {
     res.status(500).json({ error: "Error obteniendo el historial" });
   }
 };
-// 5. OBTENER INFORMACIÓN DETALLADA DE LOTES (NUEVO)
+
+// 7. OBTENER INFORMACIÓN DETALLADA DE LOTES
 const obtenerLotesDetallados = async (req, res) => {
   try {
     const response = await pool.query(`
@@ -220,7 +259,7 @@ const obtenerLotesDetallados = async (req, res) => {
                 c.nombre_cientifico, 
                 c.dias_estimados_cosecha
             FROM sisvillasol.lotes l
-            JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+            LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
             ORDER BY l.nombre_lote ASC
         `);
     res.json(response.rows);
@@ -229,10 +268,10 @@ const obtenerLotesDetallados = async (req, res) => {
     res.status(500).send("Error consultando lotes");
   }
 };
-// 6. OBTENER INSUMOS (Con nombre de unidad)
+
+// 8. OBTENER INSUMOS
 const obtenerInsumos = async (req, res) => {
   try {
-    // Hacemos JOIN para traer el nombre de la unidad (Ej: 'Litros') en vez del ID
     const response = await pool.query(`
             SELECT 
                 i.id_insumo, 
@@ -249,36 +288,32 @@ const obtenerInsumos = async (req, res) => {
     res.status(500).send("Error cargando insumos");
   }
 };
-// 7. FINALIZAR TAREA
+
+// 9. FINALIZAR TAREA
 const finalizarTarea = async (req, res) => {
-  const { id } = req.params; // ID de la tarea
-  const { insumosUsados, jornada, fecha_ejecucion } = req.body; // Array: [{id_insumo: 1, cantidad: 5}, ...]
+  const { id } = req.params;
+  const { insumosUsados, jornada, fecha_ejecucion } = req.body;
 
-  const client = await pool.connect(); // Iniciamos transacción
-
+  const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const fechaReal = fecha_ejecucion || new Date();
-    // 1. Marcar tarea como HECHO
+
     await client.query(
       `UPDATE sisvillasol.tareas SET estado = 'HECHO',
        jornada = $1, fecha_ejecucion = $2 WHERE id_tarea = $3`,
       [jornada || "COMPLETA", fechaReal, id]
     );
 
-    // 2. Procesar Insumos (Si hubo gasto)
     if (insumosUsados && insumosUsados.length > 0) {
       for (const item of insumosUsados) {
-        // A. Consultar costo actual para guardar el histórico
         const insumoInfo = await client.query(
           "SELECT costo_unitario_promedio FROM sisvillasol.insumos WHERE id_insumo = $1",
           [item.id_insumo]
         );
-
         const costoUnitario = insumoInfo.rows[0]?.costo_unitario_promedio || 0;
         const costoTotalCalculado = costoUnitario * item.cantidad;
 
-        // B. Insertar en tu tabla 'consumo_insumos' (Nombres corregidos)
         await client.query(
           `INSERT INTO sisvillasol.consumo_insumos 
                     (id_tarea_consumo, id_insumo_consumo, cantidad_usada, costo_calculado) 
@@ -286,7 +321,6 @@ const finalizarTarea = async (req, res) => {
           [id, item.id_insumo, item.cantidad, costoTotalCalculado]
         );
 
-        // C. Descontar del inventario (cantidad_stock)
         await client.query(
           `UPDATE sisvillasol.insumos 
                      SET cantidad_stock = cantidad_stock - $1 
@@ -306,41 +340,7 @@ const finalizarTarea = async (req, res) => {
     client.release();
   }
 };
-// --- FUNCIÓN DE MANTENIMIENTO AUTOMÁTICO DE LOTES ---
-const actualizarEstadosLotes = async () => {
-  try {
-    // 1. CASTIGO 😡: Si hay tareas viejas (> 4 días), poner en RIESGO
-    // Solo afecta a los que estaban OPTIMO (respetamos si ya estaban EN_TRATAMIENTO)
-    await pool.query(`
-            UPDATE sisvillasol.lotes l
-            SET estado_sanitario = 'RIESGO'
-            FROM sisvillasol.tareas t
-            WHERE l.id_lote = t.id_lote_tarea
-            AND t.estado = 'PENDIENTE' 
-            AND t.fecha_programada < (CURRENT_DATE - INTERVAL '4 days')
-            AND l.estado_sanitario = 'OPTIMO';
-        `);
 
-    // 2. PREMIO 😇: Si YA NO hay tareas viejas, volver a OPTIMO
-    // Solo "perdonamos" a los que estaban en RIESGO.
-    // Si estaba EN_TRATAMIENTO (por químicos), no lo tocamos hasta que el agrónomo quiera.
-    await pool.query(`
-            UPDATE sisvillasol.lotes l
-            SET estado_sanitario = 'OPTIMO'
-            WHERE l.estado_sanitario = 'RIESGO'
-            AND NOT EXISTS (
-                SELECT 1 FROM sisvillasol.tareas t
-                WHERE t.id_lote_tarea = l.id_lote
-                AND t.estado = 'PENDIENTE'
-                AND t.fecha_programada < (CURRENT_DATE - INTERVAL '4 days')
-            );
-        `);
-
-    console.log("✅ Estados de lotes actualizados automáticamente.");
-  } catch (error) {
-    console.error("Error actualizando estados de lotes:", error);
-  }
-};
 module.exports = {
   obtenerActividades,
   crearActividad,
@@ -351,4 +351,5 @@ module.exports = {
   obtenerInsumos,
   finalizarTarea,
   getHistorial,
+  actualizarEstadosLotes,
 };
