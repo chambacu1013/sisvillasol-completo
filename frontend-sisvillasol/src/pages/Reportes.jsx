@@ -4,14 +4,13 @@ import { useEffect, useState } from 'react';
 import { 
     Box, Typography, Grid, Card, CardContent, Button, Paper, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, InputAdornment, 
-    IconButton, MenuItem, Chip, TablePagination
+    TextField, InputAdornment, IconButton, MenuItem, Chip, TablePagination
 } from '@mui/material';
 
 // 2. RECHARTS (Aquí van TODAS las gráficas: Barras y Tortas)
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    PieChart, Pie, Cell  // <--- ¡ELLOS VAN AQUÍ!
+    PieChart, Pie, Cell 
 } from 'recharts';
 // ICONOS FINANCIEROS
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -23,8 +22,7 @@ import SearchIcon from '@mui/icons-material/Search';
 // ICONOS DE ACCIÓN
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit'; 
-import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 
 // ICONOS DE CLIMA
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
@@ -35,6 +33,9 @@ import WaterDropIcon from '@mui/icons-material/WaterDrop';
 
 import api from '../services/api';
 import Swal from 'sweetalert2';
+
+import NuevaVentaModal from '../components/NuevaVentaModal';
+
 function Reportes() {
     // --- ESTADOS ---
     const [kpis, setKpis] = useState({ 
@@ -123,18 +124,6 @@ function Reportes() {
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [busqueda, setBusqueda] = useState('');
 
-    // --- LÓGICA DE FILTRADO ---
-    // Filtramos por Cliente o Nombre del Lote
-    const ventasFiltradas = ventas.filter(v => 
-        (v.cliente && v.cliente.toLowerCase().includes(busqueda.toLowerCase())) ||
-        (v.nombre_lote && v.nombre_lote.toLowerCase().includes(busqueda.toLowerCase()))
-    );
-
-    // Cuando cambien de año o busquen algo, regresamos a la página 0
-    useEffect(() => {
-        setPage(0);
-    }, [anioSeleccionado, busqueda]);
-
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -200,72 +189,6 @@ function Reportes() {
         return <CloudIcon sx={{ fontSize: 40, color: '#fff' }} />;
     };
 
-    // --- ACCIONES FORMULARIO ---
-    const handleAbrirEditar = (venta) => {
-        setVentaEditar(venta);
-        setNuevaVenta({
-            fecha_venta: new Date(venta.fecha_venta).toISOString().split('T')[0],
-            id_lote: venta.id_lote,
-            cliente: venta.cliente || '',
-            kilos_vendidos: venta.kilos_vendidos,
-            precio_total: venta.precio_total
-        });
-        setModalOpen(true);
-    };
-
-    const handleAbrirNuevo = () => {
-        setVentaEditar(null);
-        setNuevaVenta({ fecha_venta: new Date().toISOString().split('T')[0], id_lote: '', cliente: '', kilos_vendidos: '', precio_total: '' });
-        setModalOpen(true);
-    };
-
-    const handleGuardarVenta = async () => {
-       // 1. VALIDACIÓN
-        if(!nuevaVenta.id_lote || !nuevaVenta.kilos_vendidos || !nuevaVenta.precio_total) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Faltan datos',
-                text: 'Debes indicar el Lote, Kilos y Precio Total.',
-                confirmButtonColor: '#ff9800'
-            });
-            return;
-        }
-
-        try {
-            if (ventaEditar) {
-                await api.put(`/finanzas/ventas/${ventaEditar.id_venta}`, nuevaVenta);
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Venta Actualizada',
-                    text: 'Registro financiero modificado correctamente 📝',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            } else {
-                await api.post('/finanzas/ventas', nuevaVenta);
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Venta Registrada!',
-                    text: 'Ingreso añadido a la contabilidad 💰',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            }
-            setModalOpen(false);
-            // Recargamos todo para ver los cambios en gráficas y KPIs
-            cargarKPIs(); 
-            cargarVentas(); 
-            cargarGrafica(anioSeleccionado);
-            cargarDatosTortas(); // También recargamos las tortas por si cambiaron los %
-
-        } catch (error) { 
-            console.error(error); 
-            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar la venta.' });
-        }
-    };
-
     const handleEliminarVenta = async (id) => {
         Swal.fire({
             title: '¿Eliminar venta?',
@@ -308,6 +231,18 @@ function Reportes() {
     for (let i = anioInicial; i <= anioActual; i++) {
         listaAnios.push(i);
     }
+    // --- LÓGICA DE FILTRADO ---
+    // Filtramos por Cliente o Nombre del Lote
+    const ventasFiltradas = ventas.filter(v => 
+        (v.cliente && v.cliente.toLowerCase().includes(busqueda.toLowerCase())) ||
+        (v.nombre_lote && v.nombre_lote.toLowerCase().includes(busqueda.toLowerCase()))
+    );
+
+    // Cuando cambien de año o busquen algo, regresamos a la página 0
+    useEffect(() => {
+        setPage(0);
+    }, [anioSeleccionado, busqueda]);
+
     return (
         <Box sx={{ pb: 5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -607,32 +542,14 @@ function Reportes() {
                     </Paper>
                 </Grid>
             </Grid>
-            {/* --- MODAL --- */}
-            <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ bgcolor: '#1b5e20', color: 'white', display: 'flex', justifyContent: 'space-between' }}>
-                    {ventaEditar ? 'Editar Venta' : 'Registrar Venta'}
-                    <IconButton onClick={() => setModalOpen(false)} sx={{ color: 'white' }}><CloseIcon /></IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
-                        <TextField label="Fecha" type="date" fullWidth InputLabelProps={{ shrink: true }} value={nuevaVenta.fecha_venta} onChange={(e) => setNuevaVenta({...nuevaVenta, fecha_venta: e.target.value})} />
-                        <TextField select fullWidth label="Lote Cosechado" value={nuevaVenta.id_lote} onChange={(e) => setNuevaVenta({...nuevaVenta, id_lote: e.target.value})}>
-                            {listaLotes.map((lote) => (
-                                <MenuItem key={lote.id_lote} value={lote.id_lote}>{lote.nombre_lote} - {lote.nombre_variedad|| 'Sin Cultivo'}</MenuItem>
-                            ))}
-                        </TextField>
-                        <TextField label="Cliente" fullWidth value={nuevaVenta.cliente} onChange={(e) => setNuevaVenta({...nuevaVenta, cliente: e.target.value})} />
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <TextField label="Cantidad (Kg)" type="number" fullWidth value={nuevaVenta.kilos_vendidos} onChange={(e) => setNuevaVenta({...nuevaVenta, kilos_vendidos: e.target.value})} />
-                            <TextField label="Total ($)" type="number" fullWidth InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} value={nuevaVenta.precio_total} onChange={(e) => setNuevaVenta({...nuevaVenta, precio_total: e.target.value})} />
-                        </Box>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={() => setModalOpen(false)} color="error">Cancelar</Button>
-                    <Button variant="contained" onClick={handleGuardarVenta} sx={{ bgcolor: '#1b5e20' }}>Guardar</Button>
-                </DialogActions>
-            </Dialog>
+            {/* --- 5. MODAL CONECTADO (NUEVO COMPONENTE) --- */}
+            <NuevaVentaModal 
+                open={modalOpen} 
+                onClose={() => setModalOpen(false)} 
+                ventaEditar={ventaEditar} 
+                onSuccess={recargarDatosAnuales} // Al guardar, recargamos gráficas y tablas
+                listaLotes={listaLotes} // Le pasamos la lista para que no tenga que consultarla de nuevo
+            />
         </Box>
     );
 }
