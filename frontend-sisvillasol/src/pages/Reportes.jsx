@@ -92,26 +92,40 @@ function Reportes() {
         try {
             // la API key:
             const API_KEY = '34a2ff90985cefb448d0d5b305a26a52'; 
-            const CIUDAD = 'Chitaga,CO'; 
+            const CIUDAD = 'Chitaga,CO';
 
-            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CIUDAD}&units=metric&lang=es&appid=${API_KEY}`);
-            
-            if (response.status === 401) {
-                console.warn("La API Key aún no se activa. Espera unos minutos.");
-                setClima({ temp: '⏳', desc: 'Activando Clave...', icon: 'cloud', ciudad: 'Chitagá' });
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(CIUDAD)}&units=metric&lang=es&appid=${API_KEY}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                // Manejo explícito de estados comunes y logging para depuración
+                console.warn('Error al consultar OpenWeatherMap', response.status, response.statusText);
+                if (response.status === 401) {
+                    setClima({ temp: '⏳', desc: 'Activando Clave...', icon: 'cloud', ciudad: 'Chitagá' });
+                    return;
+                }
+                setClima({ temp: '--', desc: 'Error clima', icon: 'cloud', ciudad: 'Chitagá' });
                 return;
             }
 
             const data = await response.json();
-            
-            if (data.main) {
+            console.debug('OpenWeatherMap response:', data);
+
+            // Validar que traiga la estructura esperada
+            if (data && data.main && data.weather && data.weather.length > 0) {
+                const weatherMain = (data.weather[0].main || '').toLowerCase();
+                const weatherDesc = (data.weather[0].description || '').toLowerCase();
+                const iconKey = weatherMain || weatherDesc;
+
                 setClima({
-                    temp: Math.round(data.main.temp), 
-                    desc: data.weather[0].description, 
-                    icon: data.weather[0].main.toLowerCase(), 
+                    temp: Math.round(data.main.temp),
+                    desc: data.weather[0].description,
+                    icon: iconKey,
                     ciudad: 'Chitagá'
                 });
-            } 
+            } else {
+                setClima({ temp: '--', desc: 'Sin datos', icon: 'cloud', ciudad: 'Chitagá' });
+            }
         } catch (error) {
             console.error("Error de conexión clima:", error);
         }
@@ -120,10 +134,12 @@ function Reportes() {
     const getClimaIcon = (tipo) => {
         if (!tipo) return <CloudIcon sx={{ fontSize: 40, color: '#fff' }} />;
         const t = tipo.toLowerCase();
-        if (t.includes('rain') || t.includes('drizzle')) return <WaterDropIcon sx={{ fontSize: 40, color: '#fff' }} />;
-        if (t.includes('clear') || t.includes('sun')) return <WbSunnyIcon sx={{ fontSize: 40, color: '#fff000' }} />;
-        if (t.includes('thunder')) return <ThunderstormIcon sx={{ fontSize: 40, color: '#fff' }} />;
-        if (t.includes('snow')) return <AcUnitIcon sx={{ fontSize: 40, color: '#fff' }} />;
+        // Inglés y español: lluvia, llovizna, nublado, nubes, claro, sol, tormenta, nieve
+        if (t.includes('rain') || t.includes('drizzle') || t.includes('lluv')) return <WaterDropIcon sx={{ fontSize: 40, color: '#fff' }} />;
+        if (t.includes('clear') || t.includes('sun') || t.includes('sol')) return <WbSunnyIcon sx={{ fontSize: 40, color: '#fff000' }} />;
+        if (t.includes('thunder') || t.includes('torment')) return <ThunderstormIcon sx={{ fontSize: 40, color: '#fff' }} />;
+        if (t.includes('snow') || t.includes('nieve')) return <AcUnitIcon sx={{ fontSize: 40, color: '#fff' }} />;
+        if (t.includes('cloud') || t.includes('nub') || t.includes('nubes') || t.includes('nublado')) return <CloudIcon sx={{ fontSize: 40, color: '#fff' }} />;
         return <CloudIcon sx={{ fontSize: 40, color: '#fff' }} />;
     };
 
