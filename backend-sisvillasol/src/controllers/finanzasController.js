@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 
-// 1. OBTENER RESUMEN (KPIs)
+// 1. OBTENER RESUMEN (KPIs) - Filtrado por Año
 const obtenerResumenFinanciero = async (req, res) => {
   const { year } = req.query;
   const anio = year || new Date().getFullYear();
@@ -62,12 +62,12 @@ const obtenerResumenFinanciero = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error en KPIs:", error.message); // Muestra el error exacto
+    console.error("Error en KPIs:", error.message);
     res.status(500).send("Error calculando finanzas");
   }
 };
 
-// 2. DATOS GRÁFICA BARRAS
+// 2. DATOS GRÁFICA BARRAS - Filtrado por Año
 const obtenerGraficaAnual = async (req, res) => {
   const { year } = req.query;
   const anio = year || new Date().getFullYear();
@@ -117,7 +117,7 @@ const obtenerGraficaAnual = async (req, res) => {
   }
 };
 
-// 3. OBTENER VENTAS
+// 3. OBTENER VENTAS - Filtrado por Año
 const obtenerVentas = async (req, res) => {
   const { year } = req.query;
   const anio = year || new Date().getFullYear();
@@ -140,24 +140,63 @@ const obtenerVentas = async (req, res) => {
   }
 };
 
-// ... (Las funciones crear, actualizar y eliminar venta quedan IGUAL, no las toques) ...
+// 4. CREAR VENTA (¡RESTAURADA!)
 const crearVenta = async (req, res) => {
-  /* ... tu código de siempre ... */
-};
-const actualizarVenta = async (req, res) => {
-  /* ... tu código de siempre ... */
-};
-const eliminarVenta = async (req, res) => {
-  /* ... tu código de siempre ... */
+  const { id_lote, fecha_venta, cliente, kilos_vendidos, precio_total } =
+    req.body;
+  try {
+    await pool.query(
+      `INSERT INTO sisvillasol.ventas (id_lote, fecha_venta, cliente, kilos_vendidos, precio_total)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [id_lote, fecha_venta, cliente, kilos_vendidos, precio_total]
+    );
+    res.json({ mensaje: "Venta registrada 💰" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error creando venta");
+  }
 };
 
-// 7. TORTAS (DISTRIBUCIÓN) - ¡AQUÍ ESTABA EL PROBLEMA! 🚨
+// 5. ACTUALIZAR VENTA (¡RESTAURADA!)
+const actualizarVenta = async (req, res) => {
+  const { id } = req.params;
+  const { id_lote, fecha_venta, cliente, kilos_vendidos, precio_total } =
+    req.body;
+  try {
+    await pool.query(
+      `UPDATE sisvillasol.ventas 
+       SET id_lote = $1, fecha_venta = $2, cliente = $3, kilos_vendidos = $4, precio_total = $5
+       WHERE id_venta = $6`,
+      [id_lote, fecha_venta, cliente, kilos_vendidos, precio_total, id]
+    );
+    res.json({ mensaje: "Venta actualizada 📝" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error actualizando venta");
+  }
+};
+
+// 6. ELIMINAR VENTA (¡RESTAURADA!)
+const eliminarVenta = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query("DELETE FROM sisvillasol.ventas WHERE id_venta = $1", [
+      id,
+    ]);
+    res.json({ mensaje: "Venta eliminada" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error eliminando venta");
+  }
+};
+
+// 7. TORTAS (DISTRIBUCIÓN) - Filtrada y Segura
 const obtenerDistribucionFinanciera = async (req, res) => {
   const { year } = req.query;
   const anio = year || new Date().getFullYear();
 
   try {
-    // 1. CULTIVOS (Esta suele funcionar bien)
+    // 1. CULTIVOS
     const cultivosQuery = await pool.query(
       `
             SELECT c.nombre_variedad as name, SUM(v.precio_total) as value
@@ -175,16 +214,15 @@ const obtenerDistribucionFinanciera = async (req, res) => {
       value: Number(dato.value),
     }));
 
-    // 2. GASTOS (MANO DE OBRA) - Funciona bien
+    // 2. MANO DE OBRA
     const manoObra = await pool.query(
       "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_programada) = $1",
       [anio]
     );
 
-    // 3. GASTOS (INSUMOS) - ¡EL BLOQUE BLINDADO! 🛡️
+    // 3. INSUMOS (CON PROTECCIÓN CONTRA ERRORES)
     let totalInsumos = 0;
     try {
-      // Intentamos filtrar por año (requiere que la tabla consumo_insumos tenga id_tarea)
       const insumosRes = await pool.query(
         `
             SELECT SUM(ci.costo_calculado) as total 
@@ -196,13 +234,10 @@ const obtenerDistribucionFinanciera = async (req, res) => {
       );
       totalInsumos = Number(insumosRes.rows[0].total || 0);
     } catch (errInsumos) {
-      // SI FALLA (ej: no existe columna id_tarea), mostramos error en consola PERO NO ROMPEMOS LA WEB
       console.error(
         "⚠️ Error filtrando insumos (usando total global):",
         errInsumos.message
       );
-
-      // Plan B: Cargar el total histórico sin filtrar
       const insumosGlobal = await pool.query(
         "SELECT SUM(costo_calculado) as total FROM sisvillasol.consumo_insumos"
       );
@@ -219,7 +254,6 @@ const obtenerDistribucionFinanciera = async (req, res) => {
       gastos: gastosData,
     });
   } catch (error) {
-    // Si llega aquí es un error grave en la base de datos general
     console.error("🔥 Error FATAL en tortas:", error.message);
     res.status(500).send("Error en reportes de torta");
   }
@@ -229,7 +263,7 @@ module.exports = {
   obtenerResumenFinanciero,
   obtenerGraficaAnual,
   obtenerVentas,
-  crearVenta, // Asegúrate de que estas funciones existan arriba o importalas
+  crearVenta,
   actualizarVenta,
   eliminarVenta,
   obtenerDistribucionFinanciera,
