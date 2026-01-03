@@ -242,7 +242,25 @@ function Reportes() {
     useEffect(() => {
         setPage(0);
     }, [anioSeleccionado, busqueda]);
+    // 1. Función para recargar todo (se usa al guardar o eliminar)
+    const recargarDatosAnuales = () => {
+        cargarKPIs(anioSeleccionado);
+        cargarGrafica(anioSeleccionado);
+        cargarDatosTortas(anioSeleccionado);
+        cargarVentas(anioSeleccionado);
+    };
 
+    // 2. Abrir el modal para CREAR (Limpia el formulario)
+    const handleAbrirNuevo = () => {
+        setVentaEditar(null);
+        setModalOpen(true);
+    };
+
+    // 3. Abrir el modal para EDITAR (Carga los datos)
+    const handleAbrirEditar = (venta) => {
+        setVentaEditar(venta);
+        setModalOpen(true);
+    };
     return (
         <Box sx={{ pb: 5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
