@@ -64,29 +64,59 @@ function Reportes() {
     // COLORES PARA LAS GRÁFICAS
     const COLORES_CULTIVOS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
     const COLORES_GASTOS = ['#FF8042', '#0088FE']; // Naranja (Mano Obra) y Azul (Insumos)
+    //1. Cargas iniciales que NO cambian
     useEffect(() => {
-        cargarKPIs();
-        cargarVentas();
         cargarLotes();
         obtenerClima();
-        cargarDatosTortas();
     }, []);
-    // FUNCIÓN PARA CARGAR LOS DATOS
-    const cargarDatosTortas = async () => {
+    const cargarLotes = async () => {
         try {
-            // Asegúrate de crear esta ruta en tu backend como te mostré en el PASO 1
-            const res = await api.get('/finanzas/distribucion');
+            // Asumiendo que tienes un endpoint /lotes. 
+            // Si no, usa el que usas en otros lados como '/actividades/datos-formulario'
+            const res = await api.get('/actividades/datos-formulario');
+            setListaLotes(res.data.lotes);
+        } catch (error) { 
+            console.error("Error cargando lotes", error); 
+        }
+    };
+    // 2. CARGA DINÁMICA (Cosas que SÍ cambian cuando eliges 2024, 2025...)
+    useEffect(() => {
+        // Cuando anioSeleccionado cambia, recargamos TODO
+        cargarKPIs(anioSeleccionado);
+        cargarGrafica(anioSeleccionado);
+        cargarDatosTortas(anioSeleccionado);
+        cargarVentas(anioSeleccionado); // La tabla también debería filtrarse
+    }, [anioSeleccionado]);
+    // FUNCIÓN PARA CARGAR LOS DATOS (recibidas por año)
+    const cargarKPIs = async (year) => { 
+        try { 
+            // Enviamos el año como parámetro query (?year=2025)
+            const res = await api.get(`/finanzas/resumen?year=${year}`); 
+            setKpis(res.data); 
+        } catch (e) { console.error(e); } 
+    };
+
+    const cargarDatosTortas = async (year) => {
+        try {
+            const res = await api.get(`/finanzas/distribucion?year=${year}`);
             setDataTortas(res.data);
         } catch (error) { console.error("Error cargando tortas", error); }
     };
-    useEffect(() => { cargarGrafica(anioSeleccionado); }, [anioSeleccionado]);
 
-    // --- CARGAS DE DATOS ---
-    const cargarKPIs = async () => { try { const res = await api.get('/finanzas/resumen'); setKpis(res.data); } catch (e) { console.error(e); } };
-    const cargarGrafica = async (year) => { try { const res = await api.get(`/finanzas/grafica?year=${year}`); setDatosGrafica(res.data); } catch (e) { console.error(e); } };
-    const cargarVentas = async () => { try { const res = await api.get('/finanzas/ventas'); setVentas(res.data); } catch (e) { console.error(e); } };
-    const cargarLotes = async () => { try { const res = await api.get('/actividades/datos-formulario'); setListaLotes(res.data.lotes); } catch (e) { console.error(e); } };
+    const cargarVentas = async (year) => { 
+        try { 
+            const res = await api.get(`/finanzas/ventas?year=${year}`); 
+            setVentas(res.data); 
+        } catch (e) { console.error(e); } 
+    };
 
+    // La gráfica ya estaba bien, pero asegurémonos
+    const cargarGrafica = async (year) => { 
+        try { 
+            const res = await api.get(`/finanzas/grafica?year=${year}`); 
+            setDatosGrafica(res.data); 
+        } catch (e) { console.error(e); } 
+    };
     // --- LÓGICA DEL CLIMA REAL ---
     const obtenerClima = async () => {
         try {
