@@ -260,32 +260,42 @@ function Inventario() {
             />
 
             {/* SECCIÓN 4: ALERTAS INFERIORES (Stock Bajo) */}
-            {productosBajoStock.length > 0 && (
-                <Box sx={{ mt: 5 }}>
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', display: 'flex', alignItems: 'center', color: '#d32f2f' }}>
+            {stockBajo.length > 0 && (
+                <Box sx={{ mt: 4, mb: 4 }}>
+                    <Typography variant="h6" sx={{ color: '#d32f2f', fontWeight: 'bold', mb: 2, display: 'flex', alignItems: 'center' }}>
                         <WarningIcon sx={{ mr: 1 }} /> Atención: Insumos por Agotarse
                     </Typography>
+                    
                     <Grid container spacing={2}>
-                        {productosBajoStock.map((item) => (
-                            <Grid item xs={12} sm={6} md={3} key={item.id_insumo}>
-                                <Card sx={{ borderLeft: '5px solid #d32f2f', bgcolor: '#ffebee' }}>
+                        {stockBajo.map((insumo) => (
+                            <Grid item xs={12} sm={6} md={3} key={insumo.id_insumo}>
+                                <Card sx={{ bgcolor: '#ffebee', borderLeft: '6px solid #d32f2f', boxShadow: 2 }}>
                                     <CardContent>
-                                        <Typography variant="subtitle2" color="error" fontWeight="bold">
-                                            STOCK BAJO
+                                        <Typography variant="caption" fontWeight="bold" color="error">STOCK BAJO</Typography>
+                                        <Typography variant="h6" sx={{ fontWeight: 'bold', my: 1 }}>
+                                            {insumo.nombre}
                                         </Typography>
-                                        <Typography variant="h6" sx={{ my: 1 }}>
-                                            {item.nombre.toUpperCase()}
+                                        <Typography variant="body2" sx={{ mb: 2 }}>
+                                            Tienes: <b>{insumo.cantidad_stock} {insumo.nombre_unidad}</b> 
+                                            <span style={{ opacity: 0.7, fontSize: '0.9em' }}> (Min: {insumo.stock_minimo})</span>
                                         </Typography>
-                                        <Typography variant="body2" color="textSecondary">
-                                            Tienes: <strong>{item.cantidad_stock} {item.nombre_unidad}</strong> (Mín: {item.stock_minimo})
-                                        </Typography>
+
+                                        {/* --- AQUÍ ESTÁ EL CAMBIO --- */}
                                         <Button 
-                                            variant="outlined" color="error" size="small" fullWidth 
-                                            sx={{ mt: 2, bgcolor: 'white' }}
-                                            startIcon={<ShoppingCartIcon />}
+                                            variant="outlined" 
+                                            color="error" 
+                                            size="small"
+                                            fullWidth
+                                            startIcon={<AddShoppingCartIcon />} // Si quieres un icono de carrito
+                                            onClick={() => {
+                                                setInsumoEditar(insumo); // 1. Cargamos los datos de ESTE insumo
+                                                setModalOpen(true);      // 2. Abrimos el modal
+                                            }}
                                         >
-                                            Solicitar Compra
+                                            SOLICITAR COMPRA
                                         </Button>
+                                        {/* --------------------------- */}
+
                                     </CardContent>
                                 </Card>
                             </Grid>
