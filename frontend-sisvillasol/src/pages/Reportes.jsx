@@ -274,7 +274,14 @@ function Reportes() {
             }
         });
     };
+    // GENERADOR DE AÑOS AUTOMÁTICO 🧠
+    const anioActual = new Date().getFullYear();
+    const anioInicial = 2024; // Año en que fundaron SISVILLASOL
+    const listaAnios = [];
 
+    for (let i = anioInicial; i <= anioActual; i++) {
+        listaAnios.push(i);
+    }
     return (
         <Box sx={{ pb: 5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -385,10 +392,19 @@ function Reportes() {
             <Paper sx={{ p: 3, mb: 4, borderRadius: 2, boxShadow: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555' }}>Ingresos vs. Egresos</Typography>
-                    <TextField select size="small" value={anioSeleccionado} onChange={(e) => setAnioSeleccionado(e.target.value)} sx={{ width: 100 }}>
-                        <MenuItem value={2024}>2024</MenuItem>
-                        <MenuItem value={2025}>2025</MenuItem>
-                        <MenuItem value={2026}>2026</MenuItem>
+                    <TextField 
+                        select 
+                        size="small" 
+                        value={anioSeleccionado} 
+                        onChange={(e) => setAnioSeleccionado(e.target.value)} 
+                        sx={{ width: 100 }}
+                    >
+                        {/* Mapeo Automático */}
+                        {listaAnios.map((anio) => (
+                            <MenuItem key={anio} value={anio}>
+                                {anio}
+                            </MenuItem>
+                        ))}
                     </TextField>
                 </Box>
                 <Box sx={{ height: 350, width: '100%' }}>
