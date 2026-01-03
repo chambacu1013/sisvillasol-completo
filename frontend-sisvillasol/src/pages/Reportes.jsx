@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { 
     Box, Typography, Grid, Card, CardContent, Button, Paper, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, InputAdornment, IconButton, MenuItem, Chip 
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, InputAdornment, 
+    IconButton, MenuItem, Chip, TablePagination
 } from '@mui/material';
 
 // 2. RECHARTS (Aquí van TODAS las gráficas: Barras y Tortas)
@@ -18,7 +19,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; 
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';     
-
+import SearchIcon from '@mui/icons-material/Search';
 // ICONOS DE ACCIÓN
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -116,6 +117,31 @@ function Reportes() {
             const res = await api.get(`/finanzas/grafica?year=${year}`); 
             setDatosGrafica(res.data); 
         } catch (e) { console.error(e); } 
+    };
+    // --- ESTADOS PARA LA TABLA DE VENTAS (Paginación y Búsqueda) ---
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [busqueda, setBusqueda] = useState('');
+
+    // --- LÓGICA DE FILTRADO ---
+    // Filtramos por Cliente o Nombre del Lote
+    const ventasFiltradas = ventas.filter(v => 
+        (v.cliente && v.cliente.toLowerCase().includes(busqueda.toLowerCase())) ||
+        (v.nombre_lote && v.nombre_lote.toLowerCase().includes(busqueda.toLowerCase()))
+    );
+
+    // Cuando cambien de año o busquen algo, regresamos a la página 0
+    useEffect(() => {
+        setPage(0);
+    }, [anioSeleccionado, busqueda]);
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
     };
     // --- LÓGICA DEL CLIMA REAL ---
     const obtenerClima = async () => {
@@ -422,39 +448,88 @@ function Reportes() {
                 </Box>
             </Paper>
 
-            {/* --- 3. TABLA --- */}
-            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
-                <Table>
-                    <TableHead sx={{ bgcolor: '#f5f5f5' }}>
-                        <TableRow>
-                            <TableCell><b>Fecha</b></TableCell>
-                            <TableCell><b>Lote (Cultivo)</b></TableCell>
-                            <TableCell><b>Cliente</b></TableCell>
-                            <TableCell><b>Kilos</b></TableCell>
-                            <TableCell><b>Total Venta</b></TableCell>
-                            <TableCell><b>Acciones</b></TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {ventas.map((venta) => (
-                            <TableRow key={venta.id_venta} hover>
-                                <TableCell>{new Date(venta.fecha_venta).toLocaleDateString()}</TableCell>
-                                <TableCell>
-                                    <Typography variant="body2" fontWeight="bold">{venta.nombre_lote}</Typography>
-                                    <Chip label={venta.nombre_variedad || 'Sin Cultivo'} size="small" variant="outlined" />
-                                </TableCell>
-                                <TableCell>{venta.cliente || '---'}</TableCell>
-                                <TableCell>{venta.kilos_vendidos} Kg</TableCell>
-                                <TableCell sx={{ color: '#2e7d32', fontWeight: 'bold' }}>${Number(venta.precio_total).toLocaleString()}</TableCell>
-                                <TableCell>
-                                    <IconButton color="primary" onClick={() => handleAbrirEditar(venta)}><EditIcon /></IconButton>
-                                    <IconButton color="error" onClick={() => handleEliminarVenta(venta.id_venta)}><DeleteIcon /></IconButton>
-                                </TableCell>
+          {/* --- 3. TABLA DE VENTAS CON BUSCADOR Y PAGINACIÓN --- */}
+            <Paper sx={{ borderRadius: 2, boxShadow: 2, mb: 8 }}>
+                
+                {/* BARRA DE BÚSQUEDA INTERNA */}
+                <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
+                    <TextField
+                        placeholder="Buscar por cliente o lote..."
+                        size="small"
+                        value={busqueda}
+                        onChange={(e) => setBusqueda(e.target.value)}
+                        sx={{ width: 300 }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                </Box>
+
+                <TableContainer>
+                    <Table>
+                        <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                            <TableRow>
+                                <TableCell><b>Fecha</b></TableCell>
+                                <TableCell><b>Lote (Cultivo)</b></TableCell>
+                                <TableCell><b>Cliente</b></TableCell>
+                                <TableCell><b>Kilos</b></TableCell>
+                                <TableCell><b>Total Venta</b></TableCell>
+                                <TableCell><b>Acciones</b></TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                            {ventasFiltradas
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((venta) => (
+                                    <TableRow key={venta.id_venta} hover>
+                                        <TableCell>{new Date(venta.fecha_venta).toLocaleDateString()}</TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" fontWeight="bold">{venta.nombre_lote}</Typography>
+                                            <Chip label={venta.nombre_variedad || 'Sin Cultivo'} size="small" variant="outlined" />
+                                        </TableCell>
+                                        <TableCell>{venta.cliente || '---'}</TableCell>
+                                        <TableCell>{venta.kilos_vendidos} Kg</TableCell>
+                                        <TableCell sx={{ color: '#2e7d32', fontWeight: 'bold' }}>
+                                            ${Number(venta.precio_total).toLocaleString()}
+                                        </TableCell>
+                                        <TableCell>
+                                            <IconButton color="primary" onClick={() => handleAbrirEditar(venta)}>
+                                                <EditIcon />
+                                            </IconButton>
+                                            <IconButton color="error" onClick={() => handleEliminarVenta(venta.id_venta)}>
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                            ))}
+                            {ventasFiltradas.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                        No se encontraron ventas para este año o búsqueda.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+
+                {/* PAGINACIÓN */}
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={ventasFiltradas.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    labelRowsPerPage="Filas por página:"
+                    labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+                />
+            </Paper>
             {/* --- 2.5 GRÁFICAS DE PASTEL (VERSIÓN FINAL: LEYENDA Y MÁS GRANDE) --- */}
             <Grid container spacing={4} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
 
