@@ -98,7 +98,7 @@ id_tipo_actividad SERIAL PRIMARY KEY,
 nombre_tipo_actividad VARCHAR (50) NOT NULL -- 'PODA', 'FUMIGACION', 'COSECHA'
 );
 -- Tabla de Tareas (El corazón del sistema)
-CREATE TABLE select * from sisvillasol.tareas (
+CREATE TABLE sisvillasol.tareas (
     id_tarea SERIAL PRIMARY KEY,
     id_lote_tarea INT REFERENCES sisvillasol.lotes(id_lote),
     id_usuario_asignado INT REFERENCES sisvillasol.usuarios(id_usuario),
@@ -108,8 +108,10 @@ CREATE TABLE select * from sisvillasol.tareas (
     fecha_ejecucion TIMESTAMP DEFAULT NOW(), -- Cuando Franklin le da "Finalizar"
     estado VARCHAR(20) DEFAULT 'PENDIENTE', -- 'PENDIENTE', 'EN_PROCESO', 'HECHO'
     origen VARCHAR(20) DEFAULT 'CALENDARIO', -- 'CALENDARIO' (Admin) o 'CAMPO' (Imprevisto)
-    costo_mano_obra DECIMAL(12,2) DEFAULT 0
+    costo_mano_obra DECIMAL(12,2) DEFAULT 0,
+	jornada VARCHAR(20) DEFAULT 'COMPLETA'
 );
+
 --tabla de notas(recordatorios de la finca)
 CREATE TABLE sisvillasol.notas(
 id_nota SERIAL PRIMARY KEY,
@@ -138,20 +140,15 @@ CREATE TABLE sisvillasol.ventas (
     kilos_vendidos DECIMAL(10,2),
     precio_total DECIMAL(12,2)
 );
-INSERT INTO sisvillasol.ventas (id_lote, fecha_venta, cliente, kilos_vendidos, precio_total)
-VALUES (1, '2025-05-15', 'Mercabastos', 500, 2500000);
 
--- Insertamos una venta de prueba
-INSERT INTO sisvillasol.ventas (fecha_venta, cultivo, cantidad_kg, precio_por_kg, total_venta, cliente)
-VALUES ('2025-12-01', 'Durazno Dorado', 500, 4000, 2000000, 'Mercabastos');
 -- ==========================================
 -- DATOS SEMILLA (SEED DATA)
 -- Para que no arranques vacío
 -- ==========================================
 -- Usuario Admin por defecto (Clave: 12345 - Ojo, en prod debe ir encriptada)
 INSERT INTO sisvillasol.roles (nombre) VALUES ('ADMIN'), ('AGRICULTOR');
-INSERT INTO sisvillasol.usuarios (id_rol, nombre, apellido, documento, password_hash)
-VALUES (1, 'Jaime', 'Rodriguez', '123456789', 'admin123');
+INSERT INTO sisvillasol.usuarios (id_rol, nombre, apellido, documento, telefono, password_hash)
+VALUES (1, 'Jaime', 'Rodriguez', '88164381', '3102266204','3102266204');
 --las que hay actualmente en la finca villasol
 INSERT INTO sisvillasol.cultivos (nombre_variedad,nombre_cientifico, dias_estimados_cosecha) 
 VALUES ('Cereza Bing', 'Prunus avium', 90),('Pera Williams', 'Pyrus communis', 130),
@@ -183,5 +180,5 @@ INSERT INTO sisvillasol.unidades (id_unidad, nombre_unidad) VALUES
 (6, 'Unidades');
 INSERT INTO sisvillasol.categorias(nombre_categoria) VALUES
 ('Fungicida'), ('Insecticida'), ('Fertilizante'), ('Regulador'), ('Herbicida'), ('Herramienta'), ('General');
-Insert Into
+
 select * from sisvillasol.usuarios

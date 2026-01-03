@@ -132,11 +132,15 @@ const eliminarActividad = async (req, res) => {
 // 5. DATOS FORMULARIO
 const obtenerDatosFormulario = async (req, res) => {
   try {
+    // 1. PRIMERO ACTUALIZAMOS LOS ESTADOS (¡Aquí está la magia!) ✨
+    await actualizarEstadosLotes();
+
     const lotes = await pool.query(`
     SELECT 
                 l.id_lote, 
                 l.nombre_lote, 
                 c.nombre_variedad
+                l.estado_sanitario
             FROM sisvillasol.lotes l
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
             ORDER BY l.nombre_lote ASC
@@ -300,6 +304,41 @@ const finalizarTarea = async (req, res) => {
     res.status(500).send("Error finalizando tarea");
   } finally {
     client.release();
+  }
+};
+// --- FUNCIÓN DE MANTENIMIENTO AUTOMÁTICO DE LOTES ---
+const actualizarEstadosLotes = async () => {
+  try {
+    // 1. CASTIGO 😡: Si hay tareas viejas (> 4 días), poner en RIESGO
+    // Solo afecta a los que estaban OPTIMO (respetamos si ya estaban EN_TRATAMIENTO)
+    await pool.query(`
+            UPDATE sisvillasol.lotes l
+            SET estado_sanitario = 'RIESGO'
+            FROM sisvillasol.tareas t
+            WHERE l.id_lote = t.id_lote_tarea
+            AND t.estado = 'PENDIENTE' 
+            AND t.fecha_programada < (CURRENT_DATE - INTERVAL '4 days')
+            AND l.estado_sanitario = 'OPTIMO';
+        `);
+
+    // 2. PREMIO 😇: Si YA NO hay tareas viejas, volver a OPTIMO
+    // Solo "perdonamos" a los que estaban en RIESGO.
+    // Si estaba EN_TRATAMIENTO (por químicos), no lo tocamos hasta que el agrónomo quiera.
+    await pool.query(`
+            UPDATE sisvillasol.lotes l
+            SET estado_sanitario = 'OPTIMO'
+            WHERE l.estado_sanitario = 'RIESGO'
+            AND NOT EXISTS (
+                SELECT 1 FROM sisvillasol.tareas t
+                WHERE t.id_lote_tarea = l.id_lote
+                AND t.estado = 'PENDIENTE'
+                AND t.fecha_programada < (CURRENT_DATE - INTERVAL '4 days')
+            );
+        `);
+
+    console.log("✅ Estados de lotes actualizados automáticamente.");
+  } catch (error) {
+    console.error("Error actualizando estados de lotes:", error);
   }
 };
 module.exports = {

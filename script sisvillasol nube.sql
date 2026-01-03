@@ -159,7 +159,7 @@ INSERT INTO sisvillasol.unidades (id_unidad, nombre_unidad) VALUES
 (6, 'Unidades');
 (7, 'Metros');
 (8, 'Rollo');
-INSERT INTO select * from sisvillasol.categorias(nombre_categoria) VALUES 
+INSERT INTO sisvillasol.categorias(nombre_categoria) VALUES 
 ('Fungicida'), ('Insecticida'), ('Fertilizante'), ('Regulador'), ('Herbicida'), ('Herramienta'), ('General'),('Maquinaria');
 --las que hay actualmente en la finca villasol
 INSERT INTO select * from sisvillasol.cultivos (nombre_variedad,nombre_cientifico, dias_estimados_cosecha) 
@@ -183,5 +183,4 @@ VALUES ('Lote 1',1,0.45,'-72.669772, 7.146497'),('Lote 2',1,0.22,'-72.669516, 7.
 ('Lote 8',5,0.1,'-72.670494, 7.1466556'),('Lote 9',3,2.16,'-72.66745, 7.146558'),
 ('Lote Virtual',7,0.0,'Áreas comunes, pozos, caminos, cunetas, casa');
 
-select * from sisvillasol.usuarios
-SELECT SUM(costo_calculado) as total FROM sisvillasol.consumo_insumos
+select * from sisvillasol.lotes
