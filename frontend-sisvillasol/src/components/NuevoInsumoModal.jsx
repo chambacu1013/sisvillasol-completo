@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import api from '../services/api';
-
+import Swal from 'sweetalert2';
 const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
     
     // Listas dinámicas desde BD
@@ -49,23 +49,58 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
     }, [productoEditar, open]);
 
     const handleGuardar = async () => {
-        // Validación simple
-        if (!datos.id_unidad || !datos.id_categoria_insumo) {
-            alert("Por favor selecciona una categoría y una unidad");
+        // 1. VALIDACIÓN (Alerta Amarilla)
+        if (!datos.id_unidad || !datos.id_categoria_insumo || !datos.nombre) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Faltan datos',
+                text: 'Por favor completa el nombre, categoría y unidad.',
+                confirmButtonColor: '#ff9800'
+            });
             return;
         }
 
         try {
             if (productoEditar) {
+                // EDITAR
                 await api.put(`/insumos/${productoEditar.id_insumo}`, datos);
-                alert('¡Producto actualizado! 📦');
+                
+                // 2. ÉXITO AL EDITAR
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Actualizado!',
+                    text: 'El producto se modificó correctamente 📝',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             } else {
+                // CREAR
                 await api.post('/insumos', datos);
-                alert('¡Producto creado! 📦');
+                
+                // 3. ÉXITO AL CREAR
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Registrado!',
+                    text: 'Nuevo insumo agregado a bodega 📦',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             }
+            
+            // Cerrar y recargar
             onSuccess();
             onClose();
-        } catch (error) { console.error(error); alert('Error al guardar'); }
+            
+        } catch (error) { 
+            console.error(error); 
+            // 4. ERROR (Alerta Roja)
+            Swal.fire({
+                icon: 'error',
+                title: 'Ups...',
+                text: 'Hubo un error al guardar. Intenta nuevamente.',
+                confirmButtonColor: '#d32f2f'
+            });
+        }
     };
 
     return (

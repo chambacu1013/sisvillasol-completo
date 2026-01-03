@@ -12,7 +12,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import api from '../services/api';
-
+import Swal from 'sweetalert2';
 // IMPORTAMOS EL COMPONENTE DEL MODAL (Asegúrate de que la ruta sea correcta)
 import NuevoInsumoModal from '../components/NuevoInsumoModal';
 
@@ -48,21 +48,40 @@ function Inventario() {
     };
 
     const handleEliminar = async (id, nombre) => {
-        const confirmacion = window.confirm(`¿Estás seguro de eliminar el producto "${nombre}"?\n\nEsta acción no se puede deshacer.`);
-        if (!confirmacion) return;
-
-        try {
-            await api.delete(`/insumos/${id}`);
-            alert('Producto eliminado correctamente 🗑️');
-            cargarInsumos(); 
-        } catch (error) {
-            console.error(error);
-            if (error.response && error.response.data) {
-                alert(error.response.data.mensaje); 
-            } else {
-                alert('Ocurrió un error al intentar eliminar.');
+    // 1. PRIMER ALERTA: Confirmación
+        Swal.fire({
+            title: '¿Eliminar producto?',
+            text: `Vas a borrar "${nombre}" del inventario. Esto no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d32f2f', // Rojo para peligro
+            cancelButtonColor: '#1b5e20',  // Verde para cancelar
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    // 2. SI DIJO QUE SÍ: Llamamos a la API
+                    await api.delete(`/insumos/${id}`);
+                    
+                    // 3. ÉXITO: Alerta verde
+                    Swal.fire(
+                        '¡Eliminado!',
+                        'El producto ha sido borrado.',
+                        'success'
+                    );
+                    cargarInsumos(); // Recargamos la tabla
+                } catch (error) {
+                    console.error(error);
+                    // 4. ERROR: Alerta roja
+                    Swal.fire(
+                        'Error',
+                        'No se pudo eliminar el producto. Puede que ya tenga movimientos asociados.',
+                        'error'
+                    );
+                }
             }
-        }
+        });
     };
 
     // 2. Cálculos para las Tarjetas de Arriba (KPIs)

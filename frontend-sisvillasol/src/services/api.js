@@ -17,7 +17,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 2. INTERCEPTOR DE LLEGADA (RESPONSE) <--- ¡ESTO ES LO NUEVO!
+// 2. INTERCEPTOR DE LLEGADA (RESPONSE)
 // "Si el servidor responde con un error, revisa qué pasó"
 api.interceptors.response.use(
   (response) => response, // Si todo salió bien, deja pasar la respuesta
@@ -29,8 +29,9 @@ api.interceptors.response.use(
     ) {
       // Evitar redirección automática cuando es la petición de login (para que el componente Login
       // pueda manejar el error y mostrar su alerta). Si la petición es otra, sí forzamos logout.
-      const requestUrl = error.config && error.config.url ? error.config.url : '';
-      if (requestUrl && requestUrl.includes('/auth/login')) {
+      const requestUrl =
+        error.config && error.config.url ? error.config.url : "";
+      if (requestUrl && requestUrl.includes("/auth/login")) {
         return Promise.reject(error);
       }
 

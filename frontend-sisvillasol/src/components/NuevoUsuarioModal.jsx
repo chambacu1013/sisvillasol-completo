@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import api from '../services/api';
-
+import Swal from 'sweetalert2';
 const NuevoUsuarioModal = ({ open, onClose, usuarioEditar, onSuccess }) => { // <--- Aquí la llamamos onSuccess
     
     const [datos, setDatos] = useState({
@@ -30,22 +30,58 @@ const NuevoUsuarioModal = ({ open, onClose, usuarioEditar, onSuccess }) => { // 
     }, [usuarioEditar, open]);
 
     const handleGuardar = async () => {
+       // 1. VALIDACIÓN BÁSICA (Alerta Amarilla)
+        // Si es nuevo y no tiene contraseña, o falta nombre/documento
+        if (!datos.nombre || !datos.documento || (!usuarioEditar && !datos.password)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Faltan datos',
+                text: 'Nombre, Documento y Contraseña son obligatorios.',
+                confirmButtonColor: '#ff9800'
+            });
+            return;
+        }
+
         try {
             if (usuarioEditar) {
+                // EDITAR
                 await api.put(`/usuarios/${usuarioEditar.id_usuario}`, datos);
-                alert('¡Datos actualizados! 👤');
+                
+                // 2. ÉXITO EDITAR
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Actualizado!',
+                    text: 'Datos del usuario modificados correctamente 👤',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             } else {
+                // CREAR
                 await api.post('/usuarios', datos);
-                alert('¡Usuario creado! 👤');
+                
+                // 3. ÉXITO CREAR
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Registrado!',
+                    text: 'Nuevo usuario bienvenido al sistema 🚜',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             }
             
-            // CORRECCIÓN AQUÍ:
-            onSuccess(); // <--- Usamos el nombre correcto (antes decía alGuardar)
+            // Cerrar y refrescar
+            onSuccess();
             onClose();
             
         } catch (error) {
             console.error(error);
-            alert('Error al guardar');
+            // 4. ERROR (Alerta Roja)
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo guardar. Verifica que el documento no esté repetido.',
+                confirmButtonColor: '#d32f2f'
+            });
         }
     };
 

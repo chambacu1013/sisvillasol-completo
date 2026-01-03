@@ -10,7 +10,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import api from '../services/api';
 import NuevoUsuarioModal from '../components/NuevoUsuarioModal';
-
+import Swal from 'sweetalert2';
 // (Dejé los colores importados por si quieres usarlos, aunque tu lógica usa hex)
 import { deepOrange, deepPurple, teal } from '@mui/material/colors';
 
@@ -38,15 +38,40 @@ function Usuarios() {
     };
 
     const handleEliminar = async (id, nombre) => {
-        if (!window.confirm(`¿Seguro que quieres eliminar a ${nombre}?`)) return;
-        try {
-            await api.delete(`/usuarios/${id}`);
-            alert('Usuario eliminado');
-            cargarUsuarios();
-        } catch (error) {
-            console.error(error);
-            alert('Error al eliminar');
-        }
+       // 1. ALERTA DE CONFIRMACIÓN
+        Swal.fire({
+            title: '¿Eliminar usuario?',
+            text: `Estás a punto de eliminar a ${nombre}. Esta acción no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d32f2f', // Rojo intenso
+            cancelButtonColor: '#1b5e20',  // Verde corporativo
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    // 2. LLAMADO A LA API
+                    await api.delete(`/usuarios/${id}`);
+                    
+                    // 3. ÉXITO
+                    Swal.fire(
+                        '¡Eliminado!',
+                        'El usuario ha sido borrado del sistema.',
+                        'success'
+                    );
+                    cargarUsuarios(); // Recargamos la tabla
+                } catch (error) {
+                    console.error(error);
+                    // 4. ERROR
+                    Swal.fire(
+                        'Error',
+                        'No se pudo eliminar. Verifica que el usuario no tenga tareas asignadas.',
+                        'error'
+                    );
+                }
+            }
+        });
     };
 
     // Filtramos por nombre o documento

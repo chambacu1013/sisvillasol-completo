@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import api from '../services/api';
-
+import Swal from 'sweetalert2';
 function EditarEmpresaModal({ open, onClose, alGuardar }) {
     const [datos, setDatos] = useState({
         nombre_empresa: '',
@@ -31,14 +31,40 @@ function EditarEmpresaModal({ open, onClose, alGuardar }) {
 
     // 2. Guardar cambios (PUT)
     const handleGuardar = async () => {
+      // Validación pequeña
+        if (!datos.nombre_empresa.trim()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Campo vacío',
+                text: 'El nombre de la finca es obligatorio.',
+                confirmButtonColor: '#ff9800'
+            });
+            return;
+        }
+
         try {
             await api.put('/empresa', datos);
-            alert('¡Información actualizada con éxito! 🏛️');
-            alGuardar(); // Avisamos que ya terminamos para recargar la vista
-            onClose(); // Cerramos el modal
+            
+            // ÉXITO
+            Swal.fire({
+                icon: 'success',
+                title: '¡Información actualizada!',
+                text: 'La identidad corporativa se guardó con éxito 🏛️',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            alGuardar(); // Recargar vista principal
+            onClose();   // Cerrar modal
         } catch (error) {
             console.error(error);
-            alert('Error al guardar');
+            // ERROR
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo guardar la información. Intenta nuevamente.',
+                confirmButtonColor: '#d32f2f'
+            });
         }
     };
 

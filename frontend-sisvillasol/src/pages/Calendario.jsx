@@ -8,7 +8,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/dist/locale/es'; 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-
+import Swal from 'sweetalert2';
 // ÍCONOS
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close'; 
@@ -175,40 +175,105 @@ function Calendario() {
     };
 
     const handleGuardarNota = async () => {
-        if (!nuevaNota.trim()) return;
+        if (!nuevaNota.trim()) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Nota vacía',
+                text: 'Escribe algo antes de agregar la nota ✍️',
+                confirmButtonColor: '#0288d1'
+            });
+            return;
+        }
         try {
             await api.post('/notas', { contenido: nuevaNota });
-            setNuevaNota(''); // Limpiar campo
-            cargarNotas();    // Recargar lista
-        } catch (error) { console.error(error); alert('Error al guardar nota'); }
+            setNuevaNota(''); 
+            cargarNotas();
+            
+            // Check rápido discreto
+            Swal.fire({
+                icon: 'success',
+                title: 'Nota agregada',
+                showConfirmButton: false,
+                timer: 1000,
+                position: 'top-end', // Sale en la esquina superior derecha
+                toast: true // Modo "toast" (notificación pequeña)
+            });
+            
+        } catch (error) { 
+            console.error(error); 
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar la nota' });
+        }
     };
 
     const handleEliminarNota = async (id) => {
-        if (!window.confirm('¿Borrar esta nota?')) return;
-        try {
-            await api.delete(`/notas/${id}`);
-            cargarNotas();
-        } catch (error) { console.error(error); }
+        Swal.fire({
+            title: '¿Borrar nota?',
+            text: "Esta nota desaparecerá del tablero.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f57f17', // Naranja (color de las notas)
+            cancelButtonColor: '#1b5e20',
+            confirmButtonText: 'Sí, borrar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await api.delete(`/notas/${id}`);
+                    cargarNotas();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Nota eliminada',
+                        showConfirmButton: false,
+                        timer: 1000,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                } catch (error) { console.error(error); }
+            }
+        });
     };
 
     // --- FUNCIONES DEL CALENDARIO ---
     const handleGuardar = async () => {
+        // Validación
         if(!datos.id_tipo_actividad || !datos.fecha_programada || !datos.id_lote) {
-            alert("Por favor completa los campos obligatorios ⚠️");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Faltan datos',
+                text: 'Debes seleccionar Actividad, Fecha y Lote.',
+                confirmButtonColor: '#ff9800'
+            });
             return;
         }
         try {
             if (tareaEditar) {
                 await api.put(`/actividades/${tareaEditar.resource.id_tarea}`, datos);
-                alert('¡Tarea actualizada! 📝');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Tarea Reprogramada!',
+                    text: 'Los cambios se han guardado en el calendario 📅',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             } else {
                 await api.post('/actividades', datos);
-                alert('¡Tarea programada! 📅');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Tarea Programada!',
+                    text: 'Se ha asignado la labor al equipo de campo 🚜',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             }
             setModalOpen(false);
             setTareaEditar(null);
             cargarDatos();
-        } catch (error) { console.error(error); alert('Error al guardar'); }
+        } catch (error) { 
+            console.error(error); 
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar la tarea' });
+        }
     };
 
     const handleSelectEvent = (evento) => { setTareaEditar(evento); setModalOpen(true); };

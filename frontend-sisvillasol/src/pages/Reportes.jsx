@@ -33,7 +33,7 @@ import ThunderstormIcon from '@mui/icons-material/Thunderstorm';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
 
 import api from '../services/api';
-
+import Swal from 'sweetalert2';
 function Reportes() {
     // --- ESTADOS ---
     const [kpis, setKpis] = useState({ 
@@ -147,23 +147,85 @@ function Reportes() {
     };
 
     const handleGuardarVenta = async () => {
-        if(!nuevaVenta.id_lote || !nuevaVenta.kilos_vendidos || !nuevaVenta.precio_total) return alert("Faltan datos obligatorios");
+       // 1. VALIDACIÓN
+        if(!nuevaVenta.id_lote || !nuevaVenta.kilos_vendidos || !nuevaVenta.precio_total) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Faltan datos',
+                text: 'Debes indicar el Lote, Kilos y Precio Total.',
+                confirmButtonColor: '#ff9800'
+            });
+            return;
+        }
+
         try {
             if (ventaEditar) {
                 await api.put(`/finanzas/ventas/${ventaEditar.id_venta}`, nuevaVenta);
-                alert('¡Venta actualizada! 📝');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Venta Actualizada',
+                    text: 'Registro financiero modificado correctamente 📝',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             } else {
                 await api.post('/finanzas/ventas', nuevaVenta);
-                alert('¡Venta registrada! 💰');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Venta Registrada!',
+                    text: 'Ingreso añadido a la contabilidad 💰',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             }
             setModalOpen(false);
-            cargarKPIs(); cargarVentas(); cargarGrafica(anioSeleccionado);
-        } catch (error) { console.error(error); alert('Error al guardar'); }
+            // Recargamos todo para ver los cambios en gráficas y KPIs
+            cargarKPIs(); 
+            cargarVentas(); 
+            cargarGrafica(anioSeleccionado);
+            cargarDatosTortas(); // También recargamos las tortas por si cambiaron los %
+
+        } catch (error) { 
+            console.error(error); 
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar la venta.' });
+        }
     };
 
     const handleEliminarVenta = async (id) => {
-        if(!window.confirm('¿Eliminar registro?')) return;
-        try { await api.delete(`/finanzas/ventas/${id}`); cargarKPIs(); cargarVentas(); cargarGrafica(anioSeleccionado); } catch (e) { console.error(e); }
+        Swal.fire({
+            title: '¿Eliminar venta?',
+            text: "Este registro desaparecerá de la contabilidad y afectará las gráficas.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d32f2f',
+            cancelButtonColor: '#1b5e20',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try { 
+                    await api.delete(`/finanzas/ventas/${id}`); 
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: 'El registro ha sido borrado.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    cargarKPIs(); 
+                    cargarVentas(); 
+                    cargarGrafica(anioSeleccionado);
+                    cargarDatosTortas();
+                } catch (e) { 
+                    console.error(e);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar.' });
+                }
+            }
+        });
     };
 
     return (
