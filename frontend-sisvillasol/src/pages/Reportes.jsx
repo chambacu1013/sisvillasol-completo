@@ -211,7 +211,7 @@ function Reportes() {
                         timer: 1500,
                         showConfirmButton: false
                     });
-
+                    recargarDatosAnuales();
                     cargarKPIs(); 
                     cargarVentas(); 
                     cargarGrafica(anioSeleccionado);
