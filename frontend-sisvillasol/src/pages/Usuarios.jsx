@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { 
     Box, Typography, Button, TextField, InputAdornment, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-    Paper, IconButton, Chip, TablePagination, Avatar 
+    Paper, IconButton, Chip, TablePagination, Avatar, GlobalStyles 
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
@@ -89,6 +89,11 @@ function Usuarios() {
 
     return (
         <Box>
+            <GlobalStyles styles={{ 
+                '.swal2-container': { 
+                    zIndex: '2400 !important' // Mayor que el 1300 del Modal
+                } 
+            }} />
             <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold', color: '#1b5e20' }}>
                 Gestión de Usuarios
             </Typography>

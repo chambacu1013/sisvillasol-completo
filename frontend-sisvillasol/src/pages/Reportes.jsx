@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { 
     Box, Typography, Grid, Card, CardContent, Button, Paper, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-    TextField, InputAdornment, IconButton, MenuItem, Chip, TablePagination
+    TextField, InputAdornment, IconButton, MenuItem, Chip, TablePagination,
+    GlobalStyles 
 } from '@mui/material';
 
 // 2. RECHARTS (Aquí van TODAS las gráficas: Barras y Tortas)
@@ -263,6 +264,11 @@ function Reportes() {
     };
     return (
         <Box sx={{ pb: 5 }}>
+            <GlobalStyles styles={{ 
+                '.swal2-container': { 
+                    zIndex: '2400 !important' // Mayor que el 1300 del Modal
+                } 
+            }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1b5e20' }}>Reportes Financieros</Typography>
                 <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#1b5e20' }} onClick={handleAbrirNuevo}>REGISTRAR VENTA</Button>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { 
     Box, Grid, Paper, Typography, Button, TextField, InputAdornment, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
-    Chip, IconButton, Card, CardContent 
+    Chip, IconButton, Card, CardContent, GlobalStyles
 } from '@mui/material';
 import { TablePagination } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -117,6 +117,11 @@ function Inventario() {
 
     return (
         <Box>
+            <GlobalStyles styles={{ 
+                '.swal2-container': { 
+                    zIndex: '2400 !important' // Mayor que el 1300 del Modal
+                } 
+            }} />
             <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold', color: '#1b5e20' }}>
                 Inventario de Insumos
             </Typography>

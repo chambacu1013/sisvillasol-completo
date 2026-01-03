@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { 
     Box, Typography, Button, Dialog, DialogTitle, DialogContent, 
     DialogActions, TextField, MenuItem, InputAdornment, IconButton, 
-    Grid, Card, CardContent, Paper, Divider 
+    Grid, Card, CardContent, Paper, Divider, GlobalStyles
 } from '@mui/material';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -298,7 +298,11 @@ function Calendario() {
 
     return (
         <Box sx={{ pb: 5 }}> {/* Padding bottom para que no quede pegado al final */}
-            
+            <GlobalStyles styles={{ 
+                '.swal2-container': { 
+                    zIndex: '2400 !important' // Mayor que el 1300 del Modal
+                } 
+            }} />
             {/* --- SECCIÓN 1: CALENDARIO --- */}
             <Box sx={{ height: '80vh', display: 'flex', flexDirection: 'column', mb: 5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
