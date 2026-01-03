@@ -34,6 +34,7 @@ import WaterDropIcon from '@mui/icons-material/WaterDrop';
 
 import api from '../services/api';
 import Swal from 'sweetalert2';
+import { Chip } from '@mui/material';
 function Reportes() {
     // --- ESTADOS ---
     const [kpis, setKpis] = useState({ 
@@ -46,7 +47,7 @@ function Reportes() {
     const [anioSeleccionado, setAnioSeleccionado] = useState(new Date().getFullYear());
     
     // Estado del Clima
-    const [clima, setClima] = useState({ temp: '--', desc: 'Esperando activación...', icon: 'cloud', ciudad: 'Chitagá' });
+    const [clima, setClima] = useState({ temp: '--', desc: 'Esperando activación...', icon: 'cloud', ciudad: 'Chitagá', status: null });
 
     // Listas y Modales
     const [listaLotes, setListaLotes] = useState([]);
@@ -101,10 +102,10 @@ function Reportes() {
                 // Manejo explícito de estados comunes y logging para depuración
                 console.warn('Error al consultar OpenWeatherMap', response.status, response.statusText);
                 if (response.status === 401) {
-                    setClima({ temp: '⏳', desc: 'Activando Clave...', icon: 'cloud', ciudad: 'Chitagá' });
+                    setClima({ temp: '⏳', desc: 'Activando Clave...', icon: 'cloud', ciudad: 'Chitagá', status: 401 });
                     return;
                 }
-                setClima({ temp: '--', desc: 'Error clima', icon: 'cloud', ciudad: 'Chitagá' });
+                setClima({ temp: '--', desc: 'Error clima', icon: 'cloud', ciudad: 'Chitagá', status: response.status });
                 return;
             }
 
@@ -121,10 +122,11 @@ function Reportes() {
                     temp: Math.round(data.main.temp),
                     desc: data.weather[0].description,
                     icon: iconKey,
-                    ciudad: 'Chitagá'
+                    ciudad: 'Chitagá',
+                    status: response.status
                 });
             } else {
-                setClima({ temp: '--', desc: 'Sin datos', icon: 'cloud', ciudad: 'Chitagá' });
+                setClima({ temp: '--', desc: 'Sin datos', icon: 'cloud', ciudad: 'Chitagá', status: response.status });
             }
         } catch (error) {
             console.error("Error de conexión clima:", error);
@@ -335,6 +337,13 @@ function Reportes() {
                                 <Typography variant="caption" sx={{ textTransform: 'capitalize', display: 'block', lineHeight: 1 }}>
                                     {clima.desc}
                                 </Typography>
+                                {/* Indicador cuando la API Key devuelve 401 */}
+                                {clima.status === 401 && (
+                                    <Box sx={{ mt: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
+                                        <Chip label="Clave OpenWeather inactiva (401)" color="warning" size="small" />
+                                        <Button size="small" variant="contained" onClick={obtenerClima} sx={{ bgcolor: '#fff', color: '#1b5e20' }}>Reintentar</Button>
+                                    </Box>
+                                )}
                             </Box>
                             {getClimaIcon(clima.icon)}
                         </CardContent>
