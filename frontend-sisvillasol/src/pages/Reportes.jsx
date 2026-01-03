@@ -34,7 +34,6 @@ import WaterDropIcon from '@mui/icons-material/WaterDrop';
 
 import api from '../services/api';
 import Swal from 'sweetalert2';
-import { Chip } from '@mui/material';
 function Reportes() {
     // --- ESTADOS ---
     const [kpis, setKpis] = useState({ 
