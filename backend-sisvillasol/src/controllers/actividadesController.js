@@ -3,6 +3,7 @@ const pool = require("../config/db");
 // 1. OBTENER TAREAS
 const obtenerActividades = async (req, res) => {
   try {
+    await actualizarEstadosLotes();
     const response = await pool.query(`
             SELECT 
                 t.id_tarea,
@@ -135,29 +136,39 @@ const eliminarActividad = async (req, res) => {
 const actualizarEstadosLotes = async () => {
   try {
     // 1. CASTIGO 😡: Si hay tareas viejas (> 4 días), poner en RIESGO
-    await pool.query(`
+    // Usamos ::DATE para comparar solo fechas y evitar líos de horas
+    const castigo = await pool.query(`
             UPDATE sisvillasol.lotes l
             SET estado_sanitario = 'RIESGO'
             FROM sisvillasol.tareas t
-            WHERE l.id_lote = t.id_lote_tarea  -- CORREGIDO AQUÍ
+            WHERE l.id_lote = t.id_lote_tarea
             AND t.estado = 'PENDIENTE' 
-            AND t.fecha_programada < (CURRENT_DATE - INTERVAL '4 days')
-            AND l.estado_sanitario = 'OPTIMO';
+            AND t.fecha_programada::DATE < (CURRENT_DATE - INTERVAL '4 days')
+            AND l.estado_sanitario = 'OPTIMO'
         `);
 
+    if (castigo.rowCount > 0) {
+      console.log(
+        `⚠️ ALERTA: ${castigo.rowCount} lotes pasaron a RIESGO por descuido.`
+      );
+    }
+
     // 2. PREMIO 😇: Si YA NO hay tareas viejas, volver a OPTIMO
-    await pool.query(`
+    const premio = await pool.query(`
             UPDATE sisvillasol.lotes l
             SET estado_sanitario = 'OPTIMO'
             WHERE l.estado_sanitario = 'RIESGO'
             AND NOT EXISTS (
                 SELECT 1 FROM sisvillasol.tareas t
-                WHERE t.id_lote_tarea = l.id_lote -- CORREGIDO AQUÍ TAMBIÉN
+                WHERE t.id_lote_tarea = l.id_lote
                 AND t.estado = 'PENDIENTE'
-                AND t.fecha_programada < (CURRENT_DATE - INTERVAL '4 days')
+                AND t.fecha_programada::DATE < (CURRENT_DATE - INTERVAL '4 days')
             );
         `);
 
+    if (premio.rowCount > 0) {
+      console.log(`✅ EXCELENTE: ${premio.rowCount} lotes volvieron a OPTIMO.`);
+    }
     console.log("✅ Estados de lotes actualizados automáticamente.");
   } catch (error) {
     console.error("Error actualizando estados de lotes:", error);
@@ -248,6 +259,7 @@ const getHistorial = async (req, res) => {
 // 7. OBTENER INFORMACIÓN DETALLADA DE LOTES
 const obtenerLotesDetallados = async (req, res) => {
   try {
+    await actualizarEstadosLotes();
     const response = await pool.query(`
             SELECT 
                 l.id_lote, 
