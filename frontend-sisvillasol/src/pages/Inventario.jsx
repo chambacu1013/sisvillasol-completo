@@ -14,7 +14,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // Usaremos est
 import api from '../services/api';
 import Swal from 'sweetalert2';
 // IMPORTAMOS EL COMPONENTE DEL MODAL 
-import NuevoInsumoModal from '../components/NuevoInsumoModal';
+import NuevoInsumoModal from '../components/NuevoInsumoModal.jsx';
 
 function Inventario() {
     const [insumos, setInsumos] = useState([]);
@@ -199,40 +199,30 @@ function Inventario() {
                 onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage}
             />
 
-            {/* SECCIÓN 4: ALERTAS INFERIORES (Stock Bajo) */}
+           {/* Alertas Stock Bajo */}
             {stockBajo.length > 0 && (
                 <Box sx={{ mt: 4, mb: 4 }}>
-                    <Typography variant="h6" sx={{ color: '#d32f2f', fontWeight: 'bold', mb: 2, display: 'flex', alignItems: 'center' }}>
-                        <WarningIcon sx={{ mr: 1 }} /> Atención: Insumos por Agotarse
-                    </Typography>
-                    
+                    <Typography variant="h6" sx={{ color: '#d32f2f', fontWeight: 'bold', mb: 2, display: 'flex', alignItems: 'center' }}><WarningIcon sx={{ mr: 1 }} /> Atención: Insumos por Agotarse</Typography>
                     <Grid container spacing={2}>
                         {stockBajo.map((insumo) => (
                             <Grid item xs={12} sm={6} md={3} key={insumo.id_insumo}>
                                 <Card sx={{ bgcolor: '#ffebee', borderLeft: '6px solid #d32f2f', boxShadow: 2 }}>
                                     <CardContent>
                                         <Typography variant="caption" fontWeight="bold" color="error">STOCK BAJO</Typography>
-                                        <Typography variant="h6" sx={{ fontWeight: 'bold', my: 1 }}>{insumo.nombre}</Typography>
-                                        <Typography variant="body2" sx={{ mb: 2 }}>
-                                            Tienes: <b>{insumo.cantidad_stock} {insumo.nombre_unidad}</b> 
-                                            <span style={{ opacity: 0.7, fontSize: '0.9em' }}> (Min: {insumo.stock_minimo})</span>
-                                        </Typography>
-
-                                        {/* --- BOTÓN SOLICITAR COMPRA --- */}
+                                        <Typography variant="h6" fontWeight="bold">{insumo.nombre}</Typography>
+                                        <Typography variant="body2" sx={{ mb: 2 }}>Stock: <b>{insumo.cantidad_stock} {insumo.nombre_unidad}</b></Typography>
+                                        
+                                        {/* BOTÓN ARREGLADO */}
                                         <Button 
-                                            variant="outlined" 
-                                            color="error" 
-                                            size="small"
-                                            fullWidth
-                                            startIcon={<ShoppingCartIcon />} 
+                                            variant="outlined" color="error" size="small" fullWidth startIcon={<ShoppingCartIcon />}
                                             onClick={() => {
-                                                setInsumoAEditar(insumo); // CORREGIDO: Usamos la función real
+                                                console.log("Abriendo modal COMPRA para:", insumo.nombre);
+                                                setInsumoAEditar(insumo);
                                                 setModalOpen(true);
                                             }}
                                         >
                                             SOLICITAR COMPRA
                                         </Button>
-
                                     </CardContent>
                                 </Card>
                             </Grid>
