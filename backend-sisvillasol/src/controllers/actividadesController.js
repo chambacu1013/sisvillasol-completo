@@ -160,7 +160,7 @@ const eliminarActividad = async (req, res) => {
   }
 };
 
-// 5. DATOS FORMULARIO (Se mantiene la llamada a auditoría)
+// 5. DATOS FORMULARIO
 const obtenerDatosFormulario = async (req, res) => {
   try {
     await actualizarEstadosLotes(); // <--- Aquí también auditamos
@@ -234,9 +234,13 @@ const obtenerLotesDetallados = async (req, res) => {
 const obtenerInsumos = async (req, res) => {
   try {
     const response = await pool.query(`
-            SELECT i.id_insumo, i.nombre, i.cantidad_stock, u.nombre_unidad 
+            SELECT 
+                i.*,
+                u.nombre_unidad,
+                c.nombre_categoria 
             FROM sisvillasol.insumos i
-            JOIN sisvillasol.unidades u ON i.id_unidad = u.id_unidad
+            LEFT JOIN sisvillasol.unidades u ON i.id_unidad = u.id_unidad
+            LEFT JOIN sisvillasol.categorias c ON i.id_categoria_insumo = c.id_categoria
             ORDER BY i.nombre ASC
         `);
     res.json(response.rows);
@@ -290,7 +294,27 @@ const finalizarTarea = async (req, res) => {
     client.release();
   }
 };
+// 9. NUEVO: DATOS PARA EL MODAL DE INSUMOS (Listas desplegables)
+// Esta función le da al modal las opciones de "Litros", "Kilos", "Herbicidas", etc.
+const obtenerDatosFormularioInsumos = async (req, res) => {
+  try {
+    // Asumiendo que tus tablas se llaman así. Si fallan, revisa los nombres en tu BD.
+    const categorias = await pool.query(
+      "SELECT * FROM sisvillasol.categorias ORDER BY nombre_categoria ASC"
+    );
+    const unidades = await pool.query(
+      "SELECT * FROM sisvillasol.unidades ORDER BY nombre_unidad ASC"
+    );
 
+    res.json({
+      categorias: categorias.rows,
+      unidades: unidades.rows,
+    });
+  } catch (error) {
+    console.error("Error cargando listas de insumos:", error);
+    res.status(500).send("Error listas insumos");
+  }
+};
 module.exports = {
   obtenerActividades,
   crearActividad,
@@ -302,4 +326,5 @@ module.exports = {
   finalizarTarea,
   getHistorial,
   actualizarEstadosLotes,
+  obtenerDatosFormularioInsumos,
 };
