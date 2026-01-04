@@ -7,7 +7,6 @@ const {
   crearActividad,
   actualizarTarea,
   eliminarActividad,
-  obtenerDatosFormulario,
   obtenerLotesDetallados,
   finalizarTarea,
   getHistorial,
@@ -16,7 +15,6 @@ const {
 const verificarToken = require("../middleware/authMiddleware");
 // RUTAS
 router.get("/historial", verificarToken, getHistorial);
-router.get("/datos-formulario", verificarToken, obtenerDatosFormulario);
 router.get("/info-lotes", verificarToken, obtenerLotesDetallados);
 
 // 2. Rutas GENERALES (Raíz)
