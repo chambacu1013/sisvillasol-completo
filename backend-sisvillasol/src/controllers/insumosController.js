@@ -12,8 +12,8 @@ const obtenerInsumos = async (req, res) => {
                 i.costo_unitario_promedio,
                 i.id_categoria_insumo,
                 i.id_unidad,
-                c.nombre_categoria, -- Traemos el nombre para mostrar en tabla
-                u.nombre_unidad     -- Traemos el nombre para mostrar en tabla
+                c.nombre_categoria, 
+                u.nombre_unidad     
             FROM sisvillasol.insumos i
             JOIN sisvillasol.categorias c ON i.id_categoria_insumo = c.id_categoria
             JOIN sisvillasol.unidades u ON i.id_unidad = u.id_unidad
