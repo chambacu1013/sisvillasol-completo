@@ -1,13 +1,13 @@
 const { Router } = require("express");
 const router = Router();
 
-// IMPORTAR CONTROLADOR
+// IMPORTAR (Desestructuración)
 const {
   obtenerActividades,
   crearActividad,
   actualizarTarea,
   eliminarActividad,
-  obtenerDatosFormulario, // <--- ESTO YA ESTABA IMPORTADO, PERO NO SE USABA ABAJO
+  obtenerDatosFormulario, // <--- La tienes importada aquí, ¡pero faltaba usarla abajo!
   obtenerLotesDetallados,
   finalizarTarea,
   getHistorial,
@@ -15,21 +15,20 @@ const {
 
 const verificarToken = require("../middleware/authMiddleware");
 
-// --- RUTAS ESPECÍFICAS (Deben ir ANTES de /:id) ---
-
-// 1. Historial e Información Extra
+// 1. RUTAS ESPECÍFICAS (Deben ir PRIMERO)
 router.get("/historial", verificarToken, getHistorial);
 router.get("/info-lotes", verificarToken, obtenerLotesDetallados);
 
-// 2. ¡ESTA ES LA QUE FALTABA! (Sin esto, da error 404 al cargar el formulario)
+// --- ESTA ES LA LÍNEA QUE TE FALTABA --- 🚨
+// Sin esto, el frontend recibe un error 404 y explota al intentar leer las listas
 router.get("/datos-formulario", verificarToken, obtenerDatosFormulario);
+// ----------------------------------------
 
-// 3. Rutas GENERALES (Raíz)
+// 2. Rutas GENERALES (Raíz)
 router.get("/", verificarToken, obtenerActividades);
 router.post("/", verificarToken, crearActividad);
 
-// 4. Rutas con PARÁMETROS /:id (Siempre deben ir AL FINAL)
-// Si pones 'datos-formulario' debajo de estas, el sistema creerá que "datos-formulario" es un ID.
+// 3. Rutas con PARÁMETROS /:id (Siempre deben ir AL FINAL)
 router.put("/finalizar/:id", verificarToken, finalizarTarea);
 router.put("/:id", verificarToken, actualizarTarea);
 router.delete("/:id", verificarToken, eliminarActividad);
