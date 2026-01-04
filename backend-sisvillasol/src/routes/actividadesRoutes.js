@@ -31,9 +31,5 @@ router.post("/", verificarToken, crearActividad);
 router.put("/finalizar/:id", verificarToken, finalizarTarea);
 router.put("/:id", verificarToken, actualizarTarea);
 router.delete("/:id", verificarToken, eliminarActividad);
-router.get(
-  "/insumos/datos-formulario",
-  verificarToken,
-  obtenerDatosFormularioInsumos
-);
+router.get("/listas-insumos", verificarToken, obtenerDatosFormularioInsumos);
 module.exports = router;
