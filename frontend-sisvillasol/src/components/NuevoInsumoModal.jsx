@@ -26,8 +26,8 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
     useEffect(() => {
         const cargarListas = async () => {
             try {
-                // CORREGIDO: Usamos la ruta '/listas-insumos' que definimos en el backend
-                const res = await api.get('/insumos'); 
+             
+                const res = await api.get('/insumos/datos-formulario');
                 setListas(res.data);
             } catch (error) { 
                 console.error("Error cargando listas:", error); 
