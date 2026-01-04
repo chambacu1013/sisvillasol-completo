@@ -6,6 +6,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import api from '../services/api';
 import Swal from 'sweetalert2';
+
 const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
     
     // Listas dinámicas desde BD
@@ -15,19 +16,24 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
     const [datos, setDatos] = useState({
         nombre: '',
         cantidad_stock: '',
-        id_unidad: '',           // Ahora usamos ID
-        id_categoria_insumo: '', // Ahora usamos ID
+        id_unidad: '',
+        id_categoria_insumo: '',
         costo_unitario_promedio: '',
         stock_minimo: 5
     });
 
-    // 1. Cargar las listas (Categorías y Unidades) al abrir
+    // 1. CARGAR LISTAS (¡AQUÍ ESTABA EL ERROR!) 🚨
     useEffect(() => {
         const cargarListas = async () => {
             try {
-                const res = await api.get('/listas-insumos');
+                // CORREGIDO: Usamos la ruta '/listas-insumos' que definimos en el backend
+                const res = await api.get('/listas-insumos'); 
                 setListas(res.data);
-            } catch (error) { console.error("Error cargando listas:", error); }
+            } catch (error) { 
+                console.error("Error cargando listas:", error); 
+                // Opcional: Mostrar alerta si falla la conexión
+                // Swal.fire('Error', 'No se pudieron cargar las listas.', 'error');
+            }
         };
         if (open) cargarListas();
     }, [open]);
@@ -44,12 +50,20 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 stock_minimo: productoEditar.stock_minimo || 5
             });
         } else {
-            setDatos({ nombre: '', cantidad_stock: '', id_unidad: '', id_categoria_insumo: '', costo_unitario_promedio: '', stock_minimo: 5 });
+            // Limpiar si es nuevo
+            setDatos({
+                nombre: '',
+                cantidad_stock: '',
+                id_unidad: '',
+                id_categoria_insumo: '',
+                costo_unitario_promedio: '',
+                stock_minimo: 5
+            });
         }
     }, [productoEditar, open]);
 
     const handleGuardar = async () => {
-        // 1. VALIDACIÓN (Alerta Amarilla)
+        // VALIDACIÓN
         if (!datos.id_unidad || !datos.id_categoria_insumo || !datos.nombre) {
             Swal.fire({
                 icon: 'warning',
@@ -65,7 +79,6 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 // EDITAR
                 await api.put(`/insumos/${productoEditar.id_insumo}`, datos);
                 
-                // 2. ÉXITO AL EDITAR
                 Swal.fire({
                     icon: 'success',
                     title: '¡Actualizado!',
@@ -77,7 +90,6 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 // CREAR
                 await api.post('/insumos', datos);
                 
-                // 3. ÉXITO AL CREAR
                 Swal.fire({
                     icon: 'success',
                     title: '¡Registrado!',
@@ -93,11 +105,10 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
             
         } catch (error) { 
             console.error(error); 
-            // 4. ERROR (Alerta Roja)
             Swal.fire({
                 icon: 'error',
                 title: 'Ups...',
-                text: 'Hubo un error al guardar. Intenta nuevamente.',
+                text: 'Hubo un error al guardar. Verifica la conexión.',
                 confirmButtonColor: '#d32f2f'
             });
         }
@@ -111,7 +122,6 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
             </DialogTitle>
             
             <DialogContent>
-                {/* DISEÑO VERTICAL RÍGIDO */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
                     
                     <TextField 
@@ -120,7 +130,6 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                         placeholder="Ej: Fertilizante Triple 15"
                     />
 
-                    {/* FILA: CANTIDAD y UNIDAD (Dinámico) */}
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField 
                             fullWidth label="Cantidad en Stock" type="number" 
@@ -130,7 +139,6 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                             select fullWidth label="Unidad de Medida" 
                             value={datos.id_unidad} onChange={(e) => setDatos({...datos, id_unidad: e.target.value})}
                         >
-                            {/* Mapeamos la lista de la BD */}
                             {listas.unidades.map((u) => (
                                 <MenuItem key={u.id_unidad} value={u.id_unidad}>
                                     {u.nombre_unidad}
@@ -139,13 +147,11 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                         </TextField>
                     </Box>
 
-                    {/* FILA: CATEGORÍA (Dinámico) y COSTO */}
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField 
                             select fullWidth label="Categoría" 
                             value={datos.id_categoria_insumo} onChange={(e) => setDatos({...datos, id_categoria_insumo: e.target.value})}
                         >
-                            {/* Mapeamos la lista de la BD */}
                             {listas.categorias.map((c) => (
                                 <MenuItem key={c.id_categoria} value={c.id_categoria}>
                                     {c.nombre_categoria}
