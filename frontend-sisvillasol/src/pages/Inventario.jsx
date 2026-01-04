@@ -14,7 +14,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // Usaremos est
 import api from '../services/api';
 import Swal from 'sweetalert2';
 // IMPORTAMOS EL COMPONENTE DEL MODAL 
-import NuevoInsumoModal from '../components/NuevoInsumoModal.jsx';
+import NuevoInsumoModal from '../components/NuevoInsumoModal';
 
 function Inventario() {
     const [insumos, setInsumos] = useState([]);

@@ -19,7 +19,7 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
         id_unidad: '',
         id_categoria_insumo: '',
         costo_unitario_promedio: '',
-        stock_minimo: 5
+        stock_minimo: 0.5
     });
 
     // 1. CARGAR LISTAS (¡AQUÍ ESTABA EL ERROR!) 🚨
@@ -27,7 +27,7 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
         const cargarListas = async () => {
             try {
                 // CORREGIDO: Usamos la ruta '/listas-insumos' que definimos en el backend
-                const res = await api.get('/listas-insumos'); 
+                const res = await api.get('/insumos'); 
                 setListas(res.data);
             } catch (error) { 
                 console.error("Error cargando listas:", error); 
@@ -47,7 +47,7 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 id_unidad: productoEditar.id_unidad || '',
                 id_categoria_insumo: productoEditar.id_categoria_insumo || '',
                 costo_unitario_promedio: productoEditar.costo_unitario_promedio || '',
-                stock_minimo: productoEditar.stock_minimo || 5
+                stock_minimo: productoEditar.stock_minimo || 0.5
             });
         } else {
             // Limpiar si es nuevo
@@ -57,7 +57,7 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 id_unidad: '',
                 id_categoria_insumo: '',
                 costo_unitario_promedio: '',
-                stock_minimo: 5
+                stock_minimo: 0.5
             });
         }
     }, [productoEditar, open]);

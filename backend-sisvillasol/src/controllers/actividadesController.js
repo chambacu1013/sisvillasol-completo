@@ -4,7 +4,6 @@ const pool = require("../config/db");
 const actualizarEstadosLotes = async () => {
   try {
     // 1. CASTIGO 😡: Si hay tareas viejas (> 4 días), poner en RIESGO
-    // Usamos ::DATE para comparar solo fechas y evitar líos de horas
     const castigo = await pool.query(`
             UPDATE sisvillasol.lotes l
             SET estado_sanitario = 'RIESGO'
@@ -42,11 +41,10 @@ const actualizarEstadosLotes = async () => {
   }
 };
 
-// 1. OBTENER TAREAS (Ahora ejecuta la auditoría antes de mostrar nada)
+// 1. OBTENER TAREAS
 const obtenerActividades = async (req, res) => {
   try {
-    // ¡AUDITORÍA AL INSTANTE! 🚨
-    await actualizarEstadosLotes();
+    await actualizarEstadosLotes(); // Auditoría automática
 
     const response = await pool.query(`
             SELECT 
@@ -137,7 +135,6 @@ const actualizarTarea = async (req, res) => {
         id,
       ]
     );
-    // Verificar si esto arregló algún lote
     await actualizarEstadosLotes();
     res.json({ mensaje: "¡Tarea actualizada! 📝" });
   } catch (error) {
@@ -160,10 +157,10 @@ const eliminarActividad = async (req, res) => {
   }
 };
 
-// 5. DATOS FORMULARIO
+// 5. DATOS FORMULARIO (SOLO LO NECESARIO PARA TAREAS: Lotes, Usuarios, Tipos)
 const obtenerDatosFormulario = async (req, res) => {
   try {
-    await actualizarEstadosLotes(); // <--- Aquí también auditamos
+    await actualizarEstadosLotes();
 
     const lotes = await pool.query(`
         SELECT l.id_lote, l.nombre_lote, c.nombre_variedad, l.estado_sanitario
@@ -210,12 +207,10 @@ const getHistorial = async (req, res) => {
   }
 };
 
-// 7. INFO LOTES
+// 7. INFO LOTES (Se mantiene porque el Mapa de actividades usa esto)
 const obtenerLotesDetallados = async (req, res) => {
   try {
-    // También auditamos aquí por si entran directo al Mapa
     await actualizarEstadosLotes();
-
     const response = await pool.query(`
             SELECT l.id_lote, l.nombre_lote, l.area_hectareas, l.estado_sanitario, l.ubicacion,
                 c.nombre_variedad, c.nombre_cientifico, c.dias_estimados_cosecha
@@ -230,27 +225,7 @@ const obtenerLotesDetallados = async (req, res) => {
   }
 };
 
-// 8. OBTENER INSUMOS
-const obtenerInsumos = async (req, res) => {
-  try {
-    const response = await pool.query(`
-            SELECT 
-                i.*,
-                u.nombre_unidad,
-                c.nombre_categoria 
-            FROM sisvillasol.insumos i
-            LEFT JOIN sisvillasol.unidades u ON i.id_unidad = u.id_unidad
-            LEFT JOIN sisvillasol.categorias c ON i.id_categoria_insumo = c.id_categoria
-            ORDER BY i.nombre ASC
-        `);
-    res.json(response.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error cargando insumos");
-  }
-};
-
-// 9. FINALIZAR TAREA
+// 8. FINALIZAR TAREA (Esta SÍ se queda, es el puente entre Tareas e Insumos)
 const finalizarTarea = async (req, res) => {
   const { id } = req.params;
   const { insumosUsados, jornada, fecha_ejecucion } = req.body;
@@ -283,7 +258,6 @@ const finalizarTarea = async (req, res) => {
       }
     }
     await client.query("COMMIT");
-    // Al finalizar, revisamos si el lote ya quedó libre de pendientes
     await actualizarEstadosLotes();
     res.json({ mensaje: "Tarea finalizada y stock actualizado 📉✅" });
   } catch (error) {
@@ -294,27 +268,7 @@ const finalizarTarea = async (req, res) => {
     client.release();
   }
 };
-// 9. NUEVO: DATOS PARA EL MODAL DE INSUMOS (Listas desplegables)
-// Esta función le da al modal las opciones de "Litros", "Kilos", "Herbicidas", etc.
-const obtenerDatosFormularioInsumos = async (req, res) => {
-  try {
-    // Asumiendo que tus tablas se llaman así. Si fallan, revisa los nombres en tu BD.
-    const categorias = await pool.query(
-      "SELECT * FROM sisvillasol.categorias ORDER BY nombre_categoria ASC"
-    );
-    const unidades = await pool.query(
-      "SELECT * FROM sisvillasol.unidades ORDER BY nombre_unidad ASC"
-    );
 
-    res.json({
-      categorias: categorias.rows,
-      unidades: unidades.rows,
-    });
-  } catch (error) {
-    console.error("Error cargando listas de insumos:", error);
-    res.status(500).send("Error listas insumos");
-  }
-};
 module.exports = {
   obtenerActividades,
   crearActividad,
@@ -322,9 +276,7 @@ module.exports = {
   eliminarActividad,
   obtenerDatosFormulario,
   obtenerLotesDetallados,
-  obtenerInsumos,
   finalizarTarea,
   getHistorial,
   actualizarEstadosLotes,
-  obtenerDatosFormularioInsumos,
 };

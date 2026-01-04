@@ -9,10 +9,8 @@ const {
   eliminarActividad,
   obtenerDatosFormulario,
   obtenerLotesDetallados,
-  obtenerInsumos,
   finalizarTarea,
   getHistorial,
-  obtenerDatosFormularioInsumos,
 } = require("../controllers/actividadesController");
 
 const verificarToken = require("../middleware/authMiddleware");
@@ -20,7 +18,6 @@ const verificarToken = require("../middleware/authMiddleware");
 router.get("/historial", verificarToken, getHistorial);
 router.get("/datos-formulario", verificarToken, obtenerDatosFormulario);
 router.get("/info-lotes", verificarToken, obtenerLotesDetallados);
-router.get("/insumos", verificarToken, obtenerInsumos);
 
 // 2. Rutas GENERALES (Raíz)
 router.get("/", verificarToken, obtenerActividades);
@@ -31,5 +28,4 @@ router.post("/", verificarToken, crearActividad);
 router.put("/finalizar/:id", verificarToken, finalizarTarea);
 router.put("/:id", verificarToken, actualizarTarea);
 router.delete("/:id", verificarToken, eliminarActividad);
-router.get("/listas-insumos", verificarToken, obtenerDatosFormularioInsumos);
 module.exports = router;
