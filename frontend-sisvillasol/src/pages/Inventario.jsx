@@ -170,7 +170,16 @@ function Inventario() {
                                 const esBajoStock = Number(row.cantidad_stock) <= Number(row.stock_minimo);
                                 return (
                                     <TableRow key={row.id_insumo} hover>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>{row.nombre}</TableCell>
+                                        <TableCell 
+                                            sx={{ 
+                                                fontWeight: 'bold',
+                                                whiteSpace: 'normal',   // Permite que el texto baje al siguiente renglón
+                                                wordBreak: 'break-word', // Si una palabra es eterna (sin espacios), la corta
+                                                maxWidth: '250px'       // Le pone un límite de ancho (ajusta este número si quieres)
+                                            }}
+                                        >
+                                            {row.nombre}
+                                        </TableCell>
                                         <TableCell><Chip label={row.nombre_categoria || 'Sin Cat.'} size="small" variant="outlined" /></TableCell>
                                         <TableCell>
                                             <Typography fontWeight="bold" color={esBajoStock ? 'error' : 'inherit'}>
