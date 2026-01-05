@@ -61,11 +61,11 @@ function Inventario() {
             if (result.isConfirmed) {
                 try {
                     await api.delete(`/insumos/${id}`);
-                    Swal.fire('¡Eliminado!', 'El producto ha sido borrado.', 'success');
+                    Swal.fire('¡Eliminado!', 'El Insumo ha sido borrado.', 'success');
                     cargarInsumos(); 
                 } catch (error) {
                     console.error(error);
-                    Swal.fire('Error', 'No se pudo eliminar el producto.', 'error');
+                    Swal.fire('Error', 'No se pudo eliminar el Insumo.', 'error');
                 }
             }
         });
@@ -107,7 +107,7 @@ function Inventario() {
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} md={4}>
                     <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#e8f5e9', color: '#1b5e20' }}>
-                        <Typography variant="subtitle1">Total de productos</Typography>
+                        <Typography variant="subtitle1">Total de Insumos</Typography>
                         <Typography variant="h3" sx={{ fontWeight: 'bold' }}>{totalProductos}</Typography>
                     </Paper>
                 </Grid>
@@ -130,7 +130,7 @@ function Inventario() {
             {/* SECCIÓN 2: BARRA DE HERRAMIENTAS */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2 }}>
                 <TextField
-                    placeholder="Buscar producto..."
+                    placeholder="Buscar Insumo..."
                     variant="outlined" size="small"
                     sx={{ width: '300px', bgcolor: 'white' }}
                     value={busqueda}
