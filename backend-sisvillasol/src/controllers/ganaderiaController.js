@@ -37,18 +37,49 @@ const obtenerDashboard = async (req, res) => {
 
 // 2. REGISTRAR ANIMAL
 const crearAnimal = async (req, res) => {
-  const { numero, raza } = req.body;
+  const { numero, raza, fecha_ingreso } = req.body;
   try {
     await pool.query(
-      "INSERT INTO sisvillasol.ganado (numero_animal, raza) VALUES ($1, $2)",
-      [numero, raza]
+      "INSERT INTO sisvillasol.ganado (numero_animal, raza, fecha_ingreso) VALUES ($1, $2, $3)",
+      [numero, raza, fecha_ingreso]
     );
     res.json({ message: "Animal registrado" });
   } catch (error) {
     res.status(500).send(error.message);
   }
 };
+// 7. ACTUALIZAR ANIMAL
+const actualizarAnimal = async (req, res) => {
+  const { id } = req.params;
+  const { numero, raza, fecha_ingreso } = req.body;
+  try {
+    await pool.query(
+      "UPDATE sisvillasol.ganado SET numero_animal=$1, raza=$2, fecha_ingreso=$3 WHERE id_animal=$4",
+      [numero, raza, fecha_ingreso, id]
+    );
+    res.json({ message: "Animal actualizado" });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 
+// 8. ELIMINAR ANIMAL
+const eliminarAnimal = async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Opcional: Verificar si tiene ventas o leche antes de borrar para no romper integridad
+    await pool.query("DELETE FROM sisvillasol.ganado WHERE id_animal = $1", [
+      id,
+    ]);
+    res.json({ message: "Animal eliminado" });
+  } catch (error) {
+    res
+      .status(500)
+      .send(
+        "No se puede eliminar: El animal tiene registros asociados (leche o ventas)."
+      );
+  }
+};
 // 3. REGISTRAR LECHE
 const registrarLeche = async (req, res) => {
   const { fecha, manana, tarde, precio } = req.body;
@@ -115,6 +146,8 @@ const registrarPastoreo = async (req, res) => {
 module.exports = {
   obtenerDashboard,
   crearAnimal,
+  actualizarAnimal,
+  eliminarAnimal,
   registrarLeche,
   registrarInsumo,
   venderAnimal,

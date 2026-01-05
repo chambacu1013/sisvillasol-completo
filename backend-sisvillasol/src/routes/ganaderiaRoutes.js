@@ -8,5 +8,6 @@ router.post("/leche", controller.registrarLeche);
 router.post("/insumo", controller.registrarInsumo);
 router.post("/venta", controller.venderAnimal);
 router.post("/pastoreo", controller.registrarPastoreo);
-
+router.put("/animal/:id", controller.actualizarAnimal);
+router.delete("/animal/:id", controller.eliminarAnimal);
 module.exports = router;
