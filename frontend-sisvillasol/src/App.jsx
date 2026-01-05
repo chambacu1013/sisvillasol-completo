@@ -6,7 +6,7 @@ import Layout from './components/Layout';
 import Usuarios from './pages/Usuarios';
 import Calendario from './pages/Calendario';
 import Reportes from './pages/Reportes';
-import MapaFinca from '../pages/MapaFinca';
+import MapaFinca from './pages/MapaFinca';
 function App() {
   return (
     <BrowserRouter>
