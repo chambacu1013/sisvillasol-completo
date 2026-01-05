@@ -71,8 +71,24 @@ const MapaFinca = () => {
 
             {/* CONTENEDOR DEL MAPA (IMPORTANTE DARLE ALTURA) */}
             <Box sx={{ height: '500px', width: '100%', borderRadius: '10px', overflow: 'hidden' }}>
-                <MapContainer center={centroFinca} zoom={16} style={{ height: '100%', width: '100%' }}>
+                <MapContainer center={centroFinca} zoom={24} style={{ height: '100%', width: '100%' }}>
+                    // 1. Desactivar arrastrar el mapa con el mouse/dedo
+                    dragging={false} 
                     
+                    // 2. Desactivar zoom con la rueda del mouse
+                    scrollWheelZoom={false} 
+                    
+                    // 3. Desactivar zoom con doble click
+                    doubleClickZoom={false} 
+                    
+                    // 4. Desactivar zoom con gestos (celular)
+                    touchZoom={false} 
+                    
+                    // 5. Ocultar los botones de + y -
+                    zoomControl={false} 
+                    
+                    // 6. Desactivar movimiento con teclado
+                    keyboard={false}
                     {/* Capa de Satélite (Esri World Imagery) para que parezca Google Earth */}
                     <TileLayer
                         attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
