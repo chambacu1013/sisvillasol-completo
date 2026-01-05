@@ -44,7 +44,7 @@ const MapaFinca = () => {
     const [loading, setLoading] = useState(true);
 
     // Coordenadas centrales aproximadas (Calculadas con tus datos)
-    const centroFinca = [7.1480, -72.6690]; 
+    const centroFinca = [7.1476, -72.6690]; 
 
     useEffect(() => {
         const cargarLotes = async () => {
