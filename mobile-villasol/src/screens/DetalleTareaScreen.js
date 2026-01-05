@@ -50,7 +50,17 @@ export default function DetalleTareaScreen({ route, navigation }) {
   const cargarInsumosBodega = async () => {
     try {
       const res = await api.get("/insumos");
-      setListaInsumos(res.data);
+      const categoriasConsumibles = [
+        "Fungicida",
+        "Insecticida",
+        "Fertilizante",
+        "Regulador",
+        "Herbicida",
+      ];
+      const insumosFiltrados = res.data.filter((item) =>
+        categoriasConsumibles.includes(item.nombre_categoria)
+      );
+      setListaInsumos(insumosFiltrados);
     } catch (error) {
       console.error("Error cargando bodega", error);
     }

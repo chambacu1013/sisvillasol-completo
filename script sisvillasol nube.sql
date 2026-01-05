@@ -59,7 +59,7 @@ CREATE TABLE sisvillasol.insumos (
 	id_categoria_insumo INT REFERENCES sisvillasol.categorias(id_categoria),
     id_unidad INT REFERENCES sisvillasol.unidades(id_unidad),
     cantidad_stock DECIMAL(10,2) DEFAULT 0,
-    stock_minimo DECIMAL(10,2) DEFAULT 5, -- Para la Alerta
+    stock_minimo DECIMAL(10,2) DEFAULT 0.5, -- Para la Alerta
    costo_unitario_promedio DECIMAL(12,2) -- Para reportes financieros
 );
 
@@ -75,7 +75,7 @@ CREATE TABLE sisvillasol.usuarios (
 	apellido VARCHAR(50) NOT NULL,
     documento VARCHAR(20) UNIQUE NOT NULL,
     telefono VARCHAR(20),
-    password_hash VARCHAR(255) NOT NULL, -- Aquí guardaremos la clave encriptada
+    password_hash VARCHAR(355) NOT NULL, -- Aquí guardaremos la clave encriptada
     estado BOOLEAN DEFAULT TRUE -- TRUE=Activo, FALSE=Despedido
 );
 
@@ -105,13 +105,12 @@ CREATE TABLE sisvillasol.tareas (
     id_tipo_actividad_tarea INT REFERENCES sisvillasol.tipos_actividad(id_tipo_actividad),
     descripcion TEXT,
     fecha_programada DATE,
-    fecha_ejecucion TIMESTAMP DEFAULT NOW(), -- Cuando Franklin le da "Finalizar"
+    fecha_ejecucion TIMESTAMP DEFAULT NOW(), -- Cuando el agricultor le da "Finalizar"
+	jornada VARCHAR(20) DEFAULT 'COMPLETA',
     estado VARCHAR(20) DEFAULT 'PENDIENTE', -- 'PENDIENTE', 'EN_PROCESO', 'HECHO'
     origen VARCHAR(20) DEFAULT 'CALENDARIO', -- 'CALENDARIO' (Admin) o 'CAMPO' (Imprevisto)
     costo_mano_obra DECIMAL(12,2) DEFAULT 0
 );
-ALTER TABLE sisvillasol.tareas
-ADD COLUMN jornada VARCHAR(20) DEFAULT 'COMPLETA';
 
 --tabla de notas(recordatorios de la finca)
 CREATE TABLE sisvillasol.notas(
@@ -149,20 +148,21 @@ CREATE TABLE sisvillasol.ventas (
 -- Usuario Admin por defecto (Clave: 3102266204 - Ojo, en prod debe ir encriptada)
 INSERT INTO sisvillasol.roles (nombre) VALUES ('ADMIN'), ('AGRICULTOR');
 INSERT INTO sisvillasol.usuarios (id_rol, nombre, apellido, documento, telefono, password_hash)
-VALUES (1, 'Jaime', 'Rodriguez', '88164381', '3102266204','3102266204');
+VALUES (1, 'Jaime Anatolio', 'Rodriguez', '88164381', '3102266204','3102266204'),
+(1, 'Rosa Sulley', 'Mogollon', '60255139', '3103368924','3103368924');
 INSERT INTO sisvillasol.unidades (id_unidad, nombre_unidad) VALUES 
 (1, 'Litros'),
 (2, 'Kilogramos'),
 (3, 'Gramos'),
 (4, 'Mililitros'),
 (5, 'Bultos'),
-(6, 'Unidades');
-(7, 'Metros');
+(6, 'Unidades'),
+(7, 'Metros'),
 (8, 'Rollo');
 INSERT INTO sisvillasol.categorias(nombre_categoria) VALUES 
 ('Fungicida'), ('Insecticida'), ('Fertilizante'), ('Regulador'), ('Herbicida'), ('Herramienta'), ('General'),('Maquinaria');
 --las que hay actualmente en la finca villasol
-INSERT INTO select * from sisvillasol.cultivos (nombre_variedad,nombre_cientifico, dias_estimados_cosecha) 
+INSERT INTO sisvillasol.cultivos (nombre_variedad,nombre_cientifico, dias_estimados_cosecha) 
 VALUES ('Manzana Anna','Malus domestica', 100), ('Ciruela Horvin','Prunus domestica', 120),
 ('Durazno Gran Jarillo','Prunus persica', 90), ('Aguacates hass','Persea americana', 240), 
 ('Morauva Silvestre','Rubus glaucus',90),('Feijoa sellowiana','Acca sellowiana',150),
@@ -183,4 +183,4 @@ VALUES ('Lote 1',1,0.45,'-72.669772, 7.146497'),('Lote 2',1,0.22,'-72.669516, 7.
 ('Lote 8',5,0.1,'-72.670494, 7.1466556'),('Lote 9',3,2.16,'-72.66745, 7.146558'),
 ('Lote Virtual',7,0.0,'Áreas comunes, pozos, caminos, cunetas, casa');
 
-select * from sisvillasol.lotes
+select * from sisvillasol.usuarios

@@ -169,7 +169,7 @@ const obtenerDatosFormulario = async (req, res) => {
         ORDER BY l.nombre_lote ASC
     `);
     const usuarios = await pool.query(
-      "SELECT id_usuario, nombre, apellido FROM sisvillasol.usuarios WHERE estado = true ORDER BY nombre ASC"
+      "SELECT id_usuario, nombre, apellido FROM sisvillasol.usuarios WHERE estado = true AND id_rol = 2 ORDER BY nombre ASC"
     );
     const tipos = await pool.query(
       "SELECT * FROM sisvillasol.tipos_actividad ORDER BY nombre_tipo_actividad ASC"
