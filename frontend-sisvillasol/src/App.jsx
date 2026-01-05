@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import Usuarios from './pages/Usuarios';
 import Calendario from './pages/Calendario';
 import Reportes from './pages/Reportes';
+import MapaFinca from '../pages/MapaFinca';
 function App() {
   return (
     <BrowserRouter>
@@ -17,8 +18,7 @@ function App() {
             
             {/* 2. CAMBIAR ESTA LÍNEA (Antes tenías un <h1>, ahora pones <Inventario />) */}
             <Route path="/inventario" element={<Inventario />} /> 
-            
-            <Route path="/lotes" element={<h1>Mapa de Lotes</h1>} />
+            <Route path="/lotes" element={<MapaFinca />} />
             <Route path="/reportes" element={<Reportes/>} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/calendario" element={<Calendario />} />
