@@ -12,4 +12,6 @@ router.put("/animal/:id", controller.actualizarAnimal);
 router.delete("/animal/:id", controller.eliminarAnimal);
 router.put("/leche/:id", controller.actualizarLeche);
 router.delete("/leche/:id", controller.eliminarLeche);
+router.put("/insumo/:id", controller.actualizarInsumo);
+router.delete("/insumo/:id", controller.eliminarInsumo);
 module.exports = router;

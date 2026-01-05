@@ -123,18 +123,46 @@ const eliminarLeche = async (req, res) => {
 };
 // 4. REGISTRAR GASTO (SAL/MELAZA)
 const registrarInsumo = async (req, res) => {
-  const { tipo, cantidad, costo } = req.body;
+  const { fecha, tipo, cantidad, costo } = req.body;
   try {
+    const fechaFinal = fecha || new Date().toISOString().split("T")[0];
     await pool.query(
-      "INSERT INTO sisvillasol.consumo_ganaderia (tipo_insumo, cantidad_kg, costo_total) VALUES ($1, $2, $3)",
-      [tipo, cantidad, costo]
+      "INSERT INTO sisvillasol.consumo_ganaderia (fecha, tipo_insumo, cantidad_kg, costo_total) VALUES ($1, $2, $3, $4)",
+      [fechaFinal, tipo, cantidad, costo]
     );
     res.json({ message: "Gasto registrado" });
   } catch (error) {
     res.status(500).send(error.message);
   }
 };
+// 11. ACTUALIZAR INSUMO (NUEVA)
+const actualizarInsumo = async (req, res) => {
+  const { id } = req.params;
+  const { fecha, tipo, cantidad, costo } = req.body;
+  try {
+    await pool.query(
+      "UPDATE sisvillasol.consumo_ganaderia SET fecha=$1, tipo_insumo=$2, cantidad_kg=$3, costo_total=$4 WHERE id_consumo=$5",
+      [fecha, tipo, cantidad, costo, id]
+    );
+    res.json({ message: "Registro actualizado" });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 
+// 12. ELIMINAR INSUMO (NUEVA)
+const eliminarInsumo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query(
+      "DELETE FROM sisvillasol.consumo_ganaderia WHERE id_consumo = $1",
+      [id]
+    );
+    res.json({ message: "Registro eliminado" });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 // 5. VENDER ANIMAL
 const venderAnimal = async (req, res) => {
   const { id_animal, precio, peso, comprador } = req.body;
@@ -179,6 +207,8 @@ module.exports = {
   actualizarLeche,
   eliminarLeche,
   registrarInsumo,
+  actualizarInsumo,
+  eliminarInsumo,
   venderAnimal,
   registrarPastoreo,
 };

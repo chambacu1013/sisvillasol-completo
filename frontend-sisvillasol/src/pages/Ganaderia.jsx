@@ -16,6 +16,7 @@ import api from '../services/api';
 import Swal from 'sweetalert2'; 
 import NuevoGanadoModal from '../components/NuevoGanadoModal';
 import NuevoLecheModal from '../components/NuevoLecheModal';
+import NuevoSuplementoModal from '../components/NuevoSuplementoModal';
 // --- FUNCIÓN MATEMÁTICA PARA LA EDAD ---
 const calcularEdad = (fecha) => {
     if (!fecha) return "Desconocida";
@@ -294,50 +295,118 @@ const TabLeche = ({ data, recargar }) => {
     );
 };
 // -----------------------------------------------------------
-// 3. PESTAÑA INSUMOS
+// 3. PESTAÑA SUPLEMENTACION
 // -----------------------------------------------------------
 const TabInsumos = ({ data, recargar }) => {
-    const [form, setForm] = useState({ tipo: 'Sal', cantidad: '', costo: '' });
+    const [modalOpen, setModalOpen] = useState(false);
+    const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
 
-    const guardar = async () => {
+    // Abrir Modal Crear
+    const handleNuevo = () => {
+        setRegistroSeleccionado(null);
+        setModalOpen(true);
+    };
+
+    // Abrir Modal Editar
+    const handleEditar = (registro) => {
+        setRegistroSeleccionado(registro);
+        setModalOpen(true);
+    };
+
+    // GUARDAR
+    const handleGuardar = async (form) => {
         try {
-            await api.post('/ganaderia/insumo', form);
+            if (registroSeleccionado) {
+                await api.put(`/ganaderia/insumo/${registroSeleccionado.id_consumo}`, form);
+                Swal.fire('Actualizado', 'Registro de suplementación actualizado', 'success');
+            } else {
+                await api.post('/ganaderia/insumo', form);
+                Swal.fire('Guardado', 'Gasto de suplementación registrado', 'success');
+            }
             recargar();
-            Swal.fire({ icon: 'success', title: 'Gasto Registrado', timer: 2000 });
         } catch (error) {
-            Swal.fire('Error', 'Hubo un problema al guardar', 'error');
+            Swal.fire('Error', 'No se pudo guardar', 'error');
         }
+    };
+
+    // ELIMINAR
+    const handleEliminar = (id) => {
+        Swal.fire({
+            title: '¿Eliminar registro?',
+            text: "Se borrará este gasto del historial.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await api.delete(`/ganaderia/insumo/${id}`);
+                    recargar();
+                    Swal.fire('Eliminado', 'Registro borrado.', 'success');
+                } catch (error) {
+                    Swal.fire('Error', 'No se pudo eliminar', 'error');
+                }
+            }
+        });
     };
 
     return (
         <Box sx={{ p: 2 }}>
-            <Paper sx={{ p: 2, mb: 2, display:'flex', gap:2 }}>
-                <FormControl size="small" sx={{minWidth:150}}>
-                    <InputLabel>Tipo Insumo</InputLabel>
-                    <Select value={form.tipo} label="Tipo Insumo" onChange={e=>setForm({...form, tipo:e.target.value})}>
-                        <MenuItem value="Sal">Sal Mineral</MenuItem>
-                        <MenuItem value="Melaza">Melaza</MenuItem>
-                        <MenuItem value="Concentrado">Concentrado</MenuItem>
-                        <MenuItem value="Medicamento">Medicamento</MenuItem>
-                    </Select>
-                </FormControl>
-                <TextField label="Cantidad (Kg/Lt)" onChange={e=>setForm({...form, cantidad:e.target.value})} size="small"/>
-                <TextField label="Costo Total ($)" onChange={e=>setForm({...form, costo:e.target.value})} size="small"/>
-                <Button variant="contained" color="warning" onClick={guardar}>Registrar</Button>
-            </Paper>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h6" color="text.secondary">Control de Suplementación</Typography>
+                <Button 
+                    variant="contained" 
+                    color="warning"
+                    onClick={handleNuevo}
+                    startIcon={<AddIcon />}
+                >
+                    Registrar Gasto
+                </Button>
+            </Box>
+
             <Table size="small">
-                <TableHead><TableRow><TableCell>Fecha</TableCell><TableCell>Insumo</TableCell><TableCell>Cantidad</TableCell><TableCell>Costo</TableCell></TableRow></TableHead>
+                <TableHead>
+                    <TableRow sx={{ bgcolor: '#fff3e0' }}> {/* Color naranja suave para diferenciar */}
+                        <TableCell><b>Fecha</b></TableCell>
+                        <TableCell><b>Insumo</b></TableCell>
+                        <TableCell><b>Cantidad</b></TableCell>
+                        <TableCell><b>Costo Total</b></TableCell>
+                        <TableCell align="center"><b>Acciones</b></TableCell>
+                    </TableRow>
+                </TableHead>
                 <TableBody>
                     {data.map(i => (
-                        <TableRow key={i.id_consumo}>
+                        <TableRow key={i.id_consumo} hover>
                             <TableCell>{i.fecha.split('T')[0]}</TableCell>
                             <TableCell>{i.tipo_insumo}</TableCell>
                             <TableCell>{i.cantidad_kg}</TableCell>
                             <TableCell>${i.costo_total}</TableCell>
+                            
+                            <TableCell align="center">
+                                <Tooltip title="Editar">
+                                    <IconButton color="primary" size="small" onClick={() => handleEditar(i)}>
+                                        <EditIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Eliminar">
+                                    <IconButton color="error" size="small" onClick={() => handleEliminar(i.id_consumo)}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+
+            {/* MODAL */}
+            <NuevoSuplementoModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onSave={handleGuardar}
+                registroEditar={registroSeleccionado}
+            />
         </Box>
     );
 };
