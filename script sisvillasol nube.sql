@@ -183,4 +183,9 @@ VALUES ('Lote 1',1,0.45,'-72.669772, 7.146497'),('Lote 2',1,0.22,'-72.669516, 7.
 ('Lote 8',5,0.1,'-72.670494, 7.1466556'),('Lote 9',3,2.16,'-72.66745, 7.146558'),
 ('Lote Virtual',7,0.0,'Áreas comunes, pozos, caminos, cunetas, casa');
 
+update sisvillasol.lotes set ubicacion='-72.66981, 7.147324' where id_lote=4;
+update sisvillasol.lotes set ubicacion='-72.670045, 7.147194' where id_lote=5;
+update sisvillasol.lotes set ubicacion='-72.669888, 7.147128' where id_lote=6;
+update sisvillasol.lotes set ubicacion='-72.670118, 7.148142' where id_lote=10;
+
 select * from sisvillasol.usuarios

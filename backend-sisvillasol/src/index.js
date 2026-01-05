@@ -6,7 +6,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Importar mis rutas
-const usuariosRoutes = require("./routes/usuariosRoutes"); // <--- 1. IMPORTAR
+const usuariosRoutes = require("./routes/usuariosRoutes");
 const authRoutes = require("./routes/authRoutes");
 const lotesRoutes = require("./routes/lotesRoutes");
 const insumosRoutes = require("./routes/insumosRoutes");
@@ -17,7 +17,7 @@ app.use(express.json()); // Importante para recibir datos en POST
 
 // Usar las rutas
 app.use("/api/usuarios", usuariosRoutes);
-app.use("/api/auth", authRoutes); // <--- 2. CONECTAR (Todo lo de auth va por /api/auth)
+app.use("/api/auth", authRoutes);
 app.get("/", (req, res) => {
   res.send("Backend SISVILLASOL Funcionando");
 });
@@ -28,6 +28,7 @@ app.use("/api/empresa", empresaRoutes);
 app.use("/api/actividades", require("./routes/actividadesRoutes"));
 app.use("/api/notas", require("./routes/notasRoutes"));
 app.use("/api/finanzas", require("./routes/finanzasRoutes"));
+app.use("/api/ganaderia", require("./routes/ganaderiaRoutes"));
 app.listen(port, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${port}`);
 });

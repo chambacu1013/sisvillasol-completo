@@ -1,12 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import Inicio from './pages/Inicio';
-import Inventario from './pages/Inventario'; // <--- 1. IMPORTAR ESTO
+import Inventario from './pages/Inventario';
 import Layout from './components/Layout';
 import Usuarios from './pages/Usuarios';
 import Calendario from './pages/Calendario';
 import Reportes from './pages/Reportes';
 import MapaFinca from './pages/MapaFinca';
+import Ganaderia from './pages/Ganaderia';
 function App() {
   return (
     <BrowserRouter>
@@ -15,8 +16,7 @@ function App() {
         
         <Route element={<Layout />}>
             <Route path="/inicio" element={<Inicio />} />
-            
-            {/* 2. CAMBIAR ESTA LÍNEA (Antes tenías un <h1>, ahora pones <Inventario />) */}
+            <Route path="/ganaderia" element={<Ganaderia />} />
             <Route path="/inventario" element={<Inventario />} /> 
             <Route path="/lotes" element={<MapaFinca />} />
             <Route path="/reportes" element={<Reportes/>} />
