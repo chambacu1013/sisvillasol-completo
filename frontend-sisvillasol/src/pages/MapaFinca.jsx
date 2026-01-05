@@ -87,18 +87,27 @@ const MapaFinca = () => {
                     />
 
                     {lotes.map((lote) => {
-                        // 1. FILTRAR: Si no tiene coma (como 'Áreas comunes'), lo saltamos
-                        if (!lote.ubicacion || !lote.ubicacion.includes(',')) return null;
+                        // 1. VALIDACIÓN DE SEGURIDAD 🛡️
+                        // Si la ubicación está vacía o es nula, saltar.
+                        if (!lote.ubicacion) return null;
 
-                        // 2. PARSEO: Convertir string a numeros
-                        // Tu BD tiene: "LONGITUD, LATITUD" -> "-72.669..., 7.146..."
-                        const [longitudStr, latitudStr] = lote.ubicacion.split(',');
-                        
-                        const lat = parseFloat(latitudStr); // 7.14...
-                        const lng = parseFloat(longitudStr); // -72.66...
+                        // 2. INTENTAR PARSEAR
+                        // Tu BD viene como: "LONGITUD, LATITUD"
+                        const partes = lote.ubicacion.split(',');
 
-                        // Leaflet necesita [LAT, LNG]
-                        const posicion = [lat, lng];
+                        // Si no hay al menos 2 partes (lat y lng), saltar.
+                        if (partes.length < 2) return null;
+
+                        const lng = parseFloat(partes[0].trim()); // Quitamos espacios con .trim()
+                        const lat = parseFloat(partes[1].trim());
+
+                        // 3. LA PRUEBA DE FUEGO 🔥 (Esto es lo que te faltaba)
+                        // Verificamos si el resultado es un Número real. 
+                        // Si 'lat' o 'lng' son NaN (Not a Number), no dibujamos nada.
+                        if (isNaN(lat) || isNaN(lng)) return null;
+
+                        // Si pasa todas las pruebas, ahora sí creamos la posición
+                        const posicion = [lat, lng]; // Leaflet pide [Lat, Lng]
 
                         return (
                             <Marker 
@@ -106,12 +115,9 @@ const MapaFinca = () => {
                                 position={posicion}
                                 icon={lote.estado_sanitario === 'RIESGO' ? redIcon : greenIcon}
                             >
-                                {/* Tooltip se ve al pasar el mouse */}
                                 <Tooltip direction="top" offset={[0, -20]} opacity={1}>
                                     {lote.nombre_lote}
                                 </Tooltip>
-
-                                {/* Popup se abre al hacer click */}
                                 <Popup>
                                     <Box sx={{ textAlign: 'center' }}>
                                         <Typography variant="subtitle2" fontWeight="bold">
