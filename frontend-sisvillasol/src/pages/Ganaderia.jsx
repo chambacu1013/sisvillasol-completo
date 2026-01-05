@@ -493,7 +493,7 @@ export default function Ganaderia() {
                 <Tabs value={tab} onChange={(e, v) => setTab(v)} variant="scrollable" scrollButtons="auto">
                     <Tab label="🐄 Inventario Animal" />
                     <Tab label="🥛 Producción Leche" />
-                    <Tab label="💊 Sal y Melaza" />
+                    <Tab label="💊 Suplementación" />
                     <Tab label="💰 Ventas Ganado" />
                 </Tabs>
             </Box>
