@@ -82,18 +82,45 @@ const eliminarAnimal = async (req, res) => {
 };
 // 3. REGISTRAR LECHE
 const registrarLeche = async (req, res) => {
-  const { fecha, manana, tarde, precio } = req.body;
+  const { fecha, cantidad, precio } = req.body;
   try {
     await pool.query(
-      "INSERT INTO sisvillasol.produccion_leche (fecha, litros_manana, litros_tarde, precio_litro) VALUES ($1, $2, $3, $4)",
-      [fecha, manana, tarde, precio]
+      "INSERT INTO sisvillasol.produccion_leche (fecha, cantidad_litros, precio_litro) VALUES ($1, $2, $3)",
+      [fecha, cantidad, precio]
     );
     res.json({ message: "Producción guardada" });
   } catch (error) {
     res.status(500).send(error.message);
   }
 };
+// 9. ACTUALIZAR LECHE
+const actualizarLeche = async (req, res) => {
+  const { id } = req.params;
+  const { fecha, cantidad, precio } = req.body;
+  try {
+    await pool.query(
+      "UPDATE sisvillasol.produccion_leche SET fecha=$1, cantidad_litros=$2, precio_litro=$3 WHERE id_leche=$4",
+      [fecha, cantidad, precio, id]
+    );
+    res.json({ message: "Registro actualizado" });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 
+// 10. ELIMINAR LECHE
+const eliminarLeche = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query(
+      "DELETE FROM sisvillasol.produccion_leche WHERE id_leche = $1",
+      [id]
+    );
+    res.json({ message: "Registro eliminado" });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 // 4. REGISTRAR GASTO (SAL/MELAZA)
 const registrarInsumo = async (req, res) => {
   const { tipo, cantidad, costo } = req.body;
@@ -149,6 +176,8 @@ module.exports = {
   actualizarAnimal,
   eliminarAnimal,
   registrarLeche,
+  actualizarLeche,
+  eliminarLeche,
   registrarInsumo,
   venderAnimal,
   registrarPastoreo,

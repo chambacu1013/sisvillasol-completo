@@ -15,7 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import api from '../services/api';
 import Swal from 'sweetalert2'; 
 import NuevoGanadoModal from '../components/NuevoGanadoModal';
-
+import NuevoLecheModal from '../components/NuevoLecheModal';
 // --- FUNCIÓN MATEMÁTICA PARA LA EDAD ---
 const calcularEdad = (fecha) => {
     if (!fecha) return "Desconocida";
@@ -181,46 +181,118 @@ const TabAnimales = ({ animales, recargar }) => {
 // 2. PESTAÑA LECHE
 // -----------------------------------------------------------
 const TabLeche = ({ data, recargar }) => {
-    const [form, setForm] = useState({ fecha: '', manana: 0, tarde: 0, precio: 0 });
+    const [modalOpen, setModalOpen] = useState(false);
+    const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
 
-    const guardar = async () => {
+    // Abrir Modal Crear
+    const handleNuevo = () => {
+        setRegistroSeleccionado(null);
+        setModalOpen(true);
+    };
+
+    // Abrir Modal Editar
+    const handleEditar = (registro) => {
+        setRegistroSeleccionado(registro);
+        setModalOpen(true);
+    };
+
+    // GUARDAR (Crear o Editar)
+    const handleGuardar = async (form) => {
         try {
-            await api.post('/ganaderia/leche', form);
+            if (registroSeleccionado) {
+                await api.put(`/ganaderia/leche/${registroSeleccionado.id_leche}`, form);
+                Swal.fire('Actualizado', 'Registro de leche modificado', 'success');
+            } else {
+                await api.post('/ganaderia/leche', form);
+                Swal.fire('Guardado', 'Producción de leche registrada', 'success');
+            }
             recargar();
-            Swal.fire({ icon: 'success', title: 'Producción Guardada', timer: 2000 });
         } catch (error) {
-            Swal.fire('Error', 'No se pudo registrar la leche', 'error');
+            Swal.fire('Error', 'No se pudo guardar el registro', 'error');
         }
+    };
+
+    // ELIMINAR
+    const handleEliminar = (id) => {
+        Swal.fire({
+            title: '¿Eliminar registro?',
+            text: "Se borrará este reporte de producción.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await api.delete(`/ganaderia/leche/${id}`);
+                    recargar();
+                    Swal.fire('Eliminado', 'Registro borrado.', 'success');
+                } catch (error) {
+                    Swal.fire('Error', 'No se pudo eliminar', 'error');
+                }
+            }
+        });
     };
 
     return (
         <Box sx={{ p: 2 }}>
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={3}><TextField type="date" fullWidth onChange={e=>setForm({...form, fecha:e.target.value})} size="small" focused label="Fecha"/></Grid>
-                    <Grid item xs={2}><TextField label="Lts Mañana" type="number" fullWidth onChange={e=>setForm({...form, manana:e.target.value})} size="small"/></Grid>
-                    <Grid item xs={2}><TextField label="Lts Tarde" type="number" fullWidth onChange={e=>setForm({...form, tarde:e.target.value})} size="small"/></Grid>
-                    <Grid item xs={3}><TextField label="Precio Venta ($)" type="number" fullWidth onChange={e=>setForm({...form, precio:e.target.value})} size="small"/></Grid>
-                    <Grid item xs={2}><Button fullWidth variant="contained" onClick={guardar}>Guardar</Button></Grid>
-                </Grid>
-            </Paper>
+            {/* BOTÓN SUPERIOR */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h6" color="text.secondary">Producción Diaria</Typography>
+                <Button 
+                    variant="contained" 
+                    onClick={handleNuevo}
+                    startIcon={<AddIcon />}
+                >
+                    Registrar Ordeño
+                </Button>
+            </Box>
+
             <Table size="small">
-                <TableHead><TableRow><TableCell>Fecha</TableCell><TableCell>Total Litros</TableCell><TableCell>Precio</TableCell><TableCell>Venta Total</TableCell></TableRow></TableHead>
+                <TableHead>
+                    <TableRow sx={{ bgcolor: '#e3f2fd' }}>
+                        <TableCell><b>Fecha</b></TableCell>
+                        <TableCell><b>Total Litros</b></TableCell>
+                        <TableCell><b>Precio Unitario</b></TableCell>
+                        <TableCell><b>Venta Total</b></TableCell>
+                        <TableCell align="center"><b>Acciones</b></TableCell>
+                    </TableRow>
+                </TableHead>
                 <TableBody>
                     {data.map(d => (
-                        <TableRow key={d.id_leche}>
+                        <TableRow key={d.id_leche} hover>
                             <TableCell>{d.fecha.split('T')[0]}</TableCell>
-                            <TableCell>{parseFloat(d.litros_manana) + parseFloat(d.litros_tarde)} L</TableCell>
+                            <TableCell sx={{ fontSize: '1.1em' }}>{d.cantidad_litros} L</TableCell>
                             <TableCell>${d.precio_litro}</TableCell>
                             <TableCell sx={{fontWeight:'bold', color:'green'}}>${d.total_venta}</TableCell>
+                            
+                            <TableCell align="center">
+                                <Tooltip title="Editar">
+                                    <IconButton color="primary" size="small" onClick={() => handleEditar(d)}>
+                                        <EditIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Eliminar">
+                                    <IconButton color="error" size="small" onClick={() => handleEliminar(d.id_leche)}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+
+            {/* MODAL */}
+            <NuevoLecheModal 
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onSave={handleGuardar}
+                registroEditar={registroSeleccionado}
+            />
         </Box>
     );
 };
-
 // -----------------------------------------------------------
 // 3. PESTAÑA INSUMOS
 // -----------------------------------------------------------

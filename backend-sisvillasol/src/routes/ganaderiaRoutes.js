@@ -10,4 +10,6 @@ router.post("/venta", controller.venderAnimal);
 router.post("/pastoreo", controller.registrarPastoreo);
 router.put("/animal/:id", controller.actualizarAnimal);
 router.delete("/animal/:id", controller.eliminarAnimal);
+router.put("/leche/:id", controller.actualizarLeche);
+router.delete("/leche/:id", controller.eliminarLeche);
 module.exports = router;
