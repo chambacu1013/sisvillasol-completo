@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { 
     Box, Typography, Button, Dialog, DialogTitle, DialogContent, 
     DialogActions, TextField, MenuItem, InputAdornment, IconButton, 
-    Grid, Card, CardContent, Paper, Divider, GlobalStyles
+    Grid, Card, CardContent, Paper, Divider, GlobalStyles,
+    Table, TableBody, TableCell, TableHead, TableRow, Chip
 } from '@mui/material';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -277,20 +278,28 @@ function Calendario() {
     };
 
     const handleSelectEvent = async (evento) => {
+        console.log("Evento seleccionado:", evento); // 1. Ver qué evento es
+        
         setTareaEditar(evento);
         setModalOpen(true);
-        setInsumosUsados([]); // Limpiamos por si acaso
+        setInsumosUsados([]); // Limpiamos la tabla anterior
 
+        // Obtenemos ID y Estado de forma segura
         const idTarea = evento?.resource?.id_tarea || evento?.id_tarea;
         const estadoEvento = evento?.resource?.estado || evento?.estado;
 
+        console.log("ID:", idTarea, "Estado:", estadoEvento); // 2. Ver si captura datos
+
         if (estadoEvento === 'HECHO' && idTarea) {
             try {
-                // Ajusta la URL si tu prefijo es diferente (ej: /api/actividades/...)
+                console.log("Buscando insumos...");
+                // 👇 AQUÍ ESTABA EL ERROR DE COMILLAS (Usa backticks ``)
                 const result = await api.get(`/actividades/insumos-tarea/${idTarea}`);
+                
+                console.log("Insumos encontrados:", result.data); // 3. Ver qué devolvió la BD
                 setInsumosUsados(result.data);
             } catch (error) {
-                console.error("No se pudieron cargar los insumos", error);
+                console.error("Error cargando insumos:", error);
             }
         }
     };
