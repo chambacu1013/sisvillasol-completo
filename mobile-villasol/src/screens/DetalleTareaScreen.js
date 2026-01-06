@@ -109,30 +109,28 @@ export default function DetalleTareaScreen({ route, navigation }) {
       Alert.alert("Error", "Ingresa una cantidad válida");
       return;
     }
-
     try {
-      await api.put(
-        `/actividades/insumos-tarea/${insumoAEditar.id_insumo_tarea}`,
-        {
-          cantidad: parseFloat(nuevaCantidad),
-          id_insumo: insumoAEditar.id_insumo,
-        }
-      );
+      // CORRECCIÓN: Usamos la nueva ruta y enviamos los IDs exactos
+      await api.put(`/actividades/corregir-insumo`, {
+        id_tarea: tarea.id_tarea, // ID de la tarea global
+        id_insumo: insumoAEditar.id_insumo, // ID del insumo específico
+        nueva_cantidad: parseFloat(nuevaCantidad),
+      });
 
       Toast.show({
         type: "success",
         text1: "Actualizado",
-        text2: "La dosis se corrigió correctamente ✅",
+        text2: "Inventario recalculado correctamente 🔄",
       });
 
       setModalEditarVisible(false);
-      cargarInsumosUsados();
+      cargarInsumosUsados(); // Recarga la lista para ver el cambio
     } catch (error) {
       console.error(error);
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "No se pudo actualizar la cantidad.",
+        text2: "No se pudo actualizar. Verifica conexión.",
       });
     }
   };

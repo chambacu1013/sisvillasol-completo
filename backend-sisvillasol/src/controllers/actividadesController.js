@@ -274,6 +274,7 @@ const obtenerInsumosPorTarea = async (req, res) => {
   try {
     const query = `
             SELECT 
+                i.id_insumo,  -- <--- AGREGADO IMPORTANTE
                 i.nombre AS nombre_insumo, 
                 ci.cantidad_usada, 
                 un.nombre_unidad AS unidad_medida, 
@@ -288,6 +289,65 @@ const obtenerInsumosPorTarea = async (req, res) => {
     res.json(response.rows);
   } catch (error) {
     console.error("Error en obtenerInsumosPorTarea:", error);
+    res.status(500).send("Error del servidor");
+  }
+};
+
+// NUEVA FUNCIÓN: Lógica para corregir cantidad y ajustar stock
+const corregirCantidadInsumo = async (req, res) => {
+  const { id_tarea, id_insumo, nueva_cantidad } = req.body;
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // 1. Obtener la cantidad que había antes
+    const resAntigua = await client.query(
+      `SELECT cantidad_usada FROM sisvillasol.consumo_insumos 
+             WHERE id_tarea_consumo = $1 AND id_insumo_consumo = $2`,
+      [id_tarea, id_insumo]
+    );
+
+    if (resAntigua.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res
+        .status(404)
+        .json({ message: "Insumo no encontrado en esta tarea" });
+    }
+
+    const cantidadAnterior = parseFloat(resAntigua.rows[0].cantidad_usada);
+    const cantidadNueva = parseFloat(nueva_cantidad);
+
+    // 2. Calcular la diferencia
+    // Si antes era 5 y ahora es 8, diferencia es 3 (hay que restar 3 más al stock)
+    // Si antes era 5 y ahora es 2, diferencia es -3 (hay que devolver 3 al stock)
+    const diferencia = cantidadNueva - cantidadAnterior;
+
+    // 3. Actualizar el registro del consumo
+    await client.query(
+      `UPDATE sisvillasol.consumo_insumos 
+             SET cantidad_usada = $1 
+             WHERE id_tarea_consumo = $2 AND id_insumo_consumo = $3`,
+      [cantidadNueva, id_tarea, id_insumo]
+    );
+
+    // 4. Actualizar el Stock en Bodega (restamos la diferencia)
+    // Si la diferencia es negativa (devolución), -- se convierte en +
+    await client.query(
+      `UPDATE sisvillasol.insumos 
+             SET cantidad_stock = cantidad_stock - $1 
+             WHERE id_insumo = $2`,
+      [diferencia, id_insumo]
+    );
+
+    await client.query("COMMIT");
+    res.json({ message: "Cantidad corregida y stock ajustado exitosamente" });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error corrigiendo insumo:", error);
+    res.status(500).send("Error al corregir insumo");
+  } finally {
+    client.release();
   }
 };
 module.exports = {
@@ -301,4 +361,5 @@ module.exports = {
   getHistorial,
   actualizarEstadosLotes,
   obtenerInsumosPorTarea,
+  corregirCantidadInsumo,
 };

@@ -12,6 +12,7 @@ const {
   finalizarTarea,
   getHistorial,
   obtenerInsumosPorTarea,
+  corregirCantidadInsumo,
 } = require("../controllers/actividadesController");
 
 const verificarToken = require("../middleware/authMiddleware");
@@ -30,6 +31,7 @@ router.post("/", verificarToken, crearActividad);
 // 3. Rutas con PARÁMETROS /:id (Siempre deben ir AL FINAL)
 router.put("/finalizar/:id", verificarToken, finalizarTarea);
 router.put("/:id", verificarToken, actualizarTarea);
+router.put("/corregir-insumo", verificarToken, corregirCantidadInsumo);
 router.delete("/:id", verificarToken, eliminarActividad);
 
 module.exports = router;
