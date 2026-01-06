@@ -273,11 +273,16 @@ const obtenerInsumosPorTarea = async (req, res) => {
   const { id_tarea } = req.params;
   try {
     const query = `
-            SELECT i.nombre_insumo, it.cantidad_usada, i.unidad_medida, c.nombre_categoria
-            FROM sisvillasol.insumos_tarea it
-            JOIN sisvillasol.insumos i ON it.id_insumo = i.id_insumo
+            SELECT 
+                i.nombre AS nombre_insumo, 
+                ci.cantidad_usada, 
+                un.nombre_unidad AS unidad_medida, 
+                c.nombre_categoria
+            FROM sisvillasol.consumo_insumos ci
+            JOIN sisvillasol.insumos i ON ci.id_insumo_consumo = i.id_insumo
             JOIN sisvillasol.categorias c ON i.id_categoria = c.id_categoria
-            WHERE it.id_tarea = $1
+            LEFT JOIN sisvillasol.unidades un ON i.id_unidad = un.id_unidad
+            WHERE ci.id_tarea_consumo = $1
         `;
     const response = await pool.query(query, [id_tarea]);
     res.json(response.rows);
