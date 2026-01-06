@@ -287,8 +287,14 @@ const obtenerInsumosPorTarea = async (req, res) => {
     const response = await pool.query(query, [id_tarea]);
     res.json(response.rows);
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Error cargando insumos de la tarea");
+    console.error("Error en obtenerInsumosPorTarea:", error);
+    // En desarrollo devolvemos mensaje y stack para depuración desde el frontend
+    res
+      .status(500)
+      .json({
+        error: error.message || "Error desconocido",
+        stack: error.stack,
+      });
   }
 };
 module.exports = {
