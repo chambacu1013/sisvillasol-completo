@@ -280,7 +280,7 @@ const obtenerInsumosPorTarea = async (req, res) => {
                 c.nombre_categoria
             FROM sisvillasol.consumo_insumos ci
             JOIN sisvillasol.insumos i ON ci.id_insumo_consumo = i.id_insumo
-            JOIN sisvillasol.categorias c ON i.id_categoria = c.id_categoria
+            JOIN sisvillasol.categorias c ON i.id_categoria_insumo = c.id_categoria
             LEFT JOIN sisvillasol.unidades un ON i.id_unidad = un.id_unidad
             WHERE ci.id_tarea_consumo = $1
         `;
@@ -289,12 +289,10 @@ const obtenerInsumosPorTarea = async (req, res) => {
   } catch (error) {
     console.error("Error en obtenerInsumosPorTarea:", error);
     // En desarrollo devolvemos mensaje y stack para depuración desde el frontend
-    res
-      .status(500)
-      .json({
-        error: error.message || "Error desconocido",
-        stack: error.stack,
-      });
+    res.status(500).json({
+      error: error.message || "Error desconocido",
+      stack: error.stack,
+    });
   }
 };
 module.exports = {
