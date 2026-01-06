@@ -23,7 +23,7 @@ router.get("/info-lotes", verificarToken, obtenerLotesDetallados);
 router.get("/insumos-tarea/:id_tarea", verificarToken, obtenerInsumosPorTarea);
 router.get("/datos-formulario", verificarToken, obtenerDatosFormulario);
 // ----------------------------------------
-
+router.put("/corregir-insumo", verificarToken, corregirCantidadInsumo);
 // 2. Rutas GENERALES (Raíz)
 router.get("/", verificarToken, obtenerActividades);
 router.post("/", verificarToken, crearActividad);
@@ -31,7 +31,6 @@ router.post("/", verificarToken, crearActividad);
 // 3. Rutas con PARÁMETROS /:id (Siempre deben ir AL FINAL)
 router.put("/finalizar/:id", verificarToken, finalizarTarea);
 router.put("/:id", verificarToken, actualizarTarea);
-router.put("/corregir-insumo", verificarToken, corregirCantidadInsumo);
 router.delete("/:id", verificarToken, eliminarActividad);
 
 module.exports = router;

@@ -274,7 +274,7 @@ const obtenerInsumosPorTarea = async (req, res) => {
   try {
     const query = `
             SELECT 
-                i.id_insumo,  -- <--- AGREGADO IMPORTANTE
+                i.id_insumo, 
                 i.nombre AS nombre_insumo, 
                 ci.cantidad_usada, 
                 un.nombre_unidad AS unidad_medida, 
@@ -296,7 +296,10 @@ const obtenerInsumosPorTarea = async (req, res) => {
 // NUEVA FUNCIÓN: Lógica para corregir cantidad y ajustar stock
 const corregirCantidadInsumo = async (req, res) => {
   const { id_tarea, id_insumo, nueva_cantidad } = req.body;
-
+  // Validación básica
+  if (!id_tarea || !id_insumo) {
+    return res.status(400).json({ message: "Faltan datos (IDs)" });
+  }
   const client = await pool.connect();
   try {
     await client.query("BEGIN");

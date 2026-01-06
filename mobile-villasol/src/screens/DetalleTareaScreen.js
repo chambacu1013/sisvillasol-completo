@@ -658,33 +658,46 @@ export default function DetalleTareaScreen({ route, navigation }) {
               </Text>
             )}
 
-            <TextInput
-              style={[
-                styles.inputCantidad,
-                {
-                  flex: 0, // IMPORTANTE: Anula el flex: 1 del estilo original
-                  width: "100%", // Ocupa todo el ancho disponible
-                  color: "#000000", // Fuerza letras negras
-                  backgroundColor: "#ffffff", // Fuerza fondo blanco
-                },
-              ]}
-              value={nuevaCantidad}
-              onChangeText={(text) => setNuevaCantidad(text)}
-              keyboardType="numeric"
-              placeholder="Nueva cantidad real"
-              placeholderTextColor="#999"
-              autoFocus={true}
-            />
-            <Text
+            {/* --- BLOQUE DE CANTIDAD + UNIDAD --- */}
+            <View
               style={{
-                fontSize: 18,
-                fontWeight: "bold",
-                marginLeft: 10,
-                color: "#333",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                marginVertical: 10,
               }}
             >
-              {insumoAEditar?.unidad_medida}
-            </Text>
+              <TextInput
+                style={[
+                  styles.inputCantidad,
+                  {
+                    flex: 1, // Que ocupe espacio
+                    color: "#000", // Letras negras
+                    backgroundColor: "#fff",
+                    textAlign: "center",
+                  },
+                ]}
+                value={nuevaCantidad}
+                onChangeText={setNuevaCantidad}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor="#999"
+                autoFocus={true}
+              />
+
+              {/* UNIDAD AL LADO */}
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  marginLeft: 10,
+                  color: "#333",
+                  minWidth: 50,
+                }}
+              >
+                {insumoAEditar?.unidad_medida}
+              </Text>
+            </View>
             <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
               <TouchableOpacity
                 style={[styles.btnModal, { backgroundColor: "#d32f2f" }]}
