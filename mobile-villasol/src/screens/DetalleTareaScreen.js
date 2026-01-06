@@ -17,8 +17,6 @@ import api from "../services/api";
 import Toast from "react-native-toast-message";
 
 export default function DetalleTareaScreen({ route, navigation }) {
-  const { tarea } = route.params;
-
   // Estados
   const [modalVisible, setModalVisible] = useState(false);
   const [listaInsumos, setListaInsumos] = useState([]);
@@ -33,6 +31,36 @@ export default function DetalleTareaScreen({ route, navigation }) {
   // Estado Fecha
   const [fechaEjecucion, setFechaEjecucion] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [insumos, setInsumos] = useState([]);
+
+  const [modalEditarVisible, setModalEditarVisible] = useState(false);
+  const [insumoAEditar, setInsumoAEditar] = useState(null);
+  const [nuevaCantidad, setNuevaCantidad] = useState("");
+
+  const { tarea } = route.params || {};
+
+  if (!tarea) {
+    return (
+      <View style={styles.container}>
+        <Text>Cargando tarea...</Text>
+      </View>
+    );
+  }
+  useEffect(() => {
+    if (tarea?.estado === "HECHO") {
+      cargarInsumosUsados();
+    }
+  }, [tarea]);
+
+  const cargarInsumosUsados = async () => {
+    try {
+      // Usamos LA MISMA RUTA que arreglamos en el backend hace un momento
+      const res = await api.get(`/actividades/insumos-tarea/${tarea.id_tarea}`);
+      setInsumos(res.data);
+    } catch (error) {
+      console.log("Error cargando insumos:", error);
+    }
+  };
 
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -42,10 +70,10 @@ export default function DetalleTareaScreen({ route, navigation }) {
   };
 
   useEffect(() => {
-    if (tarea.estado === "PENDIENTE") {
+    if (tarea?.estado === "PENDIENTE") {
       cargarInsumosBodega();
     }
-  }, []);
+  }, [tarea]);
 
   const cargarInsumosBodega = async () => {
     try {
@@ -63,6 +91,49 @@ export default function DetalleTareaScreen({ route, navigation }) {
       setListaInsumos(insumosFiltrados);
     } catch (error) {
       console.error("Error cargando bodega", error);
+    }
+  };
+
+  // Abrir el modal de edición para un insumo ya usado
+  const abrirEdicion = (insumo) => {
+    setInsumoAEditar(insumo);
+    setNuevaCantidad(
+      (insumo.cantidad_usada || insumo.cantidad || 0).toString()
+    );
+    setModalEditarVisible(true);
+  };
+
+  // Guardar edición de cantidad de insumo usado (disponible globalmente)
+  const guardarEdicionInsumo = async () => {
+    if (!nuevaCantidad || isNaN(nuevaCantidad)) {
+      Alert.alert("Error", "Ingresa una cantidad válida");
+      return;
+    }
+
+    try {
+      await api.put(
+        `/actividades/insumos-tarea/${insumoAEditar.id_insumo_tarea}`,
+        {
+          cantidad: parseFloat(nuevaCantidad),
+          id_insumo: insumoAEditar.id_insumo,
+        }
+      );
+
+      Toast.show({
+        type: "success",
+        text1: "Actualizado",
+        text2: "La dosis se corrigió correctamente ✅",
+      });
+
+      setModalEditarVisible(false);
+      cargarInsumosUsados();
+    } catch (error) {
+      console.error(error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No se pudo actualizar la cantidad.",
+      });
     }
   };
 
@@ -192,6 +263,9 @@ export default function DetalleTareaScreen({ route, navigation }) {
   const renderOpcionesUnidad = () => {
     if (!insumoTemporal) return null;
     const opciones = obtenerOpcionesPosibles(insumoTemporal.nombre_unidad);
+    // Las funciones de edición `abrirEdicion` y `guardarEdicionInsumo`
+    // se definen en el scope del componente para ser accesibles
+    // desde el listado y desde el modal.
 
     return (
       <View style={styles.pickerContainer}>
@@ -241,6 +315,93 @@ export default function DetalleTareaScreen({ route, navigation }) {
         </View>
         <Text style={styles.descripcion}>{tarea.descripcion}</Text>
       </View>
+      {tarea.estado === "HECHO" && insumos.length > 0 && (
+        <View style={{ marginTop: 20, paddingHorizontal: 10 }}>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "bold",
+              color: "#1b5e20",
+              marginBottom: 10,
+            }}
+          >
+            🧪 Insumos Utilizados
+          </Text>
+
+          {insumos.map((insumo, index) => (
+            <View
+              key={index}
+              style={{
+                backgroundColor: "white",
+                padding: 15,
+                borderRadius: 10,
+                marginBottom: 10,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                // Sombrita suave para que se vea moderno
+                elevation: 2,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 1.41,
+              }}
+            >
+              {/* Lado Izquierdo: Nombre y Categoría */}
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "600", color: "#333" }}
+                >
+                  {insumo.nombre_insumo}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#666",
+                    marginTop: 4,
+                    fontStyle: "italic",
+                  }}
+                >
+                  {insumo.nombre_categoria}
+                </Text>
+              </View>
+
+              {/* Lado Derecho: Cantidad */}
+              <View
+                style={{
+                  backgroundColor: "#e8f5e9",
+                  paddingVertical: 5,
+                  paddingHorizontal: 10,
+                  borderRadius: 5,
+                }}
+              >
+                <Text style={{ color: "#1b5e20", fontWeight: "bold" }}>
+                  {insumo.cantidad_usada} {insumo.unidad_medida}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => abrirEdicion(insumo)}
+                style={{
+                  padding: 5,
+                  backgroundColor: "#fff3e0",
+                  borderRadius: 50,
+                }}
+              >
+                <MaterialIcons name="edit" size={20} color="#f57c00" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Mensaje si está HECHO pero no gastó nada */}
+      {tarea.estado === "HECHO" && insumos.length === 0 && (
+        <View style={{ marginTop: 20, alignItems: "center" }}>
+          <Text style={{ color: "#888", fontStyle: "italic" }}>
+            Esta tarea se finalizó sin reportar insumos.
+          </Text>
+        </View>
+      )}
 
       {tarea.estado === "PENDIENTE" && (
         <View style={styles.insumosSection}>
@@ -476,6 +637,73 @@ export default function DetalleTareaScreen({ route, navigation }) {
                 Cancelar
               </Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      {/* --- MODAL PARA EDITAR CANTIDAD --- */}
+      <Modal
+        visible={modalEditarVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setModalEditarVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { width: "80%" }]}>
+            <Text style={styles.modalTitle}>Corregir Cantidad</Text>
+
+            {insumoAEditar && (
+              <Text style={{ textAlign: "center", marginBottom: 10 }}>
+                Insumo:{" "}
+                <Text style={{ fontWeight: "bold" }}>
+                  {insumoAEditar.nombre_insumo}
+                </Text>
+              </Text>
+            )}
+
+            <TextInput
+              style={[
+                styles.inputCantidad,
+                {
+                  flex: 0, // IMPORTANTE: Anula el flex: 1 del estilo original
+                  width: "100%", // Ocupa todo el ancho disponible
+                  color: "#000000", // Fuerza letras negras
+                  backgroundColor: "#ffffff", // Fuerza fondo blanco
+                },
+              ]}
+              value={nuevaCantidad}
+              onChangeText={(text) => setNuevaCantidad(text)}
+              keyboardType="numeric"
+              placeholder="Nueva cantidad real"
+              placeholderTextColor="#999"
+              autoFocus={true}
+            />
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                marginLeft: 10,
+                color: "#333",
+              }}
+            >
+              {insumoAEditar?.unidad_medida}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
+              <TouchableOpacity
+                style={[styles.btnModal, { backgroundColor: "#d32f2f" }]}
+                onPress={() => setModalEditarVisible(false)}
+              >
+                <Text style={{ color: "white" }}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.btnModal, { backgroundColor: "#1976d2" }]}
+                onPress={guardarEdicionInsumo}
+              >
+                <Text style={{ color: "white", fontWeight: "bold" }}>
+                  Guardar
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

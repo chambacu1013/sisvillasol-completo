@@ -7,11 +7,12 @@ const {
   crearActividad,
   actualizarTarea,
   eliminarActividad,
-  obtenerDatosFormulario, // <--- La tienes importada aquí, ¡pero faltaba usarla abajo!
+  obtenerDatosFormulario,
   obtenerLotesDetallados,
   finalizarTarea,
   getHistorial,
   obtenerInsumosPorTarea,
+  actualizarConsumoInsumo,
 } = require("../controllers/actividadesController");
 
 const verificarToken = require("../middleware/authMiddleware");
@@ -20,6 +21,7 @@ const verificarToken = require("../middleware/authMiddleware");
 router.get("/historial", verificarToken, getHistorial);
 router.get("/info-lotes", verificarToken, obtenerLotesDetallados);
 router.get("/insumos-tarea/:id_tarea", verificarToken, obtenerInsumosPorTarea);
+router.put("/insumos-tarea/:id", verificarToken, actualizarConsumoInsumo);
 router.get("/datos-formulario", verificarToken, obtenerDatosFormulario);
 // ----------------------------------------
 

@@ -52,7 +52,7 @@ const toastConfig = {
         fontWeight: "bold",
       }}
       text2Style={{
-        fontSize: 16,
+        fontSize: 12,
         color: "#333",
       }}
     />

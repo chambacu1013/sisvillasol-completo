@@ -288,11 +288,6 @@ const obtenerInsumosPorTarea = async (req, res) => {
     res.json(response.rows);
   } catch (error) {
     console.error("Error en obtenerInsumosPorTarea:", error);
-    // En desarrollo devolvemos mensaje y stack para depuración desde el frontend
-    res.status(500).json({
-      error: error.message || "Error desconocido",
-      stack: error.stack,
-    });
   }
 };
 module.exports = {

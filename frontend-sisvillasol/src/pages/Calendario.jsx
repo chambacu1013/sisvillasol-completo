@@ -288,15 +288,12 @@ function Calendario() {
         const idTarea = evento?.resource?.id_tarea || evento?.id_tarea;
         const estadoEvento = evento?.resource?.estado || evento?.estado;
 
-        console.log("ID:", idTarea, "Estado:", estadoEvento); // 2. Ver si captura datos
-
         if (estadoEvento === 'HECHO' && idTarea) {
             try {
                 console.log("Buscando insumos...");
-                // 👇 AQUÍ ESTABA EL ERROR DE COMILLAS (Usa backticks ``)
+                
                 const result = await api.get(`/actividades/insumos-tarea/${idTarea}`);
                 
-                console.log("Insumos encontrados:", result.data); // 3. Ver qué devolvió la BD
                 setInsumosUsados(result.data);
             } catch (error) {
                 console.error("Error cargando insumos:", error);
