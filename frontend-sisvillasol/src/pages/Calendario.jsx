@@ -98,7 +98,7 @@ function Calendario() {
     // --- ESTADOS DE LAS NOTAS ---
     const [notas, setNotas] = useState([]);
     const [nuevaNota, setNuevaNota] = useState('');
-
+    const [insumosUsados, setInsumosUsados] = useState([]);
     useEffect(() => {
         cargarDatos();
         cargarListas();
@@ -276,7 +276,24 @@ function Calendario() {
         }
     };
 
-    const handleSelectEvent = (evento) => { setTareaEditar(evento); setModalOpen(true); };
+    const handleSelectEvent = async (evento) => {
+        setTareaEditar(evento);
+        setModalOpen(true);
+        setInsumosUsados([]); // Limpiamos por si acaso
+
+        const idTarea = evento?.resource?.id_tarea || evento?.id_tarea;
+        const estadoEvento = evento?.resource?.estado || evento?.estado;
+
+        if (estadoEvento === 'HECHO' && idTarea) {
+            try {
+                // Ajusta la URL si tu prefijo es diferente (ej: /api/actividades/...)
+                const result = await api.get(`/actividades/insumos-tarea/${idTarea}`);
+                setInsumosUsados(result.data);
+            } catch (error) {
+                console.error("No se pudieron cargar los insumos", error);
+            }
+        }
+    };
     const handleSelectSlot = ({ start }) => {
         setTareaEditar(null);
         setDatos({
@@ -525,6 +542,44 @@ function Calendario() {
                             value={datos.descripcion} 
                             onChange={(e) => setDatos({...datos, descripcion: e.target.value})} 
                         />
+                        {/* --- SECCIÓN DE INSUMOS UTILIZADOS (NUEVO) --- */}
+{datos.estado === 'HECHO' && insumosUsados.length > 0 && (
+    <Box sx={{ mt: 3, p: 2, bgcolor: '#f1f8e9', borderRadius: 2, border: '1px solid #c5e1a5' }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#33691e', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            🧪 Insumos Aplicados en esta Tarea
+        </Typography>
+        
+        <Table size="small">
+            <TableHead>
+                <TableRow>
+                    <TableCell><b>Producto</b></TableCell>
+                    <TableCell><b>Categoría</b></TableCell>
+                    <TableCell align="right"><b>Dosis Total</b></TableCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {insumosUsados.map((item, index) => (
+                    <TableRow key={index}>
+                        <TableCell>{item.nombre_insumo}</TableCell>
+                        <TableCell>
+                            <Chip label={item.nombre_categoria} size="small" variant="outlined" />
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                            {item.cantidad_usada} {item.unidad_medida}
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    </Box>
+)}
+
+{/* Si está HECHO pero no gastaron nada (ej: una Poda manual) */}
+{datos.estado === 'HECHO' && insumosUsados.length === 0 && (
+    <Typography variant="caption" sx={{ mt: 2, display: 'block', fontStyle: 'italic', color: 'gray' }}>
+        * Esta tarea se reportó como hecha sin consumo de insumos registrados.
+    </Typography>
+)}
                     </Box>
                 </DialogContent>
 

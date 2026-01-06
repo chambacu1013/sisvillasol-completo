@@ -189,3 +189,53 @@ update sisvillasol.lotes set ubicacion='-72.669888, 7.147128' where id_lote=6;
 update sisvillasol.lotes set ubicacion='-72.670118, 7.148142' where id_lote=10;
 
 select * from sisvillasol.usuarios
+-- =====================================
+-- se crea la base de datos ganaderia
+-- =====================================
+-- 1. Tabla Principal de Animales
+/*
+CREATE TABLE sisvillasol.ganado (
+    id_animal SERIAL PRIMARY KEY,
+    numero_animal VARCHAR(20) UNIQUE NOT NULL, -- La "Chapeta" o número
+    raza VARCHAR(50), -- Ej: Holstein, Normando
+    estado VARCHAR(20) DEFAULT 'ACTIVO', -- 'ACTIVO', 'VENDIDO', 'MUERTO'
+    fecha_ingreso DATE DEFAULT CURRENT_DATE
+);
+
+-- 2. Producción de Leche (Diaria)
+CREATE TABLE sisvillasol.produccion_leche (
+    id_leche SERIAL PRIMARY KEY,
+    fecha DATE DEFAULT CURRENT_DATE,
+    cantidad_litros DECIMAL(5,2) DEFAULT 0,
+    precio_litro DECIMAL(10,2), -- Precio al que se vendió ese día
+    total_venta DECIMAL(12,2) GENERATED ALWAYS AS (cantidad_litros * precio_litro) STORED
+);
+
+-- 3. Consumo de Insumos (Sal, Melaza, Concentrado)
+CREATE TABLE sisvillasol.consumo_ganaderia (
+    id_consumo SERIAL PRIMARY KEY,
+    fecha DATE DEFAULT CURRENT_DATE,
+    tipo_insumo VARCHAR(50), -- 'Sal', 'Melaza', 'Concentrado'
+    cantidad_kg DECIMAL(8,2),
+    costo_total DECIMAL(10,2),
+    observacion TEXT
+);
+
+-- 4. Ventas de Animales
+CREATE TABLE sisvillasol.ventas_ganado (
+    id_venta SERIAL PRIMARY KEY,
+    id_animal INT REFERENCES sisvillasol.ganado(id_animal),
+    fecha_venta DATE DEFAULT CURRENT_DATE,
+    peso_kg DECIMAL(6,2),
+    precio_venta DECIMAL(12,2),
+    comprador VARCHAR(100)
+);
+
+-- 5. Rotación de Potreros (Pastoreo)
+CREATE TABLE sisvillasol.pastoreo (
+    id_pastoreo SERIAL PRIMARY KEY,
+    numero_lote VARCHAR(50), -- Ej: "Lote del Rio", "Lote Alto"
+    fecha_entrada DATE,
+    fecha_salida DATE,
+    dias_pastoreo INT -- Se puede calcular o ingresar manual
+);

@@ -268,7 +268,24 @@ const finalizarTarea = async (req, res) => {
     client.release();
   }
 };
-
+// NUEVA FUNCION: Obtener insumos usados en una tarea específica
+const obtenerInsumosPorTarea = async (req, res) => {
+  const { id_tarea } = req.params;
+  try {
+    const query = `
+            SELECT i.nombre_insumo, it.cantidad_usada, i.unidad_medida, c.nombre_categoria
+            FROM sisvillasol.insumos_tarea it
+            JOIN sisvillasol.insumos i ON it.id_insumo = i.id_insumo
+            JOIN sisvillasol.categorias c ON i.id_categoria = c.id_categoria
+            WHERE it.id_tarea = $1
+        `;
+    const response = await pool.query(query, [id_tarea]);
+    res.json(response.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error cargando insumos de la tarea");
+  }
+};
 module.exports = {
   obtenerActividades,
   crearActividad,
@@ -279,4 +296,5 @@ module.exports = {
   finalizarTarea,
   getHistorial,
   actualizarEstadosLotes,
+  obtenerInsumosPorTarea,
 };

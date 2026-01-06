@@ -11,6 +11,7 @@ const {
   obtenerLotesDetallados,
   finalizarTarea,
   getHistorial,
+  obtenerInsumosPorTarea,
 } = require("../controllers/actividadesController");
 
 const verificarToken = require("../middleware/authMiddleware");
@@ -18,9 +19,7 @@ const verificarToken = require("../middleware/authMiddleware");
 // 1. RUTAS ESPECÍFICAS (Deben ir PRIMERO)
 router.get("/historial", verificarToken, getHistorial);
 router.get("/info-lotes", verificarToken, obtenerLotesDetallados);
-
-// --- ESTA ES LA LÍNEA QUE TE FALTABA --- 🚨
-// Sin esto, el frontend recibe un error 404 y explota al intentar leer las listas
+router.get("/insumos-tarea/:id_tarea", verificarToken, obtenerInsumosPorTarea);
 router.get("/datos-formulario", verificarToken, obtenerDatosFormulario);
 // ----------------------------------------
 
