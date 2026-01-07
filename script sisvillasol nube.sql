@@ -189,6 +189,7 @@ update sisvillasol.lotes set ubicacion='-72.669888, 7.147128' where id_lote=6;
 update sisvillasol.lotes set ubicacion='-72.670118, 7.148142' where id_lote=10;
 
 select * from sisvillasol.usuarios
+
 -- =====================================
 -- se crea la base de datos ganaderia
 -- =====================================
