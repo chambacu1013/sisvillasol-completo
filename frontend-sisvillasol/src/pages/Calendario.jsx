@@ -19,7 +19,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import CancelIcon from '@mui/icons-material/Cancel'; 
 
 import api from '../services/api';
-
+import '../../public/Calendario.css'; // Estilos personalizados
 moment.locale('es');
 const localizer = momentLocalizer(moment);
 
@@ -256,6 +256,20 @@ function Calendario() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1b5e20' }}>Calendario de Actividades</Typography>
                     <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#1b5e20' }} onClick={() => { setTareaEditar(null); setModalOpen(true); }}>PROGRAMAR TAREA</Button>
+                    <div className="leyenda-container">
+                        <div className="item-leyenda">
+                            <span className="punto pendiente"></span>
+                            <span>Pendiente</span>
+                        </div>
+                        <div className="item-leyenda">
+                            <span className="punto hecho"></span>
+                            <span>Realizado</span>
+                        </div>
+                        <div className="item-leyenda">
+                            <span className="punto no-realizado"></span>
+                            <span>No Realizado</span>
+                        </div>
+                    </div>
                 </Box>
                 <Box sx={{ flex: 1, bgcolor: 'white', p: 2, borderRadius: 2, boxShadow: 2 }}>
                     <Calendar
@@ -390,5 +404,4 @@ function Calendario() {
         </Box>
     );
 }
-
 export default Calendario;

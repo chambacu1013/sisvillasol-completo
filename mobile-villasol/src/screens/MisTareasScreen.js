@@ -24,6 +24,25 @@ export default function MisTareasScreen({ navigation }) {
       cargarDatos();
     }, [])
   );
+  const formatearFechaLocal = (fechaString) => {
+    if (!fechaString) return "Fecha no disponible";
+
+    // Asegurarnos de tomar solo la parte YYYY-MM-DD si viene con hora
+    const soloFecha = fechaString.split("T")[0];
+
+    // Dividimos "2026-01-04" en [2026, 01, 04]
+    const [anio, mes, dia] = soloFecha.split("-");
+
+    // Creamos la fecha en hora LOCAL (Mes en JS es índice 0, por eso restamos 1)
+    const fecha = new Date(anio, mes - 1, dia);
+
+    // Opciones para que se vea bonito en español (ej: "4 ene 2026")
+    return fecha.toLocaleDateString("es-CO", {
+      day: "numeric",
+      month: "short", // o 'long' para el nombre completo
+      year: "numeric",
+    });
+  };
 
   const cargarDatos = async () => {
     try {
@@ -72,7 +91,7 @@ export default function MisTareasScreen({ navigation }) {
         </Text>
       </Text>
       <Text style={styles.fecha}>
-        📅 {new Date(item.fecha_programada).toLocaleDateString()}
+        📅 {formatearFechaLocal(item.fecha_programada)}
       </Text>
     </TouchableOpacity>
   );

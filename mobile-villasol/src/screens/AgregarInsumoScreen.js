@@ -81,7 +81,7 @@ export default function AgregarInsumoScreen({ navigation }) {
     setNombre(item.nombre);
     setCantidadStock(item.cantidad_stock?.toString() || "0");
     setCostoPromedio(item.costo_unitario_promedio?.toString() || "0");
-    setStockMinimo(item.stock_minimo?.toString() || "5");
+    setStockMinimo(item.stock_minimo?.toString() || "0.5");
     setIdUnidadSeleccionada(item.id_unidad);
     setIdCategoriaSeleccionada(item.id_categoria_insumo);
     setModalVisible(true);
@@ -117,7 +117,7 @@ export default function AgregarInsumoScreen({ navigation }) {
       id_categoria_insumo: idCategoriaSeleccionada,
       id_unidad: idUnidadSeleccionada,
       cantidad_stock: parseFloat(cantidadStock),
-      stock_minimo: parseFloat(stockMinimo || 5),
+      stock_minimo: parseFloat(stockMinimo || 0.5),
       costo_unitario_promedio: parseFloat(costoPromedio || 0),
     };
 
@@ -158,7 +158,7 @@ export default function AgregarInsumoScreen({ navigation }) {
     const nombreUnidad = unidadObj ? unidadObj.nombre_unidad : "Unidad";
     const nombreCategoria = catObj ? catObj.nombre_categoria : "General";
 
-    const stockMin = item.stock_minimo || 5;
+    const stockMin = item.stock_minimo || 0.5;
     const esBajo = parseFloat(item.cantidad_stock) <= parseFloat(stockMin);
 
     return (
@@ -310,7 +310,7 @@ export default function AgregarInsumoScreen({ navigation }) {
                     value={stockMinimo}
                     onChangeText={setStockMinimo}
                     keyboardType="numeric"
-                    placeholder="5"
+                    placeholder="0.5"
                   />
 
                   <View style={styles.modalButtons}>

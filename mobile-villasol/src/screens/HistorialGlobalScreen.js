@@ -31,6 +31,26 @@ export default function HistorialGlobalScreen({ navigation }) {
     }
   };
 
+  const formatearFechaLocal = (fechaString) => {
+    if (!fechaString) return "Fecha no disponible";
+
+    // Asegurarnos de tomar solo la parte YYYY-MM-DD si viene con hora
+    const soloFecha = fechaString.split("T")[0];
+
+    // Dividimos "2026-01-04" en [2026, 01, 04]
+    const [anio, mes, dia] = soloFecha.split("-");
+
+    // Creamos la fecha en hora LOCAL (Mes en JS es índice 0, por eso restamos 1)
+    const fecha = new Date(anio, mes - 1, dia);
+
+    // Opciones para que se vea bonito en español (ej: "4 ene 2026")
+    return fecha.toLocaleDateString("es-CO", {
+      day: "numeric",
+      month: "short", // o 'long' para el nombre completo
+      year: "numeric",
+    });
+  };
+
   const abrirDetalles = (item) => {
     setTareaSeleccionada(item);
     setModalVisible(true);
@@ -41,15 +61,6 @@ export default function HistorialGlobalScreen({ navigation }) {
     if (estado === "HECHO") return "#2E7D32"; // Verde
     if (estado === "EN_PROCESO") return "#F9A825"; // Amarillo oscuro
     return "#C62828"; // Rojo (Pendiente)
-  };
-
-  const formatearFecha = (fecha) => {
-    if (!fecha) return "Sin fecha";
-    return new Date(fecha).toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
   };
 
   const renderItem = ({ item }) => (
@@ -83,7 +94,7 @@ export default function HistorialGlobalScreen({ navigation }) {
         <Ionicons name="calendar-outline" size={16} color="#666" />
         <Text style={styles.dateText}>
           {" "}
-          Prog: {formatearFecha(item.fecha_programada)}
+          Prog: {formatearFechaLocal(item.fecha_programada)}
         </Text>
       </View>
     </TouchableOpacity>
@@ -140,7 +151,7 @@ export default function HistorialGlobalScreen({ navigation }) {
                 {/* 2. Fechas (Lógica condicional) */}
                 <Text style={styles.label}>📅 Fecha Programada:</Text>
                 <Text style={styles.valueText}>
-                  {formatearFecha(tareaSeleccionada.fecha_programada)}
+                  {formatearFechaLocal(tareaSeleccionada.fecha_programada)}
                 </Text>
 
                 {tareaSeleccionada.estado === "HECHO" && (
