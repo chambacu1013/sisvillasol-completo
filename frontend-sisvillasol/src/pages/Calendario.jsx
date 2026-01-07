@@ -256,7 +256,9 @@ function Calendario() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1b5e20' }}>Calendario de Actividades</Typography>
                     <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#1b5e20' }} onClick={() => { setTareaEditar(null); setModalOpen(true); }}>PROGRAMAR TAREA</Button>
-                    <div className="leyenda-container">
+                   
+                </Box>
+                 <div className="leyenda-container">
                         <div className="item-leyenda">
                             <span className="punto pendiente"></span>
                             <span>Pendiente</span>
@@ -270,7 +272,6 @@ function Calendario() {
                             <span>No Realizado</span>
                         </div>
                     </div>
-                </Box>
                 <Box sx={{ flex: 1, bgcolor: 'white', p: 2, borderRadius: 2, boxShadow: 2 }}>
                     <Calendar
                         localizer={localizer} events={eventos} startAccessor="start" endAccessor="end" style={{ height: '100%' }}
