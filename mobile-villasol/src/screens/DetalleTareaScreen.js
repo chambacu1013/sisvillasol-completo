@@ -84,6 +84,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
         "Fertilizante",
         "Regulador",
         "Herbicida",
+        "General",
       ];
       const insumosFiltrados = res.data.filter((item) =>
         categoriasConsumibles.includes(item.nombre_categoria)

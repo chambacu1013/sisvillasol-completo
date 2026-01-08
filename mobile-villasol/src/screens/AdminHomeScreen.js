@@ -5,8 +5,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AdminHomeScreen({ navigation }) {
   const logout = async () => {
-    await AsyncStorage.clear();
-    navigation.replace("Login");
+    try {
+      // 1. Borramos SOLO la sesión actual
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("usuario");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    } catch (error) {
+      console.error("Error al salir:", error);
+    }
   };
 
   return (

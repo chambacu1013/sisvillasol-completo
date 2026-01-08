@@ -44,7 +44,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id_usuario, rol: user.nombre_rol },
       "secreto_super_seguro", // (En producción esto va en .env)
-      { expiresIn: "8h" } // El token dura 8 horas
+      { expiresIn: "1h" } // El token dura 1 hora
     );
 
     // 5. RESPONDER AL FRONTEND
@@ -56,7 +56,7 @@ const login = async (req, res) => {
         id_rol: user.id_rol,
         nombre: user.nombre,
         apellido: user.apellido,
-        rol: user.nombre_rol, // "ADMIN" o "AGRICULTOR"
+        rol: user.nombre_rol, // "ADMIN"
         estado: user.estado,
       },
     });

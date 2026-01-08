@@ -24,8 +24,17 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleLogout = async () => {
-    await AsyncStorage.clear(); // Borramos datos de sesión
-    navigation.replace("Login"); // Volvemos al login
+    try {
+      // 1. Borramos SOLO la sesión actual
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("usuario");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    } catch (error) {
+      console.error("Error al salir:", error);
+    }
   };
 
   return (
