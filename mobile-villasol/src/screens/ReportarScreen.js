@@ -63,12 +63,19 @@ export default function ReportarScreen({ navigation }) {
       const userJson = await AsyncStorage.getItem("usuario");
       const user = JSON.parse(userJson);
       const userId = user.id || user.id_usuario;
+      // --- CORRECCIÓN DE FECHA ---
+      // Creamos la fecha basada en TU reloj local, no en UTC
+      const hoy = new Date();
+      const anio = hoy.getFullYear();
+      const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+      const dia = String(hoy.getDate()).padStart(2, "0");
+      const fechaLocal = `${anio}-${mes}-${dia}`;
 
       const nuevaTarea = {
         id_tipo_actividad: form.id_tipo_actividad,
         id_lote: form.id_lote,
         descripcion: `[ESPONTANEA] ${form.descripcion}`,
-        fecha_programada: new Date().toISOString().split("T")[0], // Fecha HOY
+        fecha_programada: fechaLocal,
         id_usuario: userId,
         estado: "PENDIENTE",
         costo_mano_obra: 0,

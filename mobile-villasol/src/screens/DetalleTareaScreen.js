@@ -230,13 +230,18 @@ export default function DetalleTareaScreen({ route, navigation }) {
 
   const enviarDatos = async () => {
     try {
+      // Tomamos la fecha del selector (fechaEjecucion) y extraemos año-mes-dia local
+      const anio = fechaEjecucion.getFullYear();
+      const mes = String(fechaEjecucion.getMonth() + 1).padStart(2, "0");
+      const dia = String(fechaEjecucion.getDate()).padStart(2, "0");
+      const fechaFinalLocal = `${anio}-${mes}-${dia}`;
       await api.put(`/actividades/finalizar/${tarea.id_tarea}`, {
         insumosUsados: insumosSeleccionados.map((i) => ({
           id_insumo: i.id_insumo,
           cantidad: i.cantidad,
         })),
         jornada: jornadaSeleccionada,
-        fecha_ejecucion: fechaEjecucion.toISOString(),
+        fecha_ejecucion: fechaFinalLocal,
       });
 
       // TOAST VERDE DE ÉXITO ✅
