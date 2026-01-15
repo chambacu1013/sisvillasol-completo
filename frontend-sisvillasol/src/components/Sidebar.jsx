@@ -10,11 +10,12 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
 //import GrassIcon from '@mui/icons-material/Grass';
+import CowIcon from '../../public/CowIcon.jsx';
 const drawerWidth = 240; // Ancho cuando está abierto
 
 const menuItems = [
     { text: 'Inicio', icon: <HomeIcon />, path: '/inicio' },
-   // { text: 'Ganadería', icon: <GrassIcon />, path: '/ganaderia' },
+    { text: 'Ganadería', icon: <CowIcon sx={{ color: '#1b5e20' }} />, path: '/ganaderia' },
     { text: 'Lotes (Mapa)', icon: <MapIcon />, path: '/lotes' },
     { text: 'Calendario', icon: <CalendarTodayIcon />, path: '/calendario' },
     { text: 'Inventario', icon: <InventoryIcon />, path: '/inventario' },
