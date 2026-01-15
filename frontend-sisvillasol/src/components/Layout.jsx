@@ -57,7 +57,7 @@ function Layout() {
     const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
     const handleAbrirConfig = () => { handleMenuClose(); setModalOpen(true); };
-    const handleLogout = () => { localStorage.removeItem('token'); navigate('/'); };
+    const handleLogout = () => { localStorage.clear(); navigate('/'); };
 
     return (
         <Box sx={{ display: 'flex' }}>

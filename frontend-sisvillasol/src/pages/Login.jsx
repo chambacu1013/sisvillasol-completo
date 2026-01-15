@@ -82,7 +82,6 @@ const [loading, setLoading] = useState(false);
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                // IMAGEN DE FONDO (Asegúrate de poner 'fondo.jpg' en la carpeta public)
                 backgroundImage: 'url(/fondo.jpg)', 
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',

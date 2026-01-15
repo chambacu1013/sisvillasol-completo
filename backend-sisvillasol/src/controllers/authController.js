@@ -49,7 +49,7 @@ const login = async (req, res) => {
 
     // 5. RESPONDER AL FRONTEND
     res.json({
-      mensaje: `¡Bienvenido/a ${user.nombre}! 👋`,
+      mensaje: `¡Bienvenido/a ${user.nombre} ${user.apellido}! 👋`,
       token: token,
       usuario: {
         id: user.id_usuario,
