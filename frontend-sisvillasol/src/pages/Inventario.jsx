@@ -1,333 +1,297 @@
-import React, { useEffect, useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import Sidebar from "./Sidebar"; // Ajusta la ruta según corresponda
-import api from "../services/api"; // Ajusta la ruta de tu servicio API
-import { Modal, Button, Form } from "react-bootstrap";
-import { toast } from "react-toastify";
+import { useEffect, useState } from 'react';
+import { 
+    Box, Grid, Paper, Typography, Button, TextField, InputAdornment, 
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
+    Chip, IconButton, Card, CardContent, GlobalStyles
+} from '@mui/material';
+import { TablePagination } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import WarningIcon from '@mui/icons-material/Warning';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; 
+import api from '../services/api';
+import Swal from 'sweetalert2';
+import NuevoInsumoModal from '../components/NuevoInsumoModal';
 
-const Inventario = () => {
-  const [insumos, setInsumos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  // --- 1. NUEVO ESTADO PARA CATEGORÍA ---
-  const [selectedCategory, setSelectedCategory] = useState(""); 
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+function Inventario() {
+    const [insumos, setInsumos] = useState([]);
+    const [busqueda, setBusqueda] = useState('');
+    
+    // 1. NUEVO ESTADO PARA CATEGORÍA
+    const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
 
-  // Estados para Modal de Edición
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingInsumo, setEditingInsumo] = useState(null);
+    // Estados para la paginación
+    const [page, setPage] = useState(0); 
+    const [rowsPerPage, setRowsPerPage] = useState(10); 
+    
+    // Estados del Modal
+    const [modalOpen, setModalOpen] = useState(false);
+    const [insumoAEditar, setInsumoAEditar] = useState(null);
 
-  // Cargar insumos
-  useEffect(() => {
-    fetchInsumos();
-  }, []);
+    // Cargar datos del Backend
+    useEffect(() => {
+        cargarInsumos();
+    }, []);
 
-  const fetchInsumos = async () => {
-    try {
-      const response = await api.get("/insumos");
-      setInsumos(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error al cargar insumos:", error);
-      setLoading(false);
-    }
-  };
+    const cargarInsumos = async () => {
+        try {
+            const response = await api.get('/insumos');
+            setInsumos(response.data);
+        } catch (error) {
+            console.error("Error cargando inventario", error);
+        }
+    };
 
-  // --- 2. OBTENER CATEGORÍAS ÚNICAS PARA EL SELECT ---
-  // Esto crea una lista automática sin repetidos (ej: ["Fertilizante", "Fungicida", ...])
-  const uniqueCategories = [
-    ...new Set(insumos.map((item) => item.nombre_categoria)),
-  ].sort();
+    const handleEditar = (insumo) => {
+        setInsumoAEditar(insumo); 
+        setModalOpen(true);       
+    };
 
-  // --- 3. LÓGICA DE FILTRADO ACTUALIZADA (TEXTO + CATEGORÍA) ---
-  const filteredInsumos = insumos.filter((item) => {
-    // Filtro por Texto (Nombre o Categoría escrita)
-    const matchesSearch =
-      item.nombre_insumo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.nombre_categoria.toLowerCase().includes(searchTerm.toLowerCase());
+    const handleEliminar = async (id, nombre) => {
+        Swal.fire({
+            title: '¿Eliminar producto?',
+            text: `Vas a borrar "${nombre}" del inventario. Esto no se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d32f2f', 
+            cancelButtonColor: '#1b5e20',  
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await api.delete(`/insumos/${id}`);
+                    Swal.fire('¡Eliminado!', 'El Insumo ha sido borrado.', 'success');
+                    cargarInsumos(); 
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire('Error', 'No se pudo eliminar el Insumo.', 'error');
+                }
+            }
+        });
+    };
 
-    // Filtro por Dropdown de Categoría
-    const matchesCategory = selectedCategory
-      ? item.nombre_categoria === selectedCategory
-      : true; // Si no hay categoría seleccionada, pasan todos
+    // Cálculos para las Tarjetas de Arriba (KPIs)
+    const totalProductos = insumos.length;
+    const stockBajo = insumos.filter(i => Number(i.cantidad_stock) <= Number(i.stock_minimo));
+    const alertasStock = stockBajo.length;
+    const valorTotal = insumos.reduce((acc, item) => acc + (Number(item.costo_unitario_promedio || 0)), 0);
 
-    return matchesSearch && matchesCategory;
-  });
+    // 2. EXTRAER CATEGORÍAS ÚNICAS (Para llenar el select)
+    const categoriasUnicas = [...new Set(insumos.map(item => item.nombre_categoria).filter(Boolean))];
 
-  // Paginación
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredInsumos.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredInsumos.length / itemsPerPage);
+    // 3. FILTRADO ACTUALIZADO (Búsqueda + Categoría)
+    const insumosFiltrados = insumos.filter(item => {
+        const coincideBusqueda = item.nombre.toLowerCase().includes(busqueda.toLowerCase());
+        const coincideCategoria = categoriaSeleccionada 
+            ? item.nombre_categoria === categoriaSeleccionada 
+            : true;
+        
+        return coincideBusqueda && coincideCategoria;
+    });
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    useEffect(() => { setPage(0); }, [busqueda, categoriaSeleccionada]);
 
-  // Eliminar insumo
-  const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de eliminar este insumo?")) {
-      try {
-        await api.delete(`/insumos/${id}`);
-        setInsumos(insumos.filter((insumo) => insumo.id_insumo !== id));
-        toast.success("Insumo eliminado correctamente");
-      } catch (error) {
-        console.error("Error al eliminar insumo:", error);
-        toast.error("Error al eliminar insumo");
-      }
-    }
-  };
+    const handleChangePage = (event, newPage) => { setPage(newPage); };
 
-  // Abrir Modal de Edición
-  const handleEditClick = (insumo) => {
-    setEditingInsumo({ ...insumo });
-    setShowEditModal(true);
-  };
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
 
-  // Guardar Cambios
-  const handleSaveChanges = async () => {
-    try {
-      await api.put(`/insumos/${editingInsumo.id_insumo}`, editingInsumo);
-      setInsumos(
-        insumos.map((i) =>
-          i.id_insumo === editingInsumo.id_insumo ? editingInsumo : i
-        )
-      );
-      setShowEditModal(false);
-      toast.success("Insumo actualizado correctamente");
-    } catch (error) {
-      console.error("Error al actualizar:", error);
-      toast.error("Error al actualizar insumo");
-    }
-  };
-
-  // Manejar cambios en inputs del modal
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditingInsumo({ ...editingInsumo, [name]: value });
-  };
-
-  if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-success" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </div>
-      </div>
-    );
-  }
+        <Box>
+            <GlobalStyles styles={{ 
+                '.swal2-container': { zIndex: '2400 !important' } 
+            }} />
+            <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold', color: '#1b5e20' }}>
+                Inventario de Insumos
+            </Typography>
 
-  return (
-    <div className="d-flex" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
-      <Sidebar />
-      <div className="container-fluid p-4">
-        <h1 className="mb-4 text-success fw-bold">📦 Gestión de Inventario</h1>
+            {/* SECCIÓN 1: TARJETAS DE RESUMEN (KPIs) */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#e8f5e9', color: '#1b5e20' }}>
+                        <Typography variant="subtitle1">Total de Insumos</Typography>
+                        <Typography variant="h3" sx={{ fontWeight: 'bold' }}>{totalProductos}</Typography>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#ffebee', color: '#c62828' }}>
+                        <Typography variant="subtitle1">Alertas de Stock</Typography>
+                        <Typography variant="h3" sx={{ fontWeight: 'bold' }}>{alertasStock}</Typography>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#e3f2fd', color: '#0d47a1' }}>
+                        <Typography variant="subtitle1">Valor Total de Inventario</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 'bold', mt: 1 }}>
+                            ${valorTotal.toLocaleString('es-CO')}
+                        </Typography>
+                    </Paper>
+                </Grid>
+            </Grid>
 
-        <div className="card shadow-sm border-0">
-          <div className="card-body">
-            {/* Barra de Herramientas: Búsqueda y Botón */}
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div className="d-flex" style={{ flex: 1 }}>
+            {/* SECCIÓN 2: BARRA DE HERRAMIENTAS */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, gap: 2, flexWrap: 'wrap' }}>
                 
-                {/* --- 4. NUEVO SELECTOR DE CATEGORÍA --- */}
-                <select
-                  className="form-select me-2"
-                  style={{ maxWidth: "200px" }}
-                  value={selectedCategory}
-                  onChange={(e) => {
-                    setSelectedCategory(e.target.value);
-                    setCurrentPage(1); // Reiniciar a página 1 al filtrar
-                  }}
+                {/* GRUPO DE FILTROS: SELECT + BUSCADOR */}
+                <Box sx={{ display: 'flex', gap: 2, flex: 1 }}>
+                    {/* 4. SELECTOR DE CATEGORÍA (HTML Nativo) */}
+                    <select
+                        value={categoriaSeleccionada}
+                        onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+                        style={{
+                            padding: '10px',
+                            borderRadius: '4px',
+                            border: '1px solid #c4c4c4',
+                            backgroundColor: 'white',
+                            fontSize: '16px',
+                            minWidth: '150px',
+                            height: '40px' // Misma altura visual que el TextField small
+                        }}
+                    >
+                        <option value="">Todas las Categorías</option>
+                        {categoriasUnicas.map((cat, index) => (
+                            <option key={index} value={cat}>
+                                {cat}
+                            </option>
+                        ))}
+                    </select>
+
+                    <TextField
+                        placeholder="Buscar Insumo..."
+                        variant="outlined" size="small"
+                        sx={{ width: '300px', bgcolor: 'white' }}
+                        value={busqueda}
+                        onChange={(e) => setBusqueda(e.target.value)}
+                        InputProps={{
+                            startAdornment: (<InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>),
+                        }}
+                    />
+                </Box>
+
+                <Button 
+                    variant="contained" 
+                    startIcon={<AddIcon />}
+                    sx={{ bgcolor: '#1b5e20', '&:hover': { bgcolor: '#2e7d32' } }}
+                    onClick={() => { setInsumoAEditar(null); setModalOpen(true); }}
                 >
-                  <option value="">Todas las Categorías</option>
-                  {uniqueCategories.map((cat, index) => (
-                    <option key={index} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                    AGREGAR INSUMO
+                </Button>
+            </Box>
 
-                <input
-                  type="text"
-                  className="form-control me-2"
-                  placeholder="🔍 Buscar por nombre..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  style={{ maxWidth: "300px" }}
-                />
-              </div>
+            {/* SECCIÓN 3: TABLA */}
+            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
+                <Table>
+                    <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Insumo</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Categoría</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Stock Actual/dosis</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Stock Mínimo</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Precio Unit</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Acciones</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {insumosFiltrados.length > 0 ? (
+                            insumosFiltrados
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((row) => {
+                                    const esBajoStock = Number(row.cantidad_stock) <= Number(row.stock_minimo);
+                                    return (
+                                        <TableRow key={row.id_insumo} hover>
+                                            <TableCell 
+                                                sx={{ 
+                                                    fontWeight: 'bold',
+                                                    whiteSpace: 'normal',   
+                                                    wordBreak: 'break-word', 
+                                                    maxWidth: '250px'       
+                                                }}
+                                            >
+                                                {row.nombre}
+                                            </TableCell>
+                                            <TableCell><Chip label={row.nombre_categoria || 'Sin Cat.'} size="small" variant="outlined" /></TableCell>
+                                            <TableCell>
+                                                <Typography fontWeight="bold" color={esBajoStock ? 'error' : 'inherit'}>
+                                                    {row.cantidad_stock} {row.nombre_unidad || ''}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{row.stock_minimo}</TableCell>
+                                            <TableCell>
+                                                <Chip label={esBajoStock ? "BAJO STOCK" : "NORMAL"} color={esBajoStock ? "error" : "success"} size="small" sx={{ fontWeight: 'bold' }} />
+                                            </TableCell>
+                                            <TableCell>${Number(row.costo_unitario_promedio).toLocaleString('es-CO')}</TableCell>
+                                            <TableCell>
+                                                <IconButton size="small" color="primary" onClick={() => handleEditar(row)}><EditIcon /></IconButton>
+                                                <IconButton size="small" color="error" onClick={() => handleEliminar(row.id_insumo, row.nombre)}><DeleteIcon /></IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                                    <Typography variant="body1" color="textSecondary">
+                                        No se encontraron resultados para la búsqueda.
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            
+            <TablePagination
+                rowsPerPageOptions={[5, 10, 25]} component="div"
+                count={insumosFiltrados.length} rowsPerPage={rowsPerPage} page={page}
+                onPageChange={handleChangePage} onRowsPerPageChange={handleChangeRowsPerPage}
+            />
 
-              <button className="btn btn-success d-flex align-items-center gap-2">
-                <i className="bi bi-plus-lg"></i> Agregar Insumo
-              </button>
-            </div>
-
-            {/* Tabla */}
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table-light">
-                  <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Categoría</th>
-                    <th>Cantidad</th>
-                    <th>Unidad</th>
-                    <th>Stock Mín.</th>
-                    <th className="text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.length > 0 ? (
-                    currentItems.map((insumo) => (
-                      <tr key={insumo.id_insumo}>
-                        <td>#{insumo.id_insumo}</td>
-                        <td className="fw-bold text-secondary">
-                          {insumo.nombre_insumo}
-                        </td>
-                        <td>
-                          <span className="badge bg-info text-dark bg-opacity-10 border border-info">
-                            {insumo.nombre_categoria}
-                          </span>
-                        </td>
-                        <td
-                          className={
-                            insumo.cantidad_stock <= insumo.stock_minimo
-                              ? "text-danger fw-bold"
-                              : "text-success fw-bold"
-                          }
-                        >
-                          {insumo.cantidad_stock}
-                        </td>
-                        <td>{insumo.nombre_unidad}</td>
-                        <td>{insumo.stock_minimo}</td>
-                        <td className="text-center">
-                          <button
-                            className="btn btn-sm btn-outline-primary me-2"
-                            onClick={() => handleEditClick(insumo)}
-                            title="Editar"
-                          >
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDelete(insumo.id_insumo)}
-                            title="Eliminar"
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="text-center text-muted py-4">
-                        No se encontraron insumos con esos filtros.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Paginación */}
-            {totalPages > 1 && (
-              <nav>
-                <ul className="pagination justify-content-center mt-3">
-                  <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-                    <button
-                      className="page-link"
-                      onClick={() => paginate(currentPage - 1)}
-                    >
-                      Anterior
-                    </button>
-                  </li>
-                  {[...Array(totalPages)].map((_, index) => (
-                    <li
-                      key={index}
-                      className={`page-item ${
-                        currentPage === index + 1 ? "active" : ""
-                      }`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => paginate(index + 1)}
-                      >
-                        {index + 1}
-                      </button>
-                    </li>
-                  ))}
-                  <li
-                    className={`page-item ${
-                      currentPage === totalPages ? "disabled" : ""
-                    }`}
-                  >
-                    <button
-                      className="page-link"
-                      onClick={() => paginate(currentPage + 1)}
-                    >
-                      Siguiente
-                    </button>
-                  </li>
-                </ul>
-              </nav>
+           {/* Alertas Stock Bajo */}
+            {stockBajo.length > 0 && (
+                <Box sx={{ mt: 4, mb: 4 }}>
+                    <Typography variant="h6" sx={{ color: '#d32f2f', fontWeight: 'bold', mb: 2, display: 'flex', alignItems: 'center' }}><WarningIcon sx={{ mr: 1 }} /> Atención: Insumos por Agotarse</Typography>
+                    <Grid container spacing={2}>
+                        {stockBajo.map((insumo) => (
+                            <Grid item xs={12} sm={6} md={3} key={insumo.id_insumo}>
+                                <Card sx={{ bgcolor: '#ffebee', borderLeft: '6px solid #d32f2f', boxShadow: 2 }}>
+                                    <CardContent>
+                                        <Typography variant="caption" fontWeight="bold" color="error">STOCK BAJO</Typography>
+                                        <Typography variant="h6" fontWeight="bold">{insumo.nombre}</Typography>
+                                        <Typography variant="body2" sx={{ mb: 2 }}>Stock: <b>{insumo.cantidad_stock} {insumo.nombre_unidad}</b></Typography>
+                                        
+                                        <Button 
+                                            variant="outlined" color="error" size="small" fullWidth startIcon={<ShoppingCartIcon />}
+                                            onClick={() => {
+                                                console.log("Abriendo modal COMPRA para:", insumo.nombre);
+                                                setInsumoAEditar(insumo);
+                                                setModalOpen(true);
+                                            }}
+                                        >
+                                            SOLICITAR COMPRA
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
             )}
-          </div>
-        </div>
-      </div>
 
-      {/* Modal de Edición */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Editar Insumo</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {editingInsumo && (
-            <Form>
-              <Form.Group className="mb-3">
-                <Form.Label>Nombre</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="nombre_insumo"
-                  value={editingInsumo.nombre_insumo}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Stock Actual</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="cantidad_stock"
-                  value={editingInsumo.cantidad_stock}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Stock Mínimo</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="stock_minimo"
-                  value={editingInsumo.stock_minimo}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
-            </Form>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-            Cancelar
-          </Button>
-          <Button variant="success" onClick={handleSaveChanges}>
-            Guardar Cambios
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
-  );
-};
+            {/* MODAL EXTERNO CONECTADO */}
+            <NuevoInsumoModal 
+                open={modalOpen} 
+                onClose={() => setModalOpen(false)}
+                onSuccess={cargarInsumos} 
+                productoEditar={insumoAEditar} 
+            />
+        </Box>
+    );
+}
 
 export default Inventario;
