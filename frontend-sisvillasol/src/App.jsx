@@ -7,7 +7,7 @@ import Usuarios from './pages/Usuarios';
 import Calendario from './pages/Calendario';
 import Reportes from './pages/Reportes';
 import MapaFinca from './pages/MapaFinca';
-//import Ganaderia from './pages/Ganaderia';
+import Ganaderia from './pages/Ganaderia';
 function App() {
   return (
     <BrowserRouter>
