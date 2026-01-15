@@ -49,7 +49,7 @@ const [loading, setLoading] = useState(false);
             // ALERTA DE BIENVENIDA (Opcional, pero se ve genial)
             Swal.fire({
                 icon: 'success',
-                title: `¡Bienvenido, ${usuario.nombre}!`,
+                title: `¡Bienvenido, ${usuario.nombre} ${usuario.apellido}!`,
                 text: 'Iniciando sesión...',
                 timer: 1500, // Se cierra sola en 1.5 segundos
                 showConfirmButton: false
