@@ -16,7 +16,7 @@ function App() {
         
         <Route element={<Layout />}>
             <Route path="/inicio" element={<Inicio />} />
-            {/** <Route path="/ganaderia" element={<Ganaderia />} /> */}
+            <Route path="/ganaderia" element={<Ganaderia />} /> 
             <Route path="/inventario" element={<Inventario />} /> 
             <Route path="/lotes" element={<MapaFinca />} />
             <Route path="/reportes" element={<Reportes/>} />

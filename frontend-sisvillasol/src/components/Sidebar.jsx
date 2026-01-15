@@ -15,7 +15,7 @@ const drawerWidth = 240; // Ancho cuando está abierto
 
 const menuItems = [
     { text: 'Inicio', icon: <HomeIcon />, path: '/inicio' },
-    { text: 'Ganadería', icon: <CowIcon sx={{ color: '#1b5e20' }} />, path: '/ganaderia' },
+    { text: 'Ganadería', icon: <CowIcon sx={{ color: '#fdfdfd' }} />, path: '/ganaderia' },
     { text: 'Lotes (Mapa)', icon: <MapIcon />, path: '/lotes' },
     { text: 'Calendario', icon: <CalendarTodayIcon />, path: '/calendario' },
     { text: 'Inventario', icon: <InventoryIcon />, path: '/inventario' },
