@@ -93,6 +93,8 @@ function Calendario() {
 
     useEffect(() => {
         if (tareaEditar) {
+            // AL EDITAR, CARGAMOS LA FECHA PROGRAMADA ORIGINAL EN EL FORMULARIO
+            // (Para que el admin vea cuándo estaba planeada originalmente)
             const fechaRaw = tareaEditar.resource.fecha_programada;
             const fechaSimple = fechaRaw ? fechaRaw.split('T')[0] : '';
             setDatos({
@@ -118,16 +120,36 @@ function Calendario() {
     const cargarDatos = async () => {
         try {
             const res = await api.get('/actividades');
+            
+            // --- AQUÍ ESTÁ LA CORRECCIÓN DE LA FECHA ---
             const eventosFormatoCalendario = res.data.map(tarea => {
-                const fechaString = tarea.fecha_programada.split('T')[0];
+                
+                // LÓGICA MAESTRA:
+                // Si está HECHO y tiene fecha de ejecución, usamos esa.
+                // Si no, usamos la programada.
+                let fechaBase = tarea.fecha_programada;
+                if (tarea.estado === 'HECHO' && tarea.fecha_ejecucion) {
+                    fechaBase = tarea.fecha_ejecucion;
+                }
+
+                // Aseguramos que sea string y quitamos la hora (T00:00:00)
+                const fechaString = fechaBase ? fechaBase.toString().split('T')[0] : '';
+                
+                if (!fechaString) return null; // Seguridad por si viene vacío
+
+                // Construcción manual de fecha para evitar desfase de zona horaria
                 const [anio, mes, dia] = fechaString.split('-');
-                const fechaFixed = new Date(anio, mes - 1, dia);
+                const fechaFixed = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia));
 
                 return {
                     title: `${tarea.nombre_tipo_actividad || 'Tarea'} - ${tarea.nombre_lote || 'Sin Lote'} (${tarea.nombre_responsable || '?'})`,
-                    start: fechaFixed, end: fechaFixed, allDay: true, resource: tarea 
+                    start: fechaFixed, 
+                    end: fechaFixed, 
+                    allDay: true, 
+                    resource: tarea 
                 };
-            });
+            }).filter(Boolean); // Filtramos nulos por si acaso
+
             setEventos(eventosFormatoCalendario);
         } catch (error) { console.error("Error cargando calendario:", error); }
     };
@@ -340,7 +362,7 @@ function Calendario() {
                             </TextField>
                         </Box>
 
-                        {/* --- AQUÍ ESTÁ LO QUE PEDISTE: SELECTOR DE ESTADO RESTAURADO --- */}
+                        {/* SELECTOR DE ESTADO */}
                         {tareaEditar && (
                              <TextField 
                                 select 
@@ -352,7 +374,6 @@ function Calendario() {
                             >
                                 <MenuItem value="PENDIENTE">PENDIENTE ⏳</MenuItem>
                                 <MenuItem value="HECHO">HECHO ✅</MenuItem>
-                                {/* Opcional: Si la tarea ya venía 'NO REALIZADO', mostramos la opción para que no se rompa el select */}
                                 {datos.estado === 'NO REALIZADO' && (
                                     <MenuItem value="NO REALIZADO" disabled>NO REALIZADO 🛑</MenuItem>
                                 )}
@@ -361,7 +382,7 @@ function Calendario() {
 
                         <TextField fullWidth multiline rows={3} label="Observaciones" value={datos.descripcion} onChange={(e) => setDatos({...datos, descripcion: e.target.value})} />
                         
-                        {/* TABLA DE INSUMOS (SOLO SI ESTÁ HECHO Y HAY INSUMOS) */}
+                        {/* TABLA DE INSUMOS */}
                         {datos.estado === 'HECHO' && insumosUsados.length > 0 && (
                             <Box sx={{ mt: 3, p: 2, bgcolor: '#f1f8e9', borderRadius: 2, border: '1px solid #c5e1a5' }}>
                                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#33691e', mb: 1 }}>🧪 Insumos Aplicados</Typography>
@@ -378,7 +399,6 @@ function Calendario() {
                 </DialogContent>
 
                 <DialogActions sx={{ p: 3, justifyContent: 'space-between' }}>
-                    {/* BOTÓN ROJO: SOLO APARECE SI EL ESTADO EN EL DROPDOWN ES 'PENDIENTE' */}
                     {tareaEditar && datos.estado === 'PENDIENTE' ? (
                         <Button startIcon={<CancelIcon />} color="error" variant="outlined" onClick={() => setModalMotivoOpen(true)}>Marcar como NO REALIZADO</Button>
                     ) : <Box></Box>}
@@ -390,7 +410,7 @@ function Calendario() {
                 </DialogActions>
             </Dialog>
 
-            {/* --- MODAL MOTIVO --- */}
+            {/* MODAL MOTIVO */}
             <Dialog open={modalMotivoOpen} onClose={() => setModalMotivoOpen(false)} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ bgcolor: '#d32f2f', color: 'white' }}>🛑 Tarea No Realizada</DialogTitle>
                 <DialogContent>
