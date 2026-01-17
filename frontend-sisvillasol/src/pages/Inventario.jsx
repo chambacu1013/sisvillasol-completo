@@ -99,8 +99,7 @@ function Inventario() {
     const totalProductos = insumos.length;
     const stockBajo = insumos.filter(i => i.estado_insumo === 'BAJO STOCK');
     const alertasStock = stockBajo.length;
-    //const valorTotal = insumos.reduce((acc, item) => acc + (Number(item.costo_unitario_promedio || 0)), 0);
-    const valorTotal = insumos.reduce((acc, item) => acc + (Number(item.costo_unitario_promedio || 0) * Number(item.cantidad_stock || 0)), 0);
+    const valorTotal = insumos.reduce((acc, item) => acc + (Number(item.costo_unitario_promedio || 0)), 0);
     // 2. EXTRAER CATEGORÍAS ÚNICAS (Para llenar el select)
     const categoriasUnicas = [...new Set(insumos.map(item => item.nombre_categoria).filter(Boolean))];
 

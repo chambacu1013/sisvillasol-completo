@@ -95,13 +95,7 @@ export default function LoginScreen({ navigation }) {
       });
       // Pequeña pausa para que vean el mensaje antes de cambiar de pantalla
       setTimeout(() => {
-        const userRole = usuarioData?.rol || usuarioData?.nombre_rol; // Simplificado
-
-        if ((userRole || "").toString().toUpperCase() === "ADMIN") {
-          navigation.replace("AdminHome");
-        } else {
-          navigation.replace("Home");
-        }
+        navigation.replace("Home");
       }, 1000);
     } catch (error) {
       console.error("Error Login:", error);

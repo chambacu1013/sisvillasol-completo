@@ -9,7 +9,6 @@ import MisTareasScreen from "./src/screens/MisTareasScreen";
 import ReportarScreen from "./src/screens/ReportarScreen";
 import LotesScreen from "./src/screens/LotesScreen";
 import DetalleTareaScreen from "./src/screens/DetalleTareaScreen";
-import AdminHomeScreen from "./src/screens/AdminHomeScreen";
 import AgregarInsumoScreen from "./src/screens/AgregarInsumoScreen";
 import HistorialGlobalScreen from "./src/screens/HistorialGlobalScreen";
 
@@ -115,11 +114,6 @@ export default function App() {
             name="DetalleTarea"
             component={DetalleTareaScreen}
             options={{ headerShown: true, title: "Detalle de Tarea" }}
-          />
-          <Stack.Screen
-            name="AdminHome"
-            component={AdminHomeScreen}
-            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="AgregarInsumo"
