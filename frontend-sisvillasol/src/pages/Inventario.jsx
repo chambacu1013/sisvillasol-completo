@@ -53,8 +53,8 @@ function Inventario() {
             case 'Ib': return { color: '#c62828', texto: 'Altamente Peligroso (Ib)', bg: '#ef9a9a' }; // Rojo
             case 'II': return { color: '#fbc02d', texto: 'Moderadamente Peligroso (II)', bg: '#fff9c4' }; // Amarillo
             case 'III': return { color: '#1976d2', texto: 'Ligeramente Peligroso (III)', bg: '#bbdefb' }; // Azul
-            case 'U':  return { color: '#388e3c', texto: 'Sin Riesgo Agudo (U)', bg: '#c8e6c9' }; // Verde
-            default:   return { color: '#9e9e9e', texto: 'No Clasificado', bg: '#f5f5f5' };
+            case 'U':  return { color: '#388e3c', texto: 'Poco probable de Riesgo Agudo (U)', bg: '#c8e6c9' }; // Verde
+            default:   return { color: '#9e9e9e', texto: 'No Clasificado (N)', bg: '#f5f5f5' };
         }
     };
 // --- 2. FUNCIÓN COLOR DE ESTADO (Backend) ---

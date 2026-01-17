@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { 
     Dialog, DialogTitle, DialogContent, DialogActions, 
-    Button, TextField, Box, MenuItem, InputAdornment, IconButton 
+    Button, TextField, Box, MenuItem, InputAdornment, IconButton, Typography, Circle
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import CircleIcon from '@mui/icons-material/Circle';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 
@@ -19,9 +20,11 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
         id_unidad: '',
         id_categoria_insumo: '',
         costo_unitario_promedio: '',
-        stock_minimo: 0.5
+        stock_minimo: 0.5,
+        nivel_toxicidad: 'N'
     });
-
+    // Estado para saber si debemos mostrar/habilitar el campo toxicidad
+    const [requiereToxicidad, setRequiereToxicidad] = useState(false);
     // 1. CARGAR LISTAS (¡AQUÍ ESTABA EL ERROR!) 🚨
     useEffect(() => {
         const cargarListas = async () => {
@@ -31,8 +34,7 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 setListas(res.data);
             } catch (error) { 
                 console.error("Error cargando listas:", error); 
-                // Opcional: Mostrar alerta si falla la conexión
-                // Swal.fire('Error', 'No se pudieron cargar las listas.', 'error');
+                
             }
         };
         if (open) cargarListas();
@@ -47,8 +49,11 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 id_unidad: productoEditar.id_unidad || '',
                 id_categoria_insumo: productoEditar.id_categoria_insumo || '',
                 costo_unitario_promedio: productoEditar.costo_unitario_promedio || '',
-                stock_minimo: productoEditar.stock_minimo || 0.5
+                stock_minimo: productoEditar.stock_minimo || 0.5,
+                nivel_toxicidad: productoEditar.nivel_toxicidad || 'N'
             });
+            // Validamos si requiere toxicidad al cargar
+            verificarCategoria(productoEditar.id_categoria_insumo, listas.categorias);
         } else {
             // Limpiar si es nuevo
             setDatos({
@@ -57,11 +62,34 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 id_unidad: '',
                 id_categoria_insumo: '',
                 costo_unitario_promedio: '',
-                stock_minimo: 0.5
+                stock_minimo: 0.5,
+                nivel_toxicidad: 'N'
             });
+            setRequiereToxicidad(false);
         }
-    }, [productoEditar, open]);
-
+    }, [productoEditar, open, listas.categorias]);
+    const verificarCategoria = (idCat, categoriasDisponibles) => {
+        const catSeleccionada = categoriasDisponibles.find(c => c.id_categoria === idCat);
+        
+        if (catSeleccionada) {
+            const nombre = catSeleccionada.nombre_categoria.toLowerCase();
+            // Si es agroquímico peligroso
+            if (nombre.includes('Fungicida') || nombre.includes('Insecticida') || nombre.includes('Herbicida')) {
+                setRequiereToxicidad(true);
+            } else {
+                setRequiereToxicidad(false);
+                // Si NO es peligroso, forzamos a 'N' (Sin Riesgo Agudo)
+                setDatos(prev => ({ ...prev, nivel_toxicidad: 'N' }));
+            }
+        }
+    };
+    const handleChangeCategoria = (e) => {
+        const nuevoId = e.target.value;
+        // Actualizamos el dato
+        setDatos({ ...datos, id_categoria_insumo: nuevoId });
+        // Verificamos si activamos la toxicidad
+        verificarCategoria(nuevoId, listas.categorias);
+    };
     const handleGuardar = async () => {
         // VALIDACIÓN
         if (!datos.id_unidad || !datos.id_categoria_insumo || !datos.nombre) {
@@ -113,7 +141,15 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
             });
         }
     };
-
+    // OPCIONES DE TOXICIDAD CON COLORES
+    const opcionesToxicidad = [
+        { value: 'Ia', label: 'Ia - Extremadamente Peligroso', color: '#d32f2f' }, // Rojo Fuerte
+        { value: 'Ib', label: 'Ib - Altamente Peligroso', color: '#c62828' },      // Rojo
+        { value: 'II', label: 'II - Moderadamente Peligroso', color: '#fbc02d' },  // Amarillo
+        { value: 'III', label: 'III - Ligeramente Peligroso', color: '#1976d2' },  // Azul
+        { value: 'U', label: 'U - No Peligroso', color: '#388e3c' },         // Verde
+        { value: 'N', label: 'N - No Clasificado', color: '#ffffff' }  //blanco
+    ];
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle sx={{ bgcolor: '#1b5e20', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -127,8 +163,54 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                     <TextField 
                         fullWidth label="Nombre del Producto" 
                         value={datos.nombre} onChange={(e) => setDatos({...datos, nombre: e.target.value})} 
-                        placeholder="Ej: Fertilizante Triple 15"
+                        placeholder="Ej: Daconil 500 SC"
                     />
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        {/* CATEGORÍA (Con lógica de activación) */}
+                        <TextField 
+                            select fullWidth label="Categoría" 
+                            value={datos.id_categoria_insumo} 
+                            onChange={handleChangeCategoria} // <--- Usamos el handler personalizado
+                        >
+                            {listas.categorias.map((c) => (
+                                <MenuItem key={c.id_categoria} value={c.id_categoria}>
+                                    {c.nombre_categoria}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        {/* SELECTOR DE TOXICIDAD (Se bloquea o desbloquea) */}
+                        <TextField 
+                            select fullWidth label="Nivel de Toxicidad (OMS)" 
+                            value={datos.nivel_toxicidad} 
+                            onChange={(e) => setDatos({...datos, nivel_toxicidad: e.target.value})}
+                            disabled={!requiereToxicidad} // <--- SE DESACTIVA SI NO ES PELIGROSO
+                            helperText={!requiereToxicidad ? "Automático: Sin Riesgo (N)" : "Requerido para agroquímicos"}
+                        >
+                            {opcionesToxicidad.map((op) => (
+                                <MenuItem key={op.value} value={op.value} sx={{ display: 'flex', gap: 1 }}>
+                                    <CircleIcon sx={{ color: op.color, fontSize: 16 }} />
+                                    {op.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField 
+                            fullWidth label="Cantidad en Stock" type="number" 
+                            value={datos.cantidad_stock} onChange={(e) => setDatos({...datos, cantidad_stock: e.target.value})} 
+                        />
+                        <TextField 
+                            select fullWidth label="Unidad de Medida" 
+                            value={datos.id_unidad} onChange={(e) => setDatos({...datos, id_unidad: e.target.value})}
+                        >
+                            {listas.unidades.map((u) => (
+                                <MenuItem key={u.id_unidad} value={u.id_unidad}>
+                                    {u.nombre_unidad}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </Box>
 
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField 
@@ -149,26 +231,16 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
 
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField 
-                            select fullWidth label="Categoría" 
-                            value={datos.id_categoria_insumo} onChange={(e) => setDatos({...datos, id_categoria_insumo: e.target.value})}
-                        >
-                            {listas.categorias.map((c) => (
-                                <MenuItem key={c.id_categoria} value={c.id_categoria}>
-                                    {c.nombre_categoria}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                        <TextField 
                             fullWidth label="Costo Promedio" type="number" 
                             value={datos.costo_unitario_promedio} onChange={(e) => setDatos({...datos, costo_unitario_promedio: e.target.value})} 
                             InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} 
                         />
+                        <TextField 
+                            fullWidth label="Stock Mínimo (Alerta)" type="number" 
+                            value={datos.stock_minimo} onChange={(e) => setDatos({...datos, stock_minimo: e.target.value})} 
+                            helperText="Si pones 0, se marcará como 'FUERA DE MERCADO'"
+                        />
                     </Box>
-
-                    <TextField 
-                        fullWidth label="Stock Mínimo (Alerta)" type="number" 
-                        value={datos.stock_minimo} onChange={(e) => setDatos({...datos, stock_minimo: e.target.value})} 
-                    />
                 </Box>
             </DialogContent>
 
