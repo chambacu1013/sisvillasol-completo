@@ -28,7 +28,6 @@ app.use("/api/empresa", empresaRoutes);
 app.use("/api/actividades", require("./routes/actividadesRoutes"));
 app.use("/api/notas", require("./routes/notasRoutes"));
 app.use("/api/finanzas", require("./routes/finanzasRoutes"));
-app.use("/api/ganaderia", require("./routes/ganaderiaRoutes"));
 app.listen(port, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${port}`);
 });

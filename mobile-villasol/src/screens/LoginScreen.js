@@ -90,7 +90,7 @@ export default function LoginScreen({ navigation }) {
       Toast.show({
         type: "success", // Verde
         text1: `¡Hola, ${usuarioData.nombre} ${usuarioData.apellido}!`,
-        text2: "Bienvenido a SISVILLASOL 🚜",
+        text2: "Bienvenido a SISVILLASOL 🧑‍🌾🍎",
         visibilityTime: 3000,
       });
       // Pequeña pausa para que vean el mensaje antes de cambiar de pantalla
