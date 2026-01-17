@@ -9,8 +9,6 @@ import MisTareasScreen from "./src/screens/MisTareasScreen";
 import ReportarScreen from "./src/screens/ReportarScreen";
 import LotesScreen from "./src/screens/LotesScreen";
 import DetalleTareaScreen from "./src/screens/DetalleTareaScreen";
-import AgregarInsumoScreen from "./src/screens/AgregarInsumoScreen";
-import HistorialGlobalScreen from "./src/screens/HistorialGlobalScreen";
 
 const Stack = createNativeStackNavigator();
 const toastConfig = {
@@ -26,11 +24,11 @@ const toastConfig = {
       }}
       contentContainerStyle={{ paddingHorizontal: 15 }}
       text1Style={{
-        fontSize: 22, // TÍTULO GIGANTE
+        fontSize: 20, // TÍTULO GIGANTE
         fontWeight: "bold",
       }}
       text2Style={{
-        fontSize: 16, // SUBTÍTULO GRANDE
+        fontSize: 12, // SUBTÍTULO GRANDE
         color: "#333",
       }}
     />
@@ -47,7 +45,7 @@ const toastConfig = {
         borderLeftWidth: 10,
       }}
       text1Style={{
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: "bold",
       }}
       text2Style={{
@@ -72,7 +70,7 @@ const toastConfig = {
         fontWeight: "bold",
       }}
       text2Style={{
-        fontSize: 16,
+        fontSize: 12,
         color: "#333",
       }}
     />
@@ -114,16 +112,6 @@ export default function App() {
             name="DetalleTarea"
             component={DetalleTareaScreen}
             options={{ headerShown: true, title: "Detalle de Tarea" }}
-          />
-          <Stack.Screen
-            name="AgregarInsumo"
-            component={AgregarInsumoScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="HistorialGlobal"
-            component={HistorialGlobalScreen}
-            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       </NavigationContainer>

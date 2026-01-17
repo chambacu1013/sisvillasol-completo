@@ -75,7 +75,6 @@ export default function LoginScreen({ navigation }) {
       await AsyncStorage.setItem("token", token);
       await AsyncStorage.setItem("usuario", JSON.stringify(usuarioData));
 
-      // CHIVATO 5: Momento de la verdad
       if (rememberMe) {
         await AsyncStorage.setItem("saved_documento", documentoLimpio);
         await AsyncStorage.setItem("saved_password", passwordLimpio);

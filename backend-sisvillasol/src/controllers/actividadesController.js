@@ -225,7 +225,7 @@ const obtenerLotesDetallados = async (req, res) => {
   }
 };
 
-// 8. FINALIZAR TAREA (Esta SÍ se queda, es el puente entre Tareas e Insumos)
+// 8. FINALIZAR TAREA
 const finalizarTarea = async (req, res) => {
   const { id } = req.params;
   const { insumosUsados, jornada, fecha_ejecucion } = req.body;

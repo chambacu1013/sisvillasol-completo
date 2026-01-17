@@ -137,26 +137,78 @@ export default function DetalleTareaScreen({ route, navigation }) {
   };
 
   const calcularFactor = (unidadBase, unidadUso) => {
+    // Si son iguales, no hay conversión (1 a 1)
     if (unidadBase === unidadUso) return 1;
+
+    // --- CONVERSIONES DE VOLUMEN (Base: Galón = 4 Litros según tu indicación) ---
+
+    // Tienes GALÓN en stock, pero gastas LITROS
+    if (unidadBase === "Galon" && unidadUso === "Litros") return 0.25; // 1 Litro es 0.25 Galón
+    if (unidadBase === "Galon" && unidadUso === "Mililitros") return 0.00025;
+
+    // Tienes LITROS en stock, pero gastas GALÓN
+    if (unidadBase === "Litros" && unidadUso === "Galon") return 4; // 1 Galón son 4 Litros
     if (unidadBase === "Litros" && unidadUso === "Mililitros") return 0.001;
+
+    // Tienes MILILITROS en stock
     if (unidadBase === "Mililitros" && unidadUso === "Litros") return 1000;
+
+    // --- CONVERSIONES DE PESO (Base: Bulto = 40 Kg ESTÁNDAR) ---
+    const PESO_BULTO_KG = 40;
+
+    // Tienes BULTOS en stock, pero gastas KILOS
+    if (unidadBase === "Bultos" && unidadUso === "Kilogramos")
+      return 1 / PESO_BULTO_KG; // Ej: 1 Kg = 0.02 Bultos
+    if (unidadBase === "Bultos" && unidadUso === "Gramos")
+      return 1 / (PESO_BULTO_KG * 1000);
+
+    // Tienes KILOS en stock, pero gastas BULTOS
+    if (unidadBase === "Kilogramos" && unidadUso === "Bultos")
+      return PESO_BULTO_KG;
     if (unidadBase === "Kilogramos" && unidadUso === "Gramos") return 0.001;
+
+    // Tienes GRAMOS en stock
     if (unidadBase === "Gramos" && unidadUso === "Kilogramos") return 1000;
-    return 1;
+
+    // --- CONVERSIONES DE LONGITUD (Rollo vs Metros) ---
+    // Asumiremos un rollo estándar de 100m, SI NO ES ASÍ, BORRA ESTAS LINEAS
+    // O mejor, manejamos 1 a 1 si no sabemos la longitud del rollo.
+    // Por ahora, dejemos que Rollo y Metros sean independientes si no tienes el dato exacto,
+    // pero si sabes que 1 Rollo = 100 Metros:
+    /*
+    if (unidadBase === "Rollo" && unidadUso === "Metros") return 0.01; 
+    */
+
+    return 1; // Si no encuentra conversión, asume 1 a 1
   };
 
   const obtenerOpcionesPosibles = (unidadBase) => {
     switch (unidadBase) {
+      // --- VOLUMEN ---
+      case "Galon":
+        return ["Galon", "Litros", "Mililitros"]; // Puedo sacar litros de un galón
       case "Litros":
-        return ["Litros", "Mililitros"];
+        return ["Litros", "Mililitros", "Galon"];
       case "Mililitros":
         return ["Mililitros", "Litros"];
+
+      // --- PESO ---
+      case "Bultos":
+        return ["Bultos", "Kilogramos", "Gramos"]; // Puedo sacar kilos de un bulto
       case "Kilogramos":
-        return ["Kilogramos", "Gramos"];
+        return ["Kilogramos", "Gramos", "Bultos"];
       case "Gramos":
         return ["Gramos", "Kilogramos"];
+
+      // --- LONGITUD ---
+      case "Rollo":
+        return ["Rollo", "Metros"];
+      case "Metros":
+        return ["Metros", "Rollo"];
+
+      // --- OTROS ---
       default:
-        return [unidadBase];
+        return [unidadBase]; // Unidades, etc.
     }
   };
 

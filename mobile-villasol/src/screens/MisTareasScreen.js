@@ -91,7 +91,10 @@ export default function MisTareasScreen({ navigation }) {
         </Text>
       </Text>
       <Text style={styles.fecha}>
-        📅 {formatearFechaLocal(item.fecha_programada)}
+        📅{" "}
+        {item.estado === "HECHO"
+          ? formatearFechaLocal(item.fecha_ejecucion)
+          : formatearFechaLocal(item.fecha_programada)}
       </Text>
     </TouchableOpacity>
   );
