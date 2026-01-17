@@ -48,12 +48,22 @@ const obtenerActividades = async (req, res) => {
 
     const response = await pool.query(`
             SELECT 
-                t.id_tarea, t.descripcion, t.fecha_programada, t.estado,
-                t.costo_mano_obra, t.origen, t.jornada,
-                t.id_lote_tarea, t.id_usuario_asignado, t.id_tipo_actividad_tarea,
-                l.nombre_lote, c.nombre_variedad,
+                t.id_tarea, 
+                t.descripcion, 
+                t.fecha_programada, 
+                t.fecha_ejecucion,
+                t.estado,
+                t.costo_mano_obra, 
+                t.origen, 
+                t.jornada,
+                t.id_lote_tarea, 
+                t.id_usuario_asignado, 
+                t.id_tipo_actividad_tarea,
+                l.nombre_lote, 
+                c.nombre_variedad,
                 ta.nombre_tipo_actividad,
-                u.nombre as nombre_responsable, u.apellido as apellido_responsable
+                u.nombre as nombre_responsable, 
+                u.apellido as apellido_responsable
             FROM sisvillasol.tareas t
             LEFT JOIN sisvillasol.lotes l ON t.id_lote_tarea = l.id_lote
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo

@@ -24,11 +24,11 @@ const toastConfig = {
       }}
       contentContainerStyle={{ paddingHorizontal: 15 }}
       text1Style={{
-        fontSize: 20, // TÍTULO GIGANTE
+        fontSize: 22, // TÍTULO GIGANTE
         fontWeight: "bold",
       }}
       text2Style={{
-        fontSize: 12, // SUBTÍTULO GRANDE
+        fontSize: 13, // SUBTÍTULO GRANDE
         color: "#333",
       }}
     />
@@ -45,11 +45,11 @@ const toastConfig = {
         borderLeftWidth: 10,
       }}
       text1Style={{
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: "bold",
       }}
       text2Style={{
-        fontSize: 12,
+        fontSize: 13,
         color: "#333",
       }}
     />
