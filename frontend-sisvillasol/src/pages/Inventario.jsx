@@ -49,10 +49,10 @@ function Inventario() {
         // Normalizamos a mayúsculas por si acaso
         const n = nivel ? nivel.toString() : ""; 
         switch (n) {
-            case 'Ia': return { color: '#d32f2f', texto: 'Extremadamente Peligroso (Ia)', bg: '#ffcdd2' }; // Rojo Fuerte
-            case 'Ib': return { color: '#c62828', texto: 'Altamente Peligroso (Ib)', bg: '#ef9a9a' }; // Rojo
-            case 'II': return { color: '#fbc02d', texto: 'Moderadamente Peligroso (II)', bg: '#fff9c4' }; // Amarillo
-            case 'III': return { color: '#1976d2', texto: 'Ligeramente Peligroso (III)', bg: '#bbdefb' }; // Azul
+            case 'Ia': return { color: '#d32f2f', texto: 'Extremadamente Tóxico (Ia)', bg: '#ffcdd2' }; // Rojo Fuerte
+            case 'Ib': return { color: '#c62828', texto: 'Altamente Tóxico (Ib)', bg: '#ef9a9a' }; // Rojo
+            case 'II': return { color: '#fbc02d', texto: 'Moderadamente Tóxico (II)', bg: '#fff9c4' }; // Amarillo
+            case 'III': return { color: '#1976d2', texto: 'Ligeramente Tóxico (III)', bg: '#bbdefb' }; // Azul
             case 'U':  return { color: '#388e3c', texto: 'Poco probable de Riesgo Agudo (U)', bg: '#c8e6c9' }; // Verde
             default:   return { color: '#9e9e9e', texto: 'No Clasificado (N)', bg: '#f5f5f5' };
         }

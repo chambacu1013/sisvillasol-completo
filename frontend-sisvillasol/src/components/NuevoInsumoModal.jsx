@@ -76,7 +76,8 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
         if (catSeleccionada) {
             const nombre = catSeleccionada.nombre_categoria.toLowerCase();
             // Si es agroquímico peligroso
-            if (nombre.includes('fungicida') || nombre.includes('insecticida') || nombre.includes('herbicida')) {
+            if (nombre.includes('fungicida') || nombre.includes('insecticida') ||
+             nombre.includes('herbicida') || nombre.includes('fertilizante') ) {
                 setRequiereToxicidad(true);
             } else {
                 setRequiereToxicidad(false);
@@ -141,11 +142,11 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
 
     // OPCIONES DE TOXICIDAD CON COLORES
     const opcionesToxicidad = [
-        { value: 'Ia', label: 'Ia - Extremadamente Peligroso', color: '#d32f2f' }, // Rojo Fuerte
-        { value: 'Ib', label: 'Ib - Altamente Peligroso', color: '#c62828' },      // Rojo
-        { value: 'II', label: 'II - Moderadamente Peligroso', color: '#fbc02d' },  // Amarillo
-        { value: 'III', label: 'III - Ligeramente Peligroso', color: '#1976d2' },  // Azul
-        { value: 'U', label: 'U - No Peligroso / Otro', color: '#388e3c' }         // Verde
+        { value: 'Ia', label: 'Ia - Extremadamente Tóxico', color: '#d32f2f' }, // Rojo Fuerte
+        { value: 'Ib', label: 'Ib - Altamente Tóxico', color: '#c62828' },      // Rojo
+        { value: 'II', label: 'II - Moderadamente Tóxico', color: '#fbc02d' },  // Amarillo
+        { value: 'III', label: 'III - Ligeramente Tóxico', color: '#1976d2' },  // Azul
+        { value: 'U', label: 'U - No Tóxico / Otro', color: '#388e3c' }         // Verde
     ];
 
     return (
