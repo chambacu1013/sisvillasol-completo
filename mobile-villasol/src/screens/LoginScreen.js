@@ -71,6 +71,16 @@ export default function LoginScreen({ navigation }) {
         password: passwordLimpio,
       });
       const usuarioData = response.data.usuario;
+      if (Number(usuarioData.id_rol) !== 2) {
+        Toast.show({
+          type: "error",
+          text1: "Acceso Denegado 🛑",
+          text2: "Esta App es exclusiva para Operarios/Agricultores.",
+          visibilityTime: 4000,
+        });
+        setLoading(false);
+        return; // <--- AQUÍ MUERE EL PROCESO. No entra.
+      }
       const token = response.data.token;
       await AsyncStorage.setItem("token", token);
       await AsyncStorage.setItem("usuario", JSON.stringify(usuarioData));
@@ -80,7 +90,7 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.setItem("saved_password", passwordLimpio);
       } else {
         console.log(
-          "❌ El usuario NO marcó el check. Borrando credenciales viejas."
+          "❌ El usuario NO marcó el check. Borrando credenciales viejas.",
         );
         await AsyncStorage.removeItem("saved_documento");
         await AsyncStorage.removeItem("saved_password");

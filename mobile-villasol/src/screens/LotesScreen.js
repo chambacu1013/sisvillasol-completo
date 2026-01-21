@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import api from "../services/api";
 
@@ -20,8 +21,21 @@ export default function LotesScreen() {
 
   const cargarLotes = async () => {
     try {
+      const userJson = await AsyncStorage.getItem("usuario");
+      const user = userJson ? JSON.parse(userJson) : null;
+      const userId = user?.id_usuario || user?.id;
       const res = await api.get("/actividades/info-lotes");
-      setLotes(res.data);
+
+      let listaLotes = res.data;
+      // 🛑 FILTRO FRANKLIN (ID 5)
+      // Si es Franklin, SOLO mostramos el Lote 9
+      if (Number(userId) === 5) {
+        listaLotes = listaLotes.filter((l) =>
+          l.nombre_lote.toLowerCase().includes("lote 9"),
+        );
+      }
+
+      setLotes(listaLotes);
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "No se pudo cargar la información de lotes");

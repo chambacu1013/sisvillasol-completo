@@ -12,16 +12,16 @@ import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialIcons } from "@expo/vector-icons";
 import api from "../services/api";
-import Toast from "react-native-toast-message"; // <--- 1. IMPORTAR TOAST
+import Toast from "react-native-toast-message";
 
 export default function ReportarScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
-
-  // Listas
   const [lotes, setLotes] = useState([]);
   const [tipos, setTipos] = useState([]);
 
-  // Formulario
+  // Estado para saber si es Franklin
+  const [isFranklin, setIsFranklin] = useState(false);
+
   const [form, setForm] = useState({
     id_tipo_actividad: "",
     id_lote: "",
@@ -34,26 +34,48 @@ export default function ReportarScreen({ navigation }) {
 
   const cargarListas = async () => {
     try {
+      // 1. VERIFICAR USUARIO
+      const userJson = await AsyncStorage.getItem("usuario");
+      const user = userJson ? JSON.parse(userJson) : null;
+      const userId = user?.id_usuario || user?.id;
+
       const res = await api.get("/actividades/datos-formulario");
-      setLotes(res.data.lotes);
+      const listaLotes = res.data.lotes;
+
+      setLotes(listaLotes);
       setTipos(res.data.tipos);
+
+      // 🛑 LÓGICA FRANKLIN (ID 5)
+      if (Number(userId) === 5) {
+        setIsFranklin(true);
+        // Buscamos AUTOMÁTICAMENTE el Lote 9 en la lista
+        const loteFranklin = listaLotes.find((l) =>
+          l.nombre_lote.toLowerCase().includes("lote 9"),
+        );
+
+        if (loteFranklin) {
+          // Pre-llenamos el formulario y bloqueamos selección
+          setForm((prev) => ({ ...prev, id_lote: loteFranklin.id_lote }));
+          // Opcional: Avisar discretamente
+          console.log("Modo Franklin activado: Lote 9 seleccionado.");
+        }
+      }
     } catch (error) {
       console.error(error);
       Toast.show({
         type: "error",
         text1: "Error de carga",
-        text2: "No se pudieron cargar las listas de lotes o actividades.",
+        text2: "No se pudieron cargar las listas.",
       });
     }
   };
 
   const handleGuardarLabor = async () => {
-    // 1. VALIDACIÓN (Alerta Azul)
     if (!form.id_tipo_actividad || !form.id_lote || !form.descripcion) {
       Toast.show({
         type: "info",
         text1: "Faltan datos",
-        text2: "Por favor completa todos los campos ⚠️",
+        text2: "Completa todos los campos ⚠️",
       });
       return;
     }
@@ -63,8 +85,7 @@ export default function ReportarScreen({ navigation }) {
       const userJson = await AsyncStorage.getItem("usuario");
       const user = JSON.parse(userJson);
       const userId = user.id || user.id_usuario;
-      // --- CORRECCIÓN DE FECHA ---
-      // Creamos la fecha basada en TU reloj local, no en UTC
+
       const hoy = new Date();
       const anio = hoy.getFullYear();
       const mes = String(hoy.getMonth() + 1).padStart(2, "0");
@@ -84,22 +105,18 @@ export default function ReportarScreen({ navigation }) {
 
       await api.post("/actividades", nuevaTarea);
 
-      // 2. ÉXITO (Alerta Verde)
       Toast.show({
         type: "success",
         text1: "¡Registrado!",
-        text2: "Labor espontánea guardada exitosamente ✅",
-        visibilityTime: 3000,
+        text2: "Labor guardada ✅",
       });
-
       navigation.goBack();
     } catch (error) {
       console.error(error);
-      // 3. ERROR (Alerta Roja)
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "No se pudo guardar la labor. Intenta nuevamente.",
+        text2: "No se pudo guardar.",
       });
     } finally {
       setLoading(false);
@@ -111,18 +128,21 @@ export default function ReportarScreen({ navigation }) {
       <View style={styles.header}>
         <MaterialIcons name="add-task" size={50} color="#e65100" />
         <Text style={styles.title}>Labor Espontánea</Text>
-        <Text style={styles.subtitle}>Registrar actividad NO planificada</Text>
+        <Text style={styles.subtitle}>
+          {isFranklin
+            ? "Registrar labor en Lote 9"
+            : "Registrar actividad NO planificada"}
+        </Text>
       </View>
 
       <View style={styles.card}>
-        {/* 1. TIPO DE ACTIVIDAD */}
+        {/* 1. TIPO DE ACTIVIDAD (Siempre visible) */}
         <Text style={styles.label}>¿Qué labor realizaste?</Text>
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={form.id_tipo_actividad}
             dropdownIconColor="black"
             style={{ color: "black", backgroundColor: "white" }}
-            itemStyle={{ color: "black" }}
             onValueChange={(val) =>
               setForm({ ...form, id_tipo_actividad: val })
             }
@@ -138,41 +158,61 @@ export default function ReportarScreen({ navigation }) {
           </Picker>
         </View>
 
-        {/* 2. LOTE (CON CULTIVO) */}
-        <Text style={styles.label}>¿En qué lote?</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={form.id_lote}
-            dropdownIconColor="black"
-            style={{ color: "black", backgroundColor: "white" }}
-            itemStyle={{ color: "black" }}
-            onValueChange={(val) => setForm({ ...form, id_lote: val })}
+        {/* 2. LOTE (CONDICIONAL PARA FRANKLIN) */}
+        {/* Si NO es Franklin, muestra el select. Si ES Franklin, muestra solo texto fijo. */}
+        {!isFranklin ? (
+          <>
+            <Text style={styles.label}>¿En qué lote?</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={form.id_lote}
+                dropdownIconColor="black"
+                style={{ color: "black", backgroundColor: "white" }}
+                onValueChange={(val) => setForm({ ...form, id_lote: val })}
+              >
+                <Picker.Item label="Seleccione el lote..." value="" />
+                {lotes.map((l) => (
+                  <Picker.Item
+                    key={l.id_lote}
+                    label={`${l.nombre_lote} - ${l.nombre_variedad || "Sin Cultivo"}`}
+                    value={l.id_lote}
+                  />
+                ))}
+              </Picker>
+            </View>
+          </>
+        ) : (
+          // VERSIÓN FRANKLIN (SOLO TEXTO)
+          <View
+            style={{
+              marginTop: 15,
+              padding: 10,
+              backgroundColor: "#e8f5e9",
+              borderRadius: 8,
+              borderLeftWidth: 5,
+              borderLeftColor: "#2e7d32",
+            }}
           >
-            <Picker.Item label="Seleccione el lote..." value="" />
-            {lotes.map((l) => (
-              <Picker.Item
-                key={l.id_lote}
-                label={`${l.nombre_lote} - ${
-                  l.nombre_variedad || "Sin Cultivo"
-                }`}
-                value={l.id_lote}
-              />
-            ))}
-          </Picker>
-        </View>
+            <Text style={{ fontWeight: "bold", color: "#1b5e20" }}>
+              📍 Lote Asignado:
+            </Text>
+            <Text style={{ fontSize: 16 }}>
+              Lote 9 - Gran Jarillo (Duraznos)
+            </Text>
+          </View>
+        )}
 
         {/* 3. DESCRIPCIÓN */}
         <Text style={styles.label}>Observaciones / Detalle:</Text>
         <TextInput
           style={styles.textArea}
-          placeholder="Ej: Se realizó limpieza extra en el sector norte..."
+          placeholder="Ej: Se realizó limpieza extra..."
           multiline={true}
           numberOfLines={4}
           value={form.descripcion}
           onChangeText={(text) => setForm({ ...form, descripcion: text })}
         />
 
-        {/* BOTÓN ENVIAR */}
         <TouchableOpacity
           style={styles.button}
           onPress={handleGuardarLabor}

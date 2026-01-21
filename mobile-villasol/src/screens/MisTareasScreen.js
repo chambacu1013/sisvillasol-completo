@@ -22,7 +22,7 @@ export default function MisTareasScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       cargarDatos();
-    }, [])
+    }, []),
   );
   const formatearFechaLocal = (fechaString) => {
     if (!fechaString) return "Fecha no disponible";
@@ -57,7 +57,7 @@ export default function MisTareasScreen({ navigation }) {
 
       // Filtramos SOLO las del usuario
       const misTareas = response.data.filter(
-        (t) => Number(t.id_usuario_asignado) === Number(userId)
+        (t) => Number(t.id_usuario_asignado) === Number(userId),
       );
       setTareas(misTareas);
     } catch (error) {

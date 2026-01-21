@@ -6,49 +6,52 @@ const obtenerResumenFinanciero = async (req, res) => {
   const anio = year || new Date().getFullYear();
 
   try {
+    // A. INGRESOS (VENTAS)
     const ventasRes = await pool.query(
       "SELECT SUM(precio_total) as total FROM sisvillasol.ventas WHERE EXTRACT(YEAR FROM fecha_venta) = $1",
-      [anio]
+      [anio],
     );
     const totalIngresos = Number(ventasRes.rows[0].total || 0);
 
+    // B. GASTOS DE MANO DE OBRA (TAREAS)
     const tareasRes = await pool.query(
       "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_programada) = $1",
-      [anio]
+      [anio],
     );
     const totalManoObra = Number(tareasRes.rows[0].total || 0);
 
-    const gananciaNeta = totalIngresos - totalManoObra;
+    // C. GASTOS DE INSUMOS (CONSUMO) - ¡NUEVO! 🧪
+    // OJO: Usamos 'id_tarea_consumo' para unir
+    const insumosRes = await pool.query(
+      `SELECT SUM(ci.costo_calculado) as total 
+       FROM sisvillasol.consumo_insumos ci
+       JOIN sisvillasol.tareas t ON ci.id_tarea_consumo = t.id_tarea
+       WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1`,
+      [anio],
+    );
+    const totalInsumos = Number(insumosRes.rows[0].total || 0);
 
-    const mejorLoteRes = await pool.query(
-      `
+    // D. TOTALES REALES
+    const totalGastos = totalManoObra + totalInsumos; // <--- AHORA SÍ ES REAL
+    const gananciaNeta = totalIngresos - totalGastos;
+
+    // E. MEJOR Y PEOR LOTE
+    const queryRanking = (orden) => `
             SELECT l.nombre_lote, c.nombre_variedad, SUM(v.precio_total) as total 
             FROM sisvillasol.ventas v
             JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
             WHERE EXTRACT(YEAR FROM v.fecha_venta) = $1 
             GROUP BY l.nombre_lote, c.nombre_variedad
-            ORDER BY total DESC LIMIT 1
-        `,
-      [anio]
-    );
+            ORDER BY total ${orden} LIMIT 1
+    `;
 
-    const peorLoteRes = await pool.query(
-      `
-            SELECT l.nombre_lote, c.nombre_variedad, SUM(v.precio_total) as total 
-            FROM sisvillasol.ventas v
-            JOIN sisvillasol.lotes l ON v.id_lote = l.id_lote
-            LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
-            WHERE EXTRACT(YEAR FROM v.fecha_venta) = $1 
-            GROUP BY l.nombre_lote, c.nombre_variedad
-            ORDER BY total ASC LIMIT 1
-        `,
-      [anio]
-    );
+    const mejorLoteRes = await pool.query(queryRanking("DESC"), [anio]);
+    const peorLoteRes = await pool.query(queryRanking("ASC"), [anio]);
 
     res.json({
       ingresos: totalIngresos,
-      gastos: totalManoObra,
+      gastos: totalGastos, // Enviamos la suma completa
       ganancia: gananciaNeta,
       mejorLote: mejorLoteRes.rows[0] || {
         nombre_lote: "N/A",
@@ -73,16 +76,28 @@ const obtenerGraficaAnual = async (req, res) => {
   const anio = year || new Date().getFullYear();
 
   try {
+    // 1. INGRESOS POR MES
     const ingresosRes = await pool.query(
       `SELECT EXTRACT(MONTH FROM fecha_venta) as mes, SUM(precio_total) as total
        FROM sisvillasol.ventas WHERE EXTRACT(YEAR FROM fecha_venta) = $1 GROUP BY mes`,
-      [anio]
+      [anio],
     );
 
-    const gastosRes = await pool.query(
+    // 2. MANO DE OBRA POR MES
+    const manoObraRes = await pool.query(
       `SELECT EXTRACT(MONTH FROM fecha_programada) as mes, SUM(costo_mano_obra) as total
        FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_programada) = $1 GROUP BY mes`,
-      [anio]
+      [anio],
+    );
+
+    // 3. INSUMOS POR MES (¡EL QUE FALTABA!) 🧪
+    const insumosRes = await pool.query(
+      `SELECT EXTRACT(MONTH FROM t.fecha_programada) as mes, SUM(ci.costo_calculado) as total
+       FROM sisvillasol.consumo_insumos ci
+       JOIN sisvillasol.tareas t ON ci.id_tarea_consumo = t.id_tarea
+       WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1
+       GROUP BY mes`,
+      [anio],
     );
 
     const datosGrafica = [];
@@ -102,12 +117,19 @@ const obtenerGraficaAnual = async (req, res) => {
     ];
 
     for (let i = 1; i <= 12; i++) {
-      const ingresoMes = ingresosRes.rows.find((r) => Number(r.mes) === i);
-      const gastoMes = gastosRes.rows.find((r) => Number(r.mes) === i);
+      const ingreso = ingresosRes.rows.find((r) => Number(r.mes) === i);
+      const manoObra = manoObraRes.rows.find((r) => Number(r.mes) === i);
+      const insumo = insumosRes.rows.find((r) => Number(r.mes) === i); // Buscamos insumo del mes
+
+      // Sumamos Mano de Obra + Insumos
+      const totalCostosMes =
+        (manoObra ? Number(manoObra.total) : 0) +
+        (insumo ? Number(insumo.total) : 0);
+
       datosGrafica.push({
         name: mesesNombres[i - 1],
-        Ingresos: ingresoMes ? Number(ingresoMes.total) : 0,
-        Costos: gastoMes ? Number(gastoMes.total) : 0,
+        Ingresos: ingreso ? Number(ingreso.total) : 0,
+        Costos: totalCostosMes, // Ahora incluye ambos gastos
       });
     }
     res.json(datosGrafica);
@@ -131,7 +153,7 @@ const obtenerVentas = async (req, res) => {
             WHERE EXTRACT(YEAR FROM v.fecha_venta) = $1 
             ORDER BY v.fecha_venta DESC
         `,
-      [anio]
+      [anio],
     );
     res.json(response.rows);
   } catch (error) {
@@ -140,7 +162,7 @@ const obtenerVentas = async (req, res) => {
   }
 };
 
-// 4. CREAR VENTA (¡RESTAURADA!)
+// 4. CREAR VENTA
 const crearVenta = async (req, res) => {
   const { id_lote, fecha_venta, cliente, kilos_vendidos, precio_total } =
     req.body;
@@ -148,7 +170,7 @@ const crearVenta = async (req, res) => {
     await pool.query(
       `INSERT INTO sisvillasol.ventas (id_lote, fecha_venta, cliente, kilos_vendidos, precio_total)
        VALUES ($1, $2, $3, $4, $5)`,
-      [id_lote, fecha_venta, cliente, kilos_vendidos, precio_total]
+      [id_lote, fecha_venta, cliente, kilos_vendidos, precio_total],
     );
     res.json({ mensaje: "Venta registrada 💰" });
   } catch (error) {
@@ -157,7 +179,7 @@ const crearVenta = async (req, res) => {
   }
 };
 
-// 5. ACTUALIZAR VENTA (¡RESTAURADA!)
+// 5. ACTUALIZAR VENTA
 const actualizarVenta = async (req, res) => {
   const { id } = req.params;
   const { id_lote, fecha_venta, cliente, kilos_vendidos, precio_total } =
@@ -167,7 +189,7 @@ const actualizarVenta = async (req, res) => {
       `UPDATE sisvillasol.ventas 
        SET id_lote = $1, fecha_venta = $2, cliente = $3, kilos_vendidos = $4, precio_total = $5
        WHERE id_venta = $6`,
-      [id_lote, fecha_venta, cliente, kilos_vendidos, precio_total, id]
+      [id_lote, fecha_venta, cliente, kilos_vendidos, precio_total, id],
     );
     res.json({ mensaje: "Venta actualizada 📝" });
   } catch (error) {
@@ -176,7 +198,7 @@ const actualizarVenta = async (req, res) => {
   }
 };
 
-// 6. ELIMINAR VENTA (¡RESTAURADA!)
+// 6. ELIMINAR VENTA
 const eliminarVenta = async (req, res) => {
   const { id } = req.params;
   try {
@@ -190,7 +212,7 @@ const eliminarVenta = async (req, res) => {
   }
 };
 
-// 7. TORTAS (DISTRIBUCIÓN) - Filtrada y Segura
+// 7. TORTAS (DISTRIBUCIÓN) - Corregida y Optimizada
 const obtenerDistribucionFinanciera = async (req, res) => {
   const { year } = req.query;
   const anio = year || new Date().getFullYear();
@@ -206,7 +228,7 @@ const obtenerDistribucionFinanciera = async (req, res) => {
             WHERE EXTRACT(YEAR FROM v.fecha_venta) = $1
             GROUP BY c.nombre_variedad
         `,
-      [anio]
+      [anio],
     );
 
     const cultivosData = cultivosQuery.rows.map((dato) => ({
@@ -217,32 +239,21 @@ const obtenerDistribucionFinanciera = async (req, res) => {
     // 2. MANO DE OBRA
     const manoObra = await pool.query(
       "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_programada) = $1",
-      [anio]
+      [anio],
     );
 
-    // 3. INSUMOS (CON PROTECCIÓN CONTRA ERRORES)
-    let totalInsumos = 0;
-    try {
-      const insumosRes = await pool.query(
-        `
+    // 3. INSUMOS (CORREGIDO EL JOIN QUE ESTABA MAL) 🛠️
+    // Antes decía ci.id_tarea (incorrecto), ahora dice ci.id_tarea_consumo (correcto)
+    const insumosRes = await pool.query(
+      `
             SELECT SUM(ci.costo_calculado) as total 
             FROM sisvillasol.consumo_insumos ci
-            JOIN sisvillasol.tareas t ON ci.id_tarea = t.id_tarea
+            JOIN sisvillasol.tareas t ON ci.id_tarea_consumo = t.id_tarea
             WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1
         `,
-        [anio]
-      );
-      totalInsumos = Number(insumosRes.rows[0].total || 0);
-    } catch (errInsumos) {
-      console.error(
-        "⚠️ Error filtrando insumos (usando total global):",
-        errInsumos.message
-      );
-      const insumosGlobal = await pool.query(
-        "SELECT SUM(costo_calculado) as total FROM sisvillasol.consumo_insumos"
-      );
-      totalInsumos = Number(insumosGlobal.rows[0].total || 0);
-    }
+      [anio],
+    );
+    const totalInsumos = Number(insumosRes.rows[0].total || 0);
 
     const gastosData = [
       { name: "Mano de Obra", value: Number(manoObra.rows[0].total || 0) },
