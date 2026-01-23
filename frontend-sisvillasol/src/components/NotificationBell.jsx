@@ -38,7 +38,7 @@ const NotificationBell = () => {
                 // Solo mostramos alerta si el stock es bajo Y el estado NO es "Fuera de mercado"
                 if (
                     parseFloat(insumo.cantidad_stock) <= parseFloat(insumo.stock_minimo) && 
-                    insumo.estado !== 'FUERA DE MERCADO'
+                    insumo.estado_insumo !== 'FUERA DE MERCADO'
                 ) {
                     nuevasAlertas.push({
                         tipo: 'STOCK',
