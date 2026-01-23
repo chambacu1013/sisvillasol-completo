@@ -58,7 +58,7 @@ function Reportes() {
     
     // Formulario
     const [nuevaVenta, setNuevaVenta] = useState({
-        fecha_venta: new Date().toISOString().split('T')[0],
+        fecha_venta: new Date().toLocaleDateString('en-CA'),
         id_lote: '', cliente: '', kilos_vendidos: '', precio_total: ''
     });
     // ESTADOS PARA LAS TORTAS
@@ -445,7 +445,7 @@ function Reportes() {
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((venta) => (
                                     <TableRow key={venta.id_venta} hover>
-                                        <TableCell>{new Date(venta.fecha_venta).toLocaleDateString()}</TableCell>
+                                       <TableCell>{new Date(venta.fecha_venta).toLocaleDateString('es-CO', { timeZone: 'UTC' })}</TableCell>
                                         <TableCell>
                                             <Typography variant="body2" fontWeight="bold">{venta.nombre_lote}</Typography>
                                             <Chip label={venta.nombre_variedad || 'Sin Cultivo'} size="small" variant="outlined" />

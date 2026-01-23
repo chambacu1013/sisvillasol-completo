@@ -11,7 +11,7 @@ const NuevaVentaModal = ({ open, onClose, ventaEditar, onSuccess, listaLotes }) 
     
     // Estado local del formulario
     const [datos, setDatos] = useState({
-        fecha_venta: new Date().toISOString().split('T')[0],
+        fecha_venta: new Date().toLocaleDateString('en-CA'),
         id_lote: '', 
         cliente: '', 
         kilos_vendidos: '', 
