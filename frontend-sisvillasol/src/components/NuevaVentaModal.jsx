@@ -31,7 +31,7 @@ const NuevaVentaModal = ({ open, onClose, ventaEditar, onSuccess, listaLotes }) 
         } else {
             // Limpiar formulario si es nuevo
             setDatos({
-                fecha_venta: new Date().toISOString().split('T')[0],
+                fecha_venta: new Date().toLocaleDateString('en-CA'),
                 id_lote: '', 
                 cliente: '', 
                 kilos_vendidos: '', 
