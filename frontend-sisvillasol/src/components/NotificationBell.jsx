@@ -43,7 +43,7 @@ const NotificationBell = () => {
                     nuevasAlertas.push({
                         tipo: 'STOCK',
                         titulo: 'Stock Crítico',
-                        mensaje: `El insumo ${insumo.nombre_insumo} se está agotando (${insumo.cantidad_stock} unid).`,
+                        mensaje: `El insumo ${insumo.nombre} se está agotando (${insumo.cantidad_stock} unid).`,
                         ruta: '/inventario'
                     });
                 }
@@ -124,8 +124,24 @@ const NotificationBell = () => {
                                 }
                             </ListItemIcon>
                             <ListItemText 
-                                primary={<Typography variant="body2" fontWeight="bold">{alerta.titulo}</Typography>} 
-                                secondary={alerta.mensaje} 
+                                primary={
+                                    <Typography variant="body2" fontWeight="bold" color="textPrimary">
+                                        {alerta.titulo}
+                                    </Typography>
+                                } 
+                                secondary={
+                                    <Typography 
+                                        variant="caption" 
+                                        color="textSecondary"
+                                        sx={{ 
+                                            display: 'block',       // Comportamiento de bloque
+                                            whiteSpace: 'normal',   // PERMITE SALTO DE LÍNEA
+                                            wordBreak: 'break-word' // Evita que se salga del recuadro
+                                        }}
+                                    >
+                                        {alerta.mensaje}
+                                    </Typography>
+                                } 
                             />
                         </MenuItem>
                     ))
