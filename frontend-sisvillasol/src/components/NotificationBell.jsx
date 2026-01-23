@@ -34,12 +34,16 @@ const NotificationBell = () => {
             // 1. OBTENER INSUMOS (Stock Bajo)
             const resInsumos = await api.get('/insumos');
             resInsumos.data.forEach(insumo => {
-                if (parseFloat(insumo.cantidad_stock) <= parseFloat(insumo.stock_minimo || 5)) {
+                // CORRECCIÓN AQUÍ: Agregamos la validación del estado
+                // Solo mostramos alerta si el stock es bajo Y el estado NO es "Fuera de mercado"
+                if (
+                    parseFloat(insumo.cantidad_stock) <= parseFloat(insumo.stock_minimo) && 
+                    insumo.estado !== 'FUERA DE MERCADO'
+                ) {
                     nuevasAlertas.push({
-                        id: `insumo-${insumo.id_insumo}`,
                         tipo: 'STOCK',
-                        titulo: 'Stock Bajo',
-                        mensaje: `Quedan ${insumo.cantidad_stock} de ${insumo.nombre}`,
+                        titulo: 'Stock Crítico',
+                        mensaje: `El insumo ${insumo.nombre_insumo} se está agotando (${insumo.cantidad_stock} unid).`,
                         ruta: '/inventario'
                     });
                 }
