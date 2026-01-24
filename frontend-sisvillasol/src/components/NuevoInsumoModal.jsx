@@ -1,13 +1,15 @@
+import { useEffect, useState } from 'react'; // <--- ESTO FALTABA
 import { 
     Dialog, DialogTitle, DialogContent, DialogActions, 
     Button, TextField, Box, MenuItem, InputAdornment, IconButton, Typography, 
-    FormControlLabel, Switch, Divider // <--- AGREGADOS
+    FormControlLabel, Switch, Divider 
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import CircleIcon from '@mui/icons-material/Circle'; // Para los puntitos de color
+import CircleIcon from '@mui/icons-material/Circle'; 
+import CalculateIcon from '@mui/icons-material/Calculate';
 import api from '../services/api';
 import Swal from 'sweetalert2';
-import CalculateIcon from '@mui/icons-material/Calculate';
+
 const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
     
     // Listas dinámicas desde BD
@@ -26,12 +28,14 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
 
     // Estado para saber si debemos mostrar/habilitar el campo toxicidad
     const [requiereToxicidad, setRequiereToxicidad] = useState(false);
+
     // --- ESTADOS PARA LA CALCULADORA ---
     const [usarCalculadora, setUsarCalculadora] = useState(false);
     const [calc, setCalc] = useState({
         precio_empaque: '', // Ej: 36000
         contenido_empaque: '' // Ej: 500
     });
+
     // 1. CARGAR LISTAS
     useEffect(() => {
         const cargarListas = async () => {
@@ -45,7 +49,7 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
         if (open) cargarListas();
     }, [open]);
 
-    // 2. Cargar datos si estamos editando
+    // 2. CARGAR DATOS SI ESTAMOS EDITANDO
     useEffect(() => {
         if (productoEditar) {
             setDatos({
@@ -57,21 +61,9 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 stock_minimo: productoEditar.stock_minimo || 0.5,
                 nivel_toxicidad: productoEditar.nivel_toxicidad || 'U'
             });
-            // --- MAGIA MATEMÁTICA 🧠 ---
-    useEffect(() => {
-        if (usarCalculadora && calc.precio_empaque && calc.contenido_empaque) {
-            const precio = parseFloat(calc.precio_empaque);
-            const contenido = parseFloat(calc.contenido_empaque);
-            
-            if (contenido > 0) {
-                const costoUnitario = precio / contenido;
-                // Guardamos el resultado con 2 decimales
-                setDatos(prev => ({ ...prev, costo_unitario_promedio: costoUnitario.toFixed(2) }));
-            }
-        }
-    }, [calc, usarCalculadora]);
             // Validamos si requiere toxicidad al cargar
             verificarCategoria(productoEditar.id_categoria_insumo, listas.categorias);
+            setUsarCalculadora(false); // Al editar, desactivamos calculadora
         } else {
             // Limpiar si es nuevo
             setDatos({
@@ -84,10 +76,24 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 nivel_toxicidad: 'U'
             });
             setRequiereToxicidad(false);
-            setUsarCalculadora(true); // Activar calculadora por defecto al crear nuevo
+            setUsarCalculadora(true); // Al crear nuevo, activamos calculadora
             setCalc({ precio_empaque: '', contenido_empaque: '' });
         }
-    }, [productoEditar, open, listas.categorias]); // Agregamos listas.categorias a dependencias
+    }, [productoEditar, open, listas.categorias]);
+
+    // 3. --- MAGIA MATEMÁTICA 🧠 (SEPARADO, NO ANIDADO) ---
+    useEffect(() => {
+        if (usarCalculadora && calc.precio_empaque && calc.contenido_empaque) {
+            const precio = parseFloat(calc.precio_empaque);
+            const contenido = parseFloat(calc.contenido_empaque);
+            
+            if (contenido > 0) {
+                const costoUnitario = precio / contenido;
+                // Guardamos el resultado con 2 decimales
+                setDatos(prev => ({ ...prev, costo_unitario_promedio: costoUnitario.toFixed(2) }));
+            }
+        }
+    }, [calc, usarCalculadora]);
 
     // --- FUNCIÓN INTELIGENTE: Verificar Categoría ---
     const verificarCategoria = (idCat, categoriasDisponibles) => {
@@ -96,12 +102,10 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
         if (catSeleccionada) {
             const nombre = catSeleccionada.nombre_categoria.toLowerCase();
             // Si es agroquímico peligroso
-            if (nombre.includes('fungicida') || nombre.includes('insecticida') ||
-             nombre.includes('herbicida') || nombre.includes('fertilizante') ) {
+            if (['fungicida', 'insecticida', 'herbicida', 'fertilizante'].some(t => nombre.includes(t))) {
                 setRequiereToxicidad(true);
             } else {
                 setRequiereToxicidad(false);
-                // Si NO es peligroso, forzamos a 'U' (Sin Riesgo Agudo)
                 setDatos(prev => ({ ...prev, nivel_toxicidad: 'U' }));
             }
         }
@@ -131,32 +135,17 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
             if (productoEditar) {
                 // EDITAR
                 await api.put(`/insumos/${productoEditar.id_insumo}`, datos);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Actualizado',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+                Swal.fire({ icon: 'success', title: 'Actualizado', timer: 1500, showConfirmButton: false });
             } else {
                 // CREAR
                 await api.post('/insumos', datos);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Registrado',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
+                Swal.fire({ icon: 'success', title: 'Registrado', timer: 1500, showConfirmButton: false });
             }
             onSuccess();
             onClose();
         } catch (error) { 
             console.error(error); 
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo guardar.',
-                confirmButtonColor: '#d32f2f'
-            });
+            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar.', confirmButtonColor: '#d32f2f' });
         }
     };
 
@@ -186,11 +175,11 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                     />
 
                     <Box sx={{ display: 'flex', gap: 2 }}>
-                        {/* CATEGORÍA (Con lógica de activación) */}
+                        {/* CATEGORÍA */}
                         <TextField 
                             select fullWidth label="Categoría" 
                             value={datos.id_categoria_insumo} 
-                            onChange={handleChangeCategoria} // <--- Usamos el handler personalizado
+                            onChange={handleChangeCategoria} 
                         >
                             {listas.categorias.map((c) => (
                                 <MenuItem key={c.id_categoria} value={c.id_categoria}>
@@ -199,16 +188,10 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                             ))}
                         </TextField>
 
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField 
-                            fullWidth label="Cantidad en Stock" type="number" 
-                            value={datos.cantidad_stock} onChange={(e) => setDatos({...datos, cantidad_stock: e.target.value})} 
-                        />
-                        <TextField 
-                            select fullWidth label="Unidad de Medida" 
+                            select fullWidth label="Unidad de Medida (Mínima)" 
                             value={datos.id_unidad} onChange={(e) => setDatos({...datos, id_unidad: e.target.value})}
+                            helperText="Ej: Gramos o Mililitros"
                         >
                             {listas.unidades.map((u) => (
                                 <MenuItem key={u.id_unidad} value={u.id_unidad}>
@@ -216,6 +199,13 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                                 </MenuItem>
                             ))}
                         </TextField>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField 
+                            fullWidth label="Cantidad en Stock" type="number" 
+                            value={datos.cantidad_stock} onChange={(e) => setDatos({...datos, cantidad_stock: e.target.value})} 
+                        />
                     </Box>
 
                     <Divider textAlign="left"><Typography variant="caption" color="textSecondary">COSTOS</Typography></Divider>
@@ -268,7 +258,6 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                             fullWidth label="Stock Mínimo (Alerta)" type="number" 
                             value={datos.stock_minimo} onChange={(e) => setDatos({...datos, stock_minimo: e.target.value})} 
                         />
-                        {/* Aquí moví el selector de Toxicidad para que quede parejo */}
                         <TextField 
                             select fullWidth label="Toxicidad" 
                             value={datos.nivel_toxicidad} 
