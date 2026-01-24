@@ -93,10 +93,14 @@ function Calendario() {
 
     useEffect(() => {
         if (tareaEditar) {
-            // AL EDITAR, CARGAMOS LA FECHA PROGRAMADA ORIGINAL EN EL FORMULARIO
-            // (Para que el admin vea cuándo estaba planeada originalmente)
-            const fechaRaw = tareaEditar.resource.fecha_programada;
-            const fechaSimple = fechaRaw ? fechaRaw.split('T')[0] : '';
+           
+            // Si la tarea ya se hizo, mostramos en el campo "Fecha" el día que se hizo.
+            // Si está pendiente, mostramos el día programado.
+            let fechaDelFormulario = tareaEditar.resource.fecha_programada;
+            if (tareaEditar.resource.estado === 'HECHO' && tareaEditar.resource.fecha_ejecucion) {
+                fechaDelFormulario = tareaEditar.resource.fecha_ejecucion;
+            }
+            const fechaSimple = fechaDelFormulario ? fechaDelFormulario.toString().split('T')[0] : '';
             setDatos({
                 id_tipo_actividad: tareaEditar.resource.id_tipo_actividad_tarea || '',
                 descripcion: tareaEditar.resource.descripcion || '',
@@ -108,10 +112,12 @@ function Calendario() {
                 jornada: tareaEditar.resource.jornada || 'COMPLETA',
             });
         } else {
+            // Limpiar formulario si es nuevo
             setDatos(prev => ({ 
                 ...prev, 
                 id_tipo_actividad: '', descripcion: '', 
-                id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: '', jornada: 'COMPLETA' 
+                id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: '', jornada: 'COMPLETA',
+                fecha_programada: new Date().toLocaleDateString('en-CA')
             }));
         }
     }, [tareaEditar, modalOpen]);
@@ -127,17 +133,13 @@ function Calendario() {
                 // LÓGICA MAESTRA:
                 // Si está HECHO y tiene fecha de ejecución, usamos esa.
                 // Si no, usamos la programada.
-                let fechaBase = tarea.fecha_programada;
+                let fechaParaMostrar = tarea.fecha_programada;
                 if (tarea.estado === 'HECHO' && tarea.fecha_ejecucion) {
-                    fechaBase = tarea.fecha_ejecucion;
+                    fechaParaMostrar = tarea.fecha_ejecucion;
                 }
 
-                // Aseguramos que sea string y quitamos la hora (T00:00:00)
-                const fechaString = fechaBase ? fechaBase.toString().split('T')[0] : '';
-                
-                if (!fechaString) return null; // Seguridad por si viene vacío
-
-                // Construcción manual de fecha para evitar desfase de zona horaria
+                if (!fechaParaMostrar) return null; // Seguridad por si viene vacío
+                const fechaString = fechaParaMostrar.toString().split('T')[0];
                 const [anio, mes, dia] = fechaString.split('-');
                 const fechaFixed = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia));
 
@@ -203,6 +205,7 @@ function Calendario() {
         }
         try {
             if (tareaEditar) {
+
                 await api.put(`/actividades/${tareaEditar.resource.id_tarea}`, datos);
                 Swal.fire({ icon: 'success', title: '¡Actualizado!', timer: 2000, showConfirmButton: false });
             } else {
