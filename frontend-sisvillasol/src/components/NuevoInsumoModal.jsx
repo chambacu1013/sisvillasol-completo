@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
 import { 
     Dialog, DialogTitle, DialogContent, DialogActions, 
-    Button, TextField, Box, MenuItem, InputAdornment, IconButton, Typography, Circle 
+    Button, TextField, Box, MenuItem, InputAdornment, IconButton, Typography, 
+    FormControlLabel, Switch, Divider // <--- AGREGADOS
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import CircleIcon from '@mui/icons-material/Circle'; // Para los puntitos de color
 import api from '../services/api';
 import Swal from 'sweetalert2';
-
+import CalculateIcon from '@mui/icons-material/Calculate';
 const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
     
     // Listas dinámicas desde BD
@@ -26,7 +26,12 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
 
     // Estado para saber si debemos mostrar/habilitar el campo toxicidad
     const [requiereToxicidad, setRequiereToxicidad] = useState(false);
-
+    // --- ESTADOS PARA LA CALCULADORA ---
+    const [usarCalculadora, setUsarCalculadora] = useState(false);
+    const [calc, setCalc] = useState({
+        precio_empaque: '', // Ej: 36000
+        contenido_empaque: '' // Ej: 500
+    });
     // 1. CARGAR LISTAS
     useEffect(() => {
         const cargarListas = async () => {
@@ -52,6 +57,19 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 stock_minimo: productoEditar.stock_minimo || 0.5,
                 nivel_toxicidad: productoEditar.nivel_toxicidad || 'U'
             });
+            // --- MAGIA MATEMÁTICA 🧠 ---
+    useEffect(() => {
+        if (usarCalculadora && calc.precio_empaque && calc.contenido_empaque) {
+            const precio = parseFloat(calc.precio_empaque);
+            const contenido = parseFloat(calc.contenido_empaque);
+            
+            if (contenido > 0) {
+                const costoUnitario = precio / contenido;
+                // Guardamos el resultado con 2 decimales
+                setDatos(prev => ({ ...prev, costo_unitario_promedio: costoUnitario.toFixed(2) }));
+            }
+        }
+    }, [calc, usarCalculadora]);
             // Validamos si requiere toxicidad al cargar
             verificarCategoria(productoEditar.id_categoria_insumo, listas.categorias);
         } else {
@@ -66,6 +84,8 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                 nivel_toxicidad: 'U'
             });
             setRequiereToxicidad(false);
+            setUsarCalculadora(true); // Activar calculadora por defecto al crear nuevo
+            setCalc({ precio_empaque: '', contenido_empaque: '' });
         }
     }, [productoEditar, open, listas.categorias]); // Agregamos listas.categorias a dependencias
 
@@ -179,21 +199,6 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                             ))}
                         </TextField>
 
-                        {/* SELECTOR DE TOXICIDAD (Se bloquea o desbloquea) */}
-                        <TextField 
-                            select fullWidth label="Nivel de Toxicidad (OMS)" 
-                            value={datos.nivel_toxicidad} 
-                            onChange={(e) => setDatos({...datos, nivel_toxicidad: e.target.value})}
-                            disabled={!requiereToxicidad} // <--- SE DESACTIVA SI NO ES PELIGROSO
-                            helperText={!requiereToxicidad ? "Automático: Sin Riesgo (U)" : "Requerido para agroquímicos"}
-                        >
-                            {opcionesToxicidad.map((op) => (
-                                <MenuItem key={op.value} value={op.value} sx={{ display: 'flex', gap: 1 }}>
-                                    <CircleIcon sx={{ color: op.color, fontSize: 16 }} />
-                                    {op.label}
-                                </MenuItem>
-                            ))}
-                        </TextField>
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 2 }}>
@@ -213,17 +218,69 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                         </TextField>
                     </Box>
 
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <TextField 
-                            fullWidth label="Costo Promedio" type="number" 
-                            value={datos.costo_unitario_promedio} onChange={(e) => setDatos({...datos, costo_unitario_promedio: e.target.value})} 
-                            InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} 
+                    <Divider textAlign="left"><Typography variant="caption" color="textSecondary">COSTOS</Typography></Divider>
+
+                    {/* --- CALCULADORA DE PRECIO INTELIGENTE --- */}
+                    <Box sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 2 }}>
+                        <FormControlLabel 
+                            control={<Switch checked={usarCalculadora} onChange={(e) => setUsarCalculadora(e.target.checked)} color="success" />} 
+                            label={<Typography variant="body2" fontWeight="bold">Calcular costo desde el Empaque/Frasco</Typography>}
                         />
+                        
+                        {usarCalculadora ? (
+                            <Box sx={{ display: 'flex', gap: 2, mt: 1, alignItems: 'center' }}>
+                                <TextField 
+                                    fullWidth label="Precio del Frasco" type="number" size="small"
+                                    value={calc.precio_empaque} 
+                                    onChange={(e) => setCalc({...calc, precio_empaque: e.target.value})} 
+                                    InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} 
+                                    placeholder="Ej: 36000"
+                                />
+                                <Typography variant="h6" color="textSecondary">/</Typography>
+                                <TextField 
+                                    fullWidth label="Contenido (g/ml)" type="number" size="small"
+                                    value={calc.contenido_empaque} 
+                                    onChange={(e) => setCalc({...calc, contenido_empaque: e.target.value})} 
+                                    placeholder="Ej: 500"
+                                />
+                                <Typography variant="h6" color="textSecondary">=</Typography>
+                                <Box sx={{ minWidth: 120, textAlign: 'center', bgcolor: '#e8f5e9', p: 1, borderRadius: 1, border: '1px solid #2e7d32' }}>
+                                    <Typography variant="caption" display="block" color="success.main">Costo x Gramo</Typography>
+                                    <Typography variant="h6" fontWeight="bold" color="success.main">
+                                        ${datos.costo_unitario_promedio || '0'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        ) : (
+                            <TextField 
+                                fullWidth label="Costo Unitario (Manual)" type="number" 
+                                value={datos.costo_unitario_promedio} 
+                                onChange={(e) => setDatos({...datos, costo_unitario_promedio: e.target.value})} 
+                                InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} 
+                                helperText="Precio de 1 solo gramo/ml"
+                            />
+                        )}
+                    </Box>
+
+                    {/* REUBICAMOS EL STOCK MÍNIMO AQUÍ ABAJO JUNTO A LA TOXICIDAD */}
+                    <Box sx={{ display: 'flex', gap: 2 }}>
                         <TextField 
                             fullWidth label="Stock Mínimo (Alerta)" type="number" 
                             value={datos.stock_minimo} onChange={(e) => setDatos({...datos, stock_minimo: e.target.value})} 
-                            helperText="Si pones 0, se marcará como 'FUERA DE MERCADO'"
                         />
+                        {/* Aquí moví el selector de Toxicidad para que quede parejo */}
+                        <TextField 
+                            select fullWidth label="Toxicidad" 
+                            value={datos.nivel_toxicidad} 
+                            onChange={(e) => setDatos({...datos, nivel_toxicidad: e.target.value})}
+                            disabled={!requiereToxicidad}
+                        >
+                            {opcionesToxicidad.map((op) => (
+                                <MenuItem key={op.value} value={op.value} sx={{ display: 'flex', gap: 1 }}>
+                                    <CircleIcon sx={{ color: op.color, fontSize: 16 }} /> {op.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
                     </Box>
                 </Box>
             </DialogContent>
