@@ -111,15 +111,7 @@ function Calendario() {
                 costo_mano_obra: tareaEditar.resource.costo_mano_obra || '',
                 jornada: tareaEditar.resource.jornada || 'COMPLETA',
             });
-        } else {
-            // Limpiar formulario si es nuevo
-            setDatos(prev => ({ 
-                ...prev, 
-                id_tipo_actividad: '', descripcion: '', 
-                id_lote: '', id_usuario: '', estado: 'PENDIENTE', costo_mano_obra: '', jornada: 'COMPLETA',
-                fecha_programada: new Date().toLocaleDateString('en-CA')
-            }));
-        }
+        } 
     }, [tareaEditar, modalOpen]);
 
     // --- CARGAS ---
@@ -280,7 +272,16 @@ function Calendario() {
             <Box sx={{ height: '80vh', display: 'flex', flexDirection: 'column', mb: 5 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1b5e20' }}>Calendario de Actividades</Typography>
-                    <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#1b5e20' }} onClick={() => { setTareaEditar(null); setModalOpen(true); }}>PROGRAMAR TAREA</Button>
+                    <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#1b5e20' }} 
+                    onClick={() => { setTareaEditar(null); 
+                        // AHORA LIMPIAMOS AQUÍ MANUALMENTE
+        setDatos({
+            id_tipo_actividad: '', descripcion: '', 
+            id_lote: '', id_usuario: '', estado: 'PENDIENTE', 
+            costo_mano_obra: '', jornada: 'COMPLETA',
+            fecha_programada: new Date().toLocaleDateString('en-CA') // Hoy
+        });
+        setModalOpen(true);}}>PROGRAMAR TAREA</Button>
                    
                 </Box>
                  <div className="leyenda-container">
