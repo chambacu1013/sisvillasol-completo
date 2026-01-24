@@ -16,7 +16,7 @@ const actualizarEstadosLotes = async () => {
 
     if (castigo.rowCount > 0) {
       console.log(
-        `⚠️ ALERTA: ${castigo.rowCount} lotes pasaron a RIESGO por descuido.`
+        `⚠️ ALERTA: ${castigo.rowCount} lotes pasaron a RIESGO por descuido.`,
       );
     }
 
@@ -106,7 +106,7 @@ const crearActividad = async (req, res) => {
         origen || "CALENDARIO",
         costo_mano_obra || 0,
         jornada || "COMPLETA",
-      ]
+      ],
     );
     res.json({ mensaje: "¡Tarea asignada exitosamente! 📅" });
   } catch (error) {
@@ -143,7 +143,7 @@ const actualizarTarea = async (req, res) => {
         costo_mano_obra || 0,
         jornada || "COMPLETA",
         id,
-      ]
+      ],
     );
     await actualizarEstadosLotes();
     res.json({ mensaje: "¡Tarea actualizada! 📝" });
@@ -179,10 +179,10 @@ const obtenerDatosFormulario = async (req, res) => {
         ORDER BY l.nombre_lote ASC
     `);
     const usuarios = await pool.query(
-      "SELECT id_usuario, nombre, apellido FROM sisvillasol.usuarios WHERE estado = true AND id_rol = 2 ORDER BY nombre ASC"
+      "SELECT id_usuario, nombre, apellido FROM sisvillasol.usuarios WHERE estado = true AND id_rol = 2 ORDER BY nombre ASC",
     );
     const tipos = await pool.query(
-      "SELECT * FROM sisvillasol.tipos_actividad ORDER BY nombre_tipo_actividad ASC"
+      "SELECT * FROM sisvillasol.tipos_actividad ORDER BY nombre_tipo_actividad ASC",
     );
 
     res.json({ lotes: lotes.rows, usuarios: usuarios.rows, tipos: tipos.rows });
@@ -235,41 +235,85 @@ const obtenerLotesDetallados = async (req, res) => {
   }
 };
 
-// 8. FINALIZAR TAREA
+// 8. FINALIZAR TAREA (ACTUALIZA ESTADOS AUTOMÁTICAMENTE)
 const finalizarTarea = async (req, res) => {
   const { id } = req.params;
   const { insumosUsados, jornada, fecha_ejecucion } = req.body;
   const client = await pool.connect();
+
   try {
     await client.query("BEGIN");
+
+    // 1. Actualizar la Tarea (Estado, Jornada, Fecha)
     const fechaReal = fecha_ejecucion || new Date();
     await client.query(
       `UPDATE sisvillasol.tareas SET estado = 'HECHO', jornada = $1, fecha_ejecucion = $2 WHERE id_tarea = $3`,
-      [jornada || "COMPLETA", fechaReal, id]
+      [jornada || "COMPLETA", fechaReal, id],
     );
 
     if (insumosUsados && insumosUsados.length > 0) {
       for (const item of insumosUsados) {
+        // A. Calcular costos para el historial
         const insumoInfo = await client.query(
           "SELECT costo_unitario_promedio FROM sisvillasol.insumos WHERE id_insumo = $1",
-          [item.id_insumo]
+          [item.id_insumo],
         );
         const costoUnitario = insumoInfo.rows[0]?.costo_unitario_promedio || 0;
         const costoTotalCalculado = costoUnitario * item.cantidad;
 
+        // B. Insertar en la tabla de consumo (Historial)
         await client.query(
           `INSERT INTO sisvillasol.consumo_insumos (id_tarea_consumo, id_insumo_consumo, cantidad_usada, costo_calculado) VALUES ($1, $2, $3, $4)`,
-          [id, item.id_insumo, item.cantidad, costoTotalCalculado]
+          [id, item.id_insumo, item.cantidad, costoTotalCalculado],
         );
-        await client.query(
-          `UPDATE sisvillasol.insumos SET cantidad_stock = cantidad_stock - $1 WHERE id_insumo = $2`,
-          [item.cantidad, item.id_insumo]
+
+        // --- C. AQUÍ ESTABA EL ERROR: AHORA RESTAMOS Y CALCULAMOS EL ESTADO ---
+
+        // 1. Restamos el stock y pedimos que nos devuelva cómo quedaron los números
+        const updateStock = await client.query(
+          `UPDATE sisvillasol.insumos 
+           SET cantidad_stock = cantidad_stock - $1 
+           WHERE id_insumo = $2 
+           RETURNING cantidad_stock, stock_minimo, estado_insumo`,
+          [item.cantidad, item.id_insumo],
         );
+
+        const prod = updateStock.rows[0];
+
+        // 2. Lógica del Semáforo en el Backend (CEREBRO 🧠)
+        if (prod && prod.estado_insumo !== "FUERA DE MERCADO") {
+          let nuevoEstado = prod.estado_insumo;
+          const actual = parseFloat(prod.cantidad_stock);
+          const minimo = parseFloat(prod.stock_minimo);
+
+          if (actual <= minimo) {
+            nuevoEstado = "BAJO STOCK";
+          } else {
+            nuevoEstado = "NORMAL";
+          }
+
+          // 3. Si el estado cambió, lo actualizamos inmediatamente
+          if (nuevoEstado !== prod.estado_insumo) {
+            await client.query(
+              `UPDATE sisvillasol.insumos SET estado_insumo = $1 WHERE id_insumo = $2`,
+              [nuevoEstado, item.id_insumo],
+            );
+          }
+        }
+        // ---------------------------------------------------------------------
       }
     }
+
     await client.query("COMMIT");
-    await actualizarEstadosLotes();
-    res.json({ mensaje: "Tarea finalizada y stock actualizado 📉✅" });
+
+    // (Opcional) Si usas esta función externa, asegúrate de que no interfiera
+    if (typeof actualizarEstadosLotes === "function") {
+      await actualizarEstadosLotes();
+    }
+
+    res.json({
+      mensaje: "Tarea finalizada y stock actualizado CORRECTAMENTE 📉✅",
+    });
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error al finalizar:", error);
@@ -318,7 +362,7 @@ const corregirCantidadInsumo = async (req, res) => {
     const resAntigua = await client.query(
       `SELECT cantidad_usada FROM sisvillasol.consumo_insumos 
              WHERE id_tarea_consumo = $1 AND id_insumo_consumo = $2`,
-      [id_tarea, id_insumo]
+      [id_tarea, id_insumo],
     );
 
     if (resAntigua.rowCount === 0) {
@@ -341,7 +385,7 @@ const corregirCantidadInsumo = async (req, res) => {
       `UPDATE sisvillasol.consumo_insumos 
              SET cantidad_usada = $1 
              WHERE id_tarea_consumo = $2 AND id_insumo_consumo = $3`,
-      [cantidadNueva, id_tarea, id_insumo]
+      [cantidadNueva, id_tarea, id_insumo],
     );
 
     // 4. Actualizar el Stock en Bodega (restamos la diferencia)
@@ -350,7 +394,7 @@ const corregirCantidadInsumo = async (req, res) => {
       `UPDATE sisvillasol.insumos 
              SET cantidad_stock = cantidad_stock - $1 
              WHERE id_insumo = $2`,
-      [diferencia, id_insumo]
+      [diferencia, id_insumo],
     );
 
     await client.query("COMMIT");

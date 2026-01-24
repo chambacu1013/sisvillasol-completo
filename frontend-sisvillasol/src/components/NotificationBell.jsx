@@ -23,7 +23,7 @@ const NotificationBell = () => {
     useEffect(() => {
         cargarAlertas();
         // Recargar cada 2 minutos por si actualizan tareas
-        const intervalo = setInterval(cargarAlertas, 120000); 
+        const intervalo = setInterval(cargarAlertas, 100000); 
         return () => clearInterval(intervalo);
     }, []);
 
@@ -36,14 +36,11 @@ const NotificationBell = () => {
             resInsumos.data.forEach(insumo => {
                 // CORRECCIÓN AQUÍ: Agregamos la validación del estado
                 // Solo mostramos alerta si el stock es bajo Y el estado NO es "Fuera de mercado"
-                if (
-                    parseFloat(insumo.cantidad_stock) <= parseFloat(insumo.stock_minimo) && 
-                    insumo.estado_insumo !== 'FUERA DE MERCADO'
-                ) {
+                if (['BAJO STOCK'].includes(insumo.estado_insumo)) {
                     nuevasAlertas.push({
                         tipo: 'STOCK',
                         titulo: 'Stock Crítico',
-                        mensaje: `El insumo ${insumo.nombre} se está agotando (${insumo.cantidad_stock} unid).`,
+                        mensaje: `El insumo ${insumo.nombre} requiere atencion.`,
                         ruta: '/inventario'
                     });
                 }
