@@ -248,14 +248,21 @@ const finalizarTarea = async (req, res) => {
           throw new Error(`Insumo ${item.id_insumo} no encontrado`);
         }
         const { costo_unitario_promedio, cantidad_stock } = insumoInfo.rows[0];
+        // 🔥 VALIDACIONES CRÍTICAS ANTES DE CALCULAR
+        const costoPromedio = parseFloat(costo_unitario_promedio) || 0;
+        const stockActual = parseFloat(cantidad_stock) || 0;
+        const cantidadUsada = parseFloat(item.cantidad) || 0;
 
-        // 🔥 AQUÍ ESTÁ LA CORRECCIÓN CRÍTICA 🔥
-        // El costo_unitario_promedio es el costo TOTAL del producto en bodega
-        // Necesitamos calcular el costo POR UNIDAD (gramo, ml, etc.)
-        const costoPorUnidad =
-          parseFloat(costo_unitario_promedio) / parseFloat(cantidad_stock);
-        // Ahora SÍ multiplicamos correctamente
-        const costoTotalCalculado = costoPorUnidad * parseFloat(item.cantidad);
+        let costoTotalCalculado = 0;
+        // Solo calcular si hay stock y costo válidos
+        if (stockActual > 0 && costoPromedio > 0) {
+          const costoPorUnidad = costoPromedio / stockActual;
+          costoTotalCalculado = costoPorUnidad * cantidadUsada;
+        } else {
+          console.warn(`⚠️ Insumo ${item.id_insumo} sin stock o costo válido`);
+          // Si no hay stock, asignamos 0 o podrías usar el costo_unitario_promedio directamente
+          costoTotalCalculado = 0;
+        }
 
         await client.query(
           `INSERT INTO sisvillasol.consumo_insumos (id_tarea_consumo, id_insumo_consumo, cantidad_usada, costo_calculado) VALUES ($1, $2, $3, $4)`,
