@@ -247,15 +247,17 @@ const finalizarTarea = async (req, res) => {
         if (!insumoInfo.rows[0]) {
           throw new Error(`Insumo ${item.id_insumo} no encontrado`);
         }
-        // 🐛 DEBUG: Ver QUÉ trae la consulta
-        console.log(
-          "🔍 DATOS CRUDOS del insumo:",
-          JSON.stringify(insumoInfo.rows[0], null, 2),
-        );
-
         const insumoData = insumoInfo.rows[0];
+
+        // 🔥 Acceso directo a los valores
         const costo_unitario_promedio = insumoData.costo_unitario_promedio;
         const cantidad_stock = insumoData.cantidad_stock;
+
+        console.log(`🔍 Insumo ID ${item.id_insumo}:`, {
+          costo: costo_unitario_promedio,
+          stock: cantidad_stock,
+          todasLasColumnas: Object.keys(insumoData),
+        });
 
         // 🔥 CONVERSIÓN A NÚMEROS
         const costoPromedio = parseFloat(costo_unitario_promedio) || 0;
