@@ -247,26 +247,45 @@ const finalizarTarea = async (req, res) => {
         if (!insumoInfo.rows[0]) {
           throw new Error(`Insumo ${item.id_insumo} no encontrado`);
         }
+        // 🐛 DEBUG: Ver QUÉ trae la consulta
+        console.log("🔍 DATOS CRUDOS del insumo:", insumoInfo.rows[0]);
         const { costo_unitario_promedio, cantidad_stock } = insumoInfo.rows[0];
-        // 🔥 VALIDACIONES CRÍTICAS ANTES DE CALCULAR
+
         const costoPromedio = parseFloat(costo_unitario_promedio) || 0;
-        const stockActual = parseFloat(cantidad_stock) || 0;
+        const stockAntesDeRestar = parseFloat(cantidad_stock) || 0;
         const cantidadUsada = parseFloat(item.cantidad) || 0;
+
+        // 🐛 DEBUG: Ver qué valores está recibiendo
         console.log(`
 📊 CALCULANDO COSTO - Insumo ID: ${item.id_insumo}
    - Costo Promedio: ${costoPromedio}
-   - Stock Actual: ${stockActual}
+   - Stock ANTES de restar: ${stockAntesDeRestar}
    - Cantidad Usada: ${cantidadUsada}
         `);
 
         let costoTotalCalculado = 0;
-        // Solo calcular si hay stock y costo válidos
-        if (stockActual > 0 && costoPromedio > 0) {
-          const costoPorUnidad = costoPromedio / stockActual;
+
+        // 🎯 NUEVA LÓGICA: Calcular basándose en el stock original + cantidad usada
+        // Si el stock está en 0, significa que YA se usó todo, entonces calculamos
+        // como si el stock original hubiera sido = cantidad_usada
+        if (costoPromedio > 0) {
+          let stockParaCalculo = stockAntesDeRestar;
+
+          // Si no hay stock, asumo que el stock era igual a lo que se usó
+          if (stockParaCalculo <= 0) {
+            stockParaCalculo = cantidadUsada;
+            console.log(
+              `   ⚠️ Stock en 0, usando cantidad_usada como referencia`,
+            );
+          }
+
+          const costoPorUnidad = costoPromedio / stockParaCalculo;
           costoTotalCalculado = costoPorUnidad * cantidadUsada;
+
+          console.log(`   ✅ Costo por unidad: ${costoPorUnidad}`);
+          console.log(`   ✅ Costo calculado: ${costoTotalCalculado}`);
         } else {
-          console.warn(`⚠️ Insumo ${item.id_insumo} sin stock o costo válido`);
-          // Si no hay stock, asignamos 0 o podrías usar el costo_unitario_promedio directamente
+          console.warn(`   ⚠️ Insumo ${item.id_insumo} sin costo válido`);
           costoTotalCalculado = 0;
         }
 
