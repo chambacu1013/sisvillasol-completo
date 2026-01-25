@@ -153,21 +153,7 @@ const actualizarTarea = async (req, res) => {
   }
 };
 
-// 4. ELIMINAR ACTIVIDAD
-const eliminarActividad = async (req, res) => {
-  const { id } = req.params;
-  try {
-    await pool.query("DELETE FROM sisvillasol.tareas WHERE id_tarea = $1", [
-      id,
-    ]);
-    res.json({ mensaje: "Tarea eliminada" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error eliminando tarea");
-  }
-};
-
-// 5. DATOS FORMULARIO (SOLO LO NECESARIO PARA TAREAS: Lotes, Usuarios, Tipos)
+// 4. DATOS FORMULARIO (SOLO LO NECESARIO PARA TAREAS: Lotes, Usuarios, Tipos)
 const obtenerDatosFormulario = async (req, res) => {
   try {
     await actualizarEstadosLotes();
@@ -192,7 +178,7 @@ const obtenerDatosFormulario = async (req, res) => {
   }
 };
 
-// 6. HISTORIAL
+// 5. HISTORIAL
 const getHistorial = async (req, res) => {
   try {
     const query = `
@@ -217,7 +203,7 @@ const getHistorial = async (req, res) => {
   }
 };
 
-// 7. INFO LOTES (Se mantiene porque el Mapa de actividades usa esto)
+// 6. INFO LOTES (Se mantiene porque el Mapa de actividades usa esto)
 const obtenerLotesDetallados = async (req, res) => {
   try {
     await actualizarEstadosLotes();
@@ -235,7 +221,7 @@ const obtenerLotesDetallados = async (req, res) => {
   }
 };
 
-// 8. FINALIZAR TAREA (ACTUALIZA ESTADOS AUTOMÁTICAMENTE)
+// 7. FINALIZAR TAREA (ACTUALIZA ESTADOS AUTOMÁTICAMENTE)
 const finalizarTarea = async (req, res) => {
   const { id } = req.params;
   const { insumosUsados, jornada, fecha_ejecucion } = req.body;
@@ -258,16 +244,23 @@ const finalizarTarea = async (req, res) => {
           "SELECT costo_unitario_promedio FROM sisvillasol.insumos WHERE id_insumo = $1",
           [item.id_insumo],
         );
-        const costoUnitario = insumoInfo.rows[0]?.costo_unitario_promedio || 0;
-        const costoTotalCalculado = costoUnitario * item.cantidad;
+        if (!insumoInfo.rows[0]) {
+          throw new Error(`Insumo ${item.id_insumo} no encontrado`);
+        }
+        const { costo_unitario_promedio, cantidad_stock } = insumoInfo.rows[0];
 
-        // B. Insertar en la tabla de consumo (Historial)
+        // 🔥 AQUÍ ESTÁ LA CORRECCIÓN CRÍTICA 🔥
+        // El costo_unitario_promedio es el costo TOTAL del producto en bodega
+        // Necesitamos calcular el costo POR UNIDAD (gramo, ml, etc.)
+        const costoPorUnidad =
+          parseFloat(costo_unitario_promedio) / parseFloat(cantidad_stock);
+        // Ahora SÍ multiplicamos correctamente
+        const costoTotalCalculado = costoPorUnidad * parseFloat(item.cantidad);
+
         await client.query(
           `INSERT INTO sisvillasol.consumo_insumos (id_tarea_consumo, id_insumo_consumo, cantidad_usada, costo_calculado) VALUES ($1, $2, $3, $4)`,
           [id, item.id_insumo, item.cantidad, costoTotalCalculado],
         );
-
-        // --- C. AQUÍ ESTABA EL ERROR: AHORA RESTAMOS Y CALCULAMOS EL ESTADO ---
 
         // 1. Restamos el stock y pedimos que nos devuelva cómo quedaron los números
         const updateStock = await client.query(

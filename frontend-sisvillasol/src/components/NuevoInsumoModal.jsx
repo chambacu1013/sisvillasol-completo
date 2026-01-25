@@ -198,7 +198,7 @@ const NuevoInsumoModal = ({ open, onClose, productoEditar, onSuccess }) => {
                             fullWidth label="Costo Unitario Promedio" type="number" 
                             value={datos.costo_unitario_promedio} onChange={(e) => setDatos({...datos, costo_unitario_promedio: e.target.value})} 
                             InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }} 
-                            helperText="OJO: Ingrese el costo por gramo/ml, NO por frasco entero."
+                            //helperText="OJO: Ingrese el costo por gramo/ml, NO por frasco entero."
                         />
                         <TextField 
                             fullWidth label="Stock Mínimo (Alerta)" type="number" 
