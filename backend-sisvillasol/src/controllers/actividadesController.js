@@ -247,55 +247,36 @@ const finalizarTarea = async (req, res) => {
         if (!insumoInfo.rows[0]) {
           throw new Error(`Insumo ${item.id_insumo} no encontrado`);
         }
-        const insumoData = insumoInfo.rows[0];
+        // B. Obtener stock en query SEPARADO
+        const stockQuery = await client.query(
+          `SELECT cantidad_stock FROM sisvillasol.insumos WHERE id_insumo = $1`,
+          [item.id_insumo],
+        );
 
-        // 🔥 Acceso directo a los valores
-        const costo_unitario_promedio = insumoData.costo_unitario_promedio;
-        const cantidad_stock = insumoData.cantidad_stock;
+        if (!insumoInfo.rows[0] || !stockQuery.rows[0]) {
+          throw new Error(`Insumo ${item.id_insumo} no encontrado`);
+        }
 
-        console.log(`🔍 Insumo ID ${item.id_insumo}:`, {
-          costo: costo_unitario_promedio,
-          stock: cantidad_stock,
-          todasLasColumnas: Object.keys(insumoData),
-        });
-
-        // 🔥 CONVERSIÓN A NÚMEROS
-        const costoPromedio = parseFloat(costo_unitario_promedio) || 0;
-        const stockAntesDeRestar = parseFloat(cantidad_stock) || 0;
+        const costoPromedio =
+          parseFloat(insumoInfo.rows[0].costo_unitario_promedio) || 0;
+        const stockAntesDeRestar =
+          parseFloat(stockQuery.rows[0].cantidad_stock) || 0;
         const cantidadUsada = parseFloat(item.cantidad) || 0;
 
-        // 🐛 DEBUG: Ver qué valores está recibiendo
-        console.log(`
-📊 CALCULANDO COSTO - Insumo ID: ${item.id_insumo}
-   - Costo Promedio: ${costoPromedio}
-   - Stock ANTES de restar: ${stockAntesDeRestar}
-   - Cantidad Usada: ${cantidadUsada}
-        `);
+        console.log(
+          `📊 Insumo ID ${item.id_insumo}: Costo=${costoPromedio}, Stock=${stockAntesDeRestar}, Usado=${cantidadUsada}`,
+        );
 
         let costoTotalCalculado = 0;
 
-        // 🎯 NUEVA LÓGICA: Calcular basándose en el stock original + cantidad usada
-        // Si el stock está en 0, significa que YA se usó todo, entonces calculamos
-        // como si el stock original hubiera sido = cantidad_usada
-        if (costoPromedio > 0) {
-          let stockParaCalculo = stockAntesDeRestar;
-
-          // Si no hay stock, asumo que el stock era igual a lo que se usó
-          if (stockParaCalculo <= 0) {
-            stockParaCalculo = cantidadUsada;
-            console.log(
-              `   ⚠️ Stock en 0, usando cantidad_usada como referencia`,
-            );
-          }
-
-          const costoPorUnidad = costoPromedio / stockParaCalculo;
+        if (costoPromedio > 0 && stockAntesDeRestar > 0) {
+          const costoPorUnidad = costoPromedio / stockAntesDeRestar;
           costoTotalCalculado = costoPorUnidad * cantidadUsada;
-
-          console.log(`   ✅ Costo por unidad: ${costoPorUnidad}`);
           console.log(`   ✅ Costo calculado: ${costoTotalCalculado}`);
         } else {
-          console.warn(`   ⚠️ Insumo ${item.id_insumo} sin costo válido`);
-          costoTotalCalculado = 0;
+          console.warn(
+            `   ⚠️ Error: Stock=${stockAntesDeRestar}, Costo=${costoPromedio}`,
+          );
         }
 
         await client.query(
