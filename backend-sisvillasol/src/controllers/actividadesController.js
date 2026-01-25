@@ -127,12 +127,21 @@ const actualizarTarea = async (req, res) => {
     estado,
     costo_mano_obra,
     jornada,
+    fecha_ejecucion,
   } = req.body;
   try {
     await pool.query(
       `UPDATE sisvillasol.tareas 
-             SET id_tipo_actividad_tarea = $1, descripcion = $2, fecha_programada = $3, id_lote_tarea = $4, id_usuario_asignado = $5, estado = $6, costo_mano_obra = $7, jornada = $8
-             WHERE id_tarea = $9`,
+             SET id_tipo_actividad_tarea = $1, 
+                 descripcion = $2, 
+                 fecha_programada = $3, 
+                 id_lote_tarea = $4, 
+                 id_usuario_asignado = $5, 
+                 estado = $6, 
+                 costo_mano_obra = $7, 
+                 jornada = $8,
+                 fecha_ejecucion = $9  
+             WHERE id_tarea = $10`,
       [
         id_tipo_actividad,
         descripcion,
@@ -142,6 +151,7 @@ const actualizarTarea = async (req, res) => {
         estado,
         costo_mano_obra || 0,
         jornada || "COMPLETA",
+        fecha_ejecucion || null,
         id,
       ],
     );

@@ -197,8 +197,20 @@ function Calendario() {
         }
         try {
             if (tareaEditar) {
+                const datosAEnviar = { ...datos };
+                // Si la tarea ya se hizo, el usuario está corrigiendo la FECHA DE EJECUCIÓN.
+                // (El campo visual 'fecha_programada' en el state contiene la fecha que eligió el usuario)
+                if (datos.estado === 'HECHO') {
+                    datosAEnviar.fecha_ejecucion = datos.fecha_programada;
+                    
+                    // TRUCO: Mantenemos la fecha programada original (si existe) para no perder el historial
+                    // de "cuándo se suponía que debía ser".
+                    if (tareaEditar.resource.fecha_programada) {
+                        datosAEnviar.fecha_programada = tareaEditar.resource.fecha_programada;
+                    }
+                }
 
-                await api.put(`/actividades/${tareaEditar.resource.id_tarea}`, datos);
+                await api.put(`/actividades/${tareaEditar.resource.id_tarea}`, datosAEnviar);
                 Swal.fire({ icon: 'success', title: '¡Actualizado!', timer: 2000, showConfirmButton: false });
             } else {
                 await api.post('/actividades', datos);
@@ -366,22 +378,40 @@ function Calendario() {
                             </TextField>
                         </Box>
 
-                        {/* SELECTOR DE ESTADO */}
+                       {/* SELECTOR DE ESTADO (LÓGICA VISUAL NUEVA) */}
                         {tareaEditar && (
-                             <TextField 
-                                select 
-                                fullWidth 
-                                label="Estado de la Tarea" 
-                                value={datos.estado} 
-                                onChange={(e) => setDatos({...datos, estado: e.target.value})} 
-                                sx={{ bgcolor: datos.estado === 'HECHO' ? '#e8f5e9' : '#fff3e0' }}
-                            >
-                                <MenuItem value="PENDIENTE">PENDIENTE ⏳</MenuItem>
-                                <MenuItem value="HECHO">HECHO ✅</MenuItem>
-                                {datos.estado === 'NO REALIZADO' && (
-                                    <MenuItem value="NO REALIZADO" disabled>NO REALIZADO 🛑</MenuItem>
-                                )}
-                            </TextField>
+                            datos.estado === 'HECHO' ? (
+                                // OPCIÓN A: Si ya está HECHO, mostramos campo BLOQUEADO (Solo lectura)
+                                <TextField
+                                    fullWidth
+                                    label="Estado de la Tarea"
+                                    value="HECHO ✅"
+                                    InputProps={{
+                                        readOnly: true, // No permite escribir ni desplegar
+                                        style: { color: '#2e7d32', fontWeight: 'bold' } // Texto Verde Fuerte
+                                    }}
+                                    sx={{ 
+                                        bgcolor: '#e8f5e9', // Fondo Verde Suave
+                                        '& .MuiInputBase-input': { cursor: 'default' } // Cursor normal
+                                    }}
+                                />
+                            ) : (
+                                // OPCIÓN B: Si es PENDIENTE, mostramos el SELECTOR normal
+                                <TextField 
+                                    select 
+                                    fullWidth 
+                                    label="Estado de la Tarea" 
+                                    value={datos.estado} 
+                                    onChange={(e) => setDatos({...datos, estado: e.target.value})} 
+                                    sx={{ bgcolor: '#fff3e0' }} // Fondo Naranja suave para Pendiente
+                                >
+                                    <MenuItem value="PENDIENTE">PENDIENTE ⏳</MenuItem>
+                                    <MenuItem value="HECHO">HECHO ✅</MenuItem>
+                                    {datos.estado === 'NO REALIZADO' && (
+                                        <MenuItem value="NO REALIZADO" disabled>NO REALIZADO 🛑</MenuItem>
+                                    )}
+                                </TextField>
+                            )
                         )}
 
                         <TextField fullWidth multiline rows={3} label="Observaciones" value={datos.descripcion} onChange={(e) => setDatos({...datos, descripcion: e.target.value})} />
