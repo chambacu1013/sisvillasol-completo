@@ -404,7 +404,6 @@ module.exports = {
   obtenerActividades,
   crearActividad,
   actualizarTarea,
-  eliminarActividad,
   obtenerDatosFormulario,
   obtenerLotesDetallados,
   finalizarTarea,

@@ -6,7 +6,6 @@ const {
   obtenerActividades,
   crearActividad,
   actualizarTarea,
-  eliminarActividad,
   obtenerDatosFormulario,
   obtenerLotesDetallados,
   finalizarTarea,
@@ -31,6 +30,5 @@ router.post("/", verificarToken, crearActividad);
 // 3. Rutas con PARÁMETROS /:id (Siempre deben ir AL FINAL)
 router.put("/finalizar/:id", verificarToken, finalizarTarea);
 router.put("/:id", verificarToken, actualizarTarea);
-router.delete("/:id", verificarToken, eliminarActividad);
 
 module.exports = router;
