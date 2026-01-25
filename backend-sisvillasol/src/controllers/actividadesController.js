@@ -248,9 +248,16 @@ const finalizarTarea = async (req, res) => {
           throw new Error(`Insumo ${item.id_insumo} no encontrado`);
         }
         // 🐛 DEBUG: Ver QUÉ trae la consulta
-        console.log("🔍 DATOS CRUDOS del insumo:", insumoInfo.rows[0]);
-        const { costo_unitario_promedio, cantidad_stock } = insumoInfo.rows[0];
+        console.log(
+          "🔍 DATOS CRUDOS del insumo:",
+          JSON.stringify(insumoInfo.rows[0], null, 2),
+        );
 
+        const insumoData = insumoInfo.rows[0];
+        const costo_unitario_promedio = insumoData.costo_unitario_promedio;
+        const cantidad_stock = insumoData.cantidad_stock;
+
+        // 🔥 CONVERSIÓN A NÚMEROS
         const costoPromedio = parseFloat(costo_unitario_promedio) || 0;
         const stockAntesDeRestar = parseFloat(cantidad_stock) || 0;
         const cantidadUsada = parseFloat(item.cantidad) || 0;
