@@ -252,6 +252,12 @@ const finalizarTarea = async (req, res) => {
         const costoPromedio = parseFloat(costo_unitario_promedio) || 0;
         const stockActual = parseFloat(cantidad_stock) || 0;
         const cantidadUsada = parseFloat(item.cantidad) || 0;
+        console.log(`
+📊 CALCULANDO COSTO - Insumo ID: ${item.id_insumo}
+   - Costo Promedio: ${costoPromedio}
+   - Stock Actual: ${stockActual}
+   - Cantidad Usada: ${cantidadUsada}
+        `);
 
         let costoTotalCalculado = 0;
         // Solo calcular si hay stock y costo válidos
