@@ -134,6 +134,16 @@ function Calendario() {
                 const fechaString = fechaParaMostrar.toString().split('T')[0];
                 const [anio, mes, dia] = fechaString.split('-');
                 const fechaFixed = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia));
+              
+                // Asignamos horas ficticias para forzar el orden: Mañana -> Completa -> Tarde
+                if (tarea.jornada === 'MANANA') {
+                    fechaFixed.setHours(6, 0, 0);  // Primero
+                } else if (tarea.jornada === 'COMPLETA') {
+                    fechaFixed.setHours(10, 0, 0); // Medio
+                } else if (tarea.jornada === 'TARDE') {
+                    fechaFixed.setHours(14, 0, 0); // Último
+                }
+                // ---------------------------------------------
 
                 return {
                     title: `${tarea.nombre_tipo_actividad || 'Tarea'} - ${tarea.nombre_lote || 'Sin Lote'} (${tarea.nombre_responsable || '?'})`,
