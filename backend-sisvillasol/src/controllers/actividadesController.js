@@ -69,7 +69,14 @@ const obtenerActividades = async (req, res) => {
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
             LEFT JOIN sisvillasol.tipos_actividad ta ON t.id_tipo_actividad_tarea = ta.id_tipo_actividad
             LEFT JOIN sisvillasol.usuarios u ON t.id_usuario_asignado = u.id_usuario
-            ORDER BY t.fecha_programada DESC
+            ORDER BY 
+                t.fecha_programada DESC,
+                CASE 
+                    WHEN t.jornada = 'MANANA' THEN 1 
+                    WHEN t.jornada = 'COMPLETA' THEN 2 
+                    WHEN t.jornada = 'TARDE' THEN 3 
+                    ELSE 4 
+                END ASC
         `);
     res.json(response.rows);
   } catch (error) {
