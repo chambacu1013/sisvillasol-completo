@@ -397,7 +397,7 @@ function Reportes() {
                         <BarChart data={datosGrafica}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="name" />
-                            <YAxis width={85} />
+                            <YAxis width={70} />
                             <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
                             <Legend />
                             <Bar dataKey="Costos" fill="#e91e63 " name="Egresos" radius={[4, 4, 0, 0]} />
