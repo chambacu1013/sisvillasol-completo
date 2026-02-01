@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // <--- AGREGAMOS useRef
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
@@ -54,6 +54,9 @@ const MapaFinca = () => {
     const [historialLote, setHistorialLote] = useState([]);
     const [loadingHistorial, setLoadingHistorial] = useState(false);
 
+    // REFERENCIA PARA EL AUTO-SCROLL 👇
+    const detalleRef = useRef(null);
+
     // Coordenadas centrales
     const centroFinca = [7.1471, -72.6690]; 
 
@@ -70,6 +73,16 @@ const MapaFinca = () => {
         };
         cargarLotes();
     }, []);
+
+    // --- EFECTO DE AUTO-SCROLL MÁGICO ✨ ---
+    useEffect(() => {
+        if (loteSeleccionado && detalleRef.current) {
+            // Esperamos un poquito (100ms) para que el componente se renderice y luego bajamos
+            setTimeout(() => {
+                detalleRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }, [loteSeleccionado]); // Se activa cada vez que seleccionas un lote
 
     // FUNCIÓN AL DAR CLICK EN UN PIN 📍
     const handleSelectLote = async (lote) => {
@@ -108,7 +121,7 @@ const MapaFinca = () => {
                 <Box sx={{ height: '500px', width: '100%', borderRadius: '10px', overflow: 'hidden' }}>
                     <MapContainer 
                         center={centroFinca} 
-                        zoom={24} // Ajusta este número si 24 es demasiado cerca (usualmente max es 18-19)
+                        zoom={24} 
                         style={{ height: '100%', width: '100%' }}
                         
                         // BLOQUEOS PARA QUE SEA ESTÁTICO 🔒
@@ -143,7 +156,7 @@ const MapaFinca = () => {
                                     position={[lat, lng]}
                                     icon={lote.estado_sanitario === 'RIESGO' ? redIcon : greenIcon}
                                     eventHandlers={{
-                                        click: () => handleSelectLote(lote), // El click sigue funcionando ✅
+                                        click: () => handleSelectLote(lote), // El click activa el scroll
                                     }}
                                 >
                                     <Tooltip direction="top" offset={[0, -20]} opacity={1}>{lote.nombre_lote}</Tooltip>
@@ -166,109 +179,110 @@ const MapaFinca = () => {
                 </Box>
             </Paper>
 
-            {/* --- SECCIÓN DETALLE (APARECE AL DAR CLICK) --- */}
+            {/* --- SECCIÓN DETALLE (APARECE AL DAR CLICK Y BAJA AUTOMÁTICAMENTE) --- */}
             {loteSeleccionado && (
-                <Paper elevation={3} sx={{ p: 3, borderRadius: 2, animation: 'fadeIn 0.5s' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#333' }}>
-                            📍 {loteSeleccionado.nombre_lote}
+                <div ref={detalleRef}> {/* <--- AQUÍ ESTÁ EL ANCLA PARA EL SCROLL */}
+                    <Paper elevation={3} sx={{ p: 3, borderRadius: 2, animation: 'fadeIn 0.5s', borderTop: '4px solid #1b5e20' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#333' }}>
+                                📍 {loteSeleccionado.nombre_lote}
+                            </Typography>
+                            <Chip 
+                                label={loteSeleccionado.estado_sanitario || 'OPTIMO'} 
+                                color={loteSeleccionado.estado_sanitario === 'RIESGO' ? 'error' : 'success'} 
+                                sx={{ fontWeight: 'bold' }}
+                            />
+                        </Box>
+
+                        <Grid container spacing={2} sx={{ mb: 3 }}>
+                            <Grid item xs={6} sm={3}>
+                                <Typography variant="subtitle2" color="textSecondary">Cultivo:</Typography>
+                                <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+                                    {loteSeleccionado.nombre_variedad || 'Sin Cultivo'}
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={6} sm={3}>
+                                <Typography variant="subtitle2" color="textSecondary">Área:</Typography>
+                                <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+                                    {loteSeleccionado.area_hectareas} Has
+                                </Typography>
+                            </Grid>
+
+                            {/* COLUMNA NUEVA DE ÁRBOLES 🌳 */}
+                            <Grid item xs={6} sm={3}>
+                                <Typography variant="subtitle2" color="textSecondary">N° Árboles:</Typography>
+                                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#2e7d32' }}>
+                                    {loteSeleccionado.cantidad_arboles || 0} 🌳
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={6} sm={3}>
+                                <Typography variant="subtitle2" color="textSecondary">Cosecha Estimada:</Typography>
+                                <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+                                    {loteSeleccionado.dias_estimados_cosecha || 'N/A'} días
+                                </Typography>
+                            </Grid>
+                        </Grid>
+
+                        <Divider sx={{ mb: 2 }} />
+                        <Typography variant="h6" sx={{ mb: 2, color: '#1b5e20', display: 'flex', alignItems: 'center', gap: 1 }}>
+                            📋 Historial de Labores
                         </Typography>
-                        <Chip 
-                            label={loteSeleccionado.estado_sanitario || 'OPTIMO'} 
-                            color={loteSeleccionado.estado_sanitario === 'RIESGO' ? 'error' : 'success'} 
-                            sx={{ fontWeight: 'bold' }}
-                        />
-                    </Box>
 
-                   {/* --- DETALLES DEL LOTE (ACTUALIZADO CON ÁRBOLES) --- */}
-                    <Grid container spacing={2} sx={{ mb: 3 }}>
-                        <Grid item xs={6} sm={3}>
-                            <Typography variant="subtitle2" color="textSecondary">Cultivo:</Typography>
-                            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-                                {loteSeleccionado.nombre_variedad || 'Sin Cultivo'}
-                            </Typography>
-                        </Grid>
-
-                        <Grid item xs={6} sm={3}>
-                            <Typography variant="subtitle2" color="textSecondary">Área:</Typography>
-                            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-                                {loteSeleccionado.area_hectareas} Has
-                            </Typography>
-                        </Grid>
-
-                        {/* AQUÍ AGREGAMOS LA CANTIDAD DE ÁRBOLES 🌳 */}
-                        <Grid item xs={6} sm={3}>
-                            <Typography variant="subtitle2" color="textSecondary">N° Árboles:</Typography>
-                            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#2e7d32' }}>
-                                {loteSeleccionado.cantidad_arboles || 0} 🌳
-                            </Typography>
-                        </Grid>
-
-                        <Grid item xs={6} sm={3}>
-                            <Typography variant="subtitle2" color="textSecondary">Cosecha Estimada:</Typography>
-                            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-                                {loteSeleccionado.dias_estimados_cosecha || 'N/A'} días
-                            </Typography>
-                        </Grid>
-                    </Grid>
-
-                    <Divider sx={{ mb: 2 }} />
-                    <Typography variant="h6" sx={{ mb: 2, color: '#1b5e20', display: 'flex', alignItems: 'center', gap: 1 }}>
-                        📋 Historial de Labores
-                    </Typography>
-
-                    {loadingHistorial ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress size={30} /></Box>
-                    ) : (
-                        <TableContainer sx={{ maxHeight: 400 }}>
-                            <Table stickyHeader size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell><b>Fecha</b></TableCell>
-                                        <TableCell><b>Actividad</b></TableCell>
-                                        <TableCell><b>Agricultor</b></TableCell>
-                                        <TableCell><b>Insumos Aplicados</b></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {historialLote.length > 0 ? (
-                                        historialLote.map((fila) => (
-                                            <TableRow key={fila.id_tarea} hover>
-                                                <TableCell>{new Date(fila.fecha_ejecucion).toLocaleDateString()}</TableCell>
-                                                <TableCell>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        {getIconoActividad(fila.nombre_tipo_actividad)}
-                                                        {fila.nombre_tipo_actividad}
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell>{fila.nombre_agricultor}</TableCell>
-                                                <TableCell>
-                                                    {fila.insumos_usados ? (
-                                                        fila.insumos_usados.map((ins, idx) => (
-                                                            <Chip 
-                                                                key={idx} 
-                                                                label={`${ins.nombre}: ${ins.cantidad} ${ins.unidad}`} 
-                                                                size="small" 
-                                                                variant="outlined" 
-                                                                sx={{ mr: 0.5, mb: 0.5 }} 
-                                                            />
-                                                        ))
-                                                    ) : <Typography variant="caption" color="textSecondary">Ninguno</Typography>}
+                        {loadingHistorial ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress size={30} /></Box>
+                        ) : (
+                            <TableContainer sx={{ maxHeight: 400 }}>
+                                <Table stickyHeader size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><b>Fecha</b></TableCell>
+                                            <TableCell><b>Actividad</b></TableCell>
+                                            <TableCell><b>Agricultor</b></TableCell>
+                                            <TableCell><b>Insumos Aplicados</b></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {historialLote.length > 0 ? (
+                                            historialLote.map((fila) => (
+                                                <TableRow key={fila.id_tarea} hover>
+                                                    <TableCell>{new Date(fila.fecha_ejecucion).toLocaleDateString()}</TableCell>
+                                                    <TableCell>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            {getIconoActividad(fila.nombre_tipo_actividad)}
+                                                            {fila.nombre_tipo_actividad}
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>{fila.nombre_agricultor}</TableCell>
+                                                    <TableCell>
+                                                        {fila.insumos_usados ? (
+                                                            fila.insumos_usados.map((ins, idx) => (
+                                                                <Chip 
+                                                                    key={idx} 
+                                                                    label={`${ins.nombre}: ${ins.cantidad} ${ins.unidad}`} 
+                                                                    size="small" 
+                                                                    variant="outlined" 
+                                                                    sx={{ mr: 0.5, mb: 0.5 }} 
+                                                                />
+                                                            ))
+                                                        ) : <Typography variant="caption" color="textSecondary">Ninguno</Typography>}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                                                    No hay registros de actividades para este lote.
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                                                No hay registros de actividades para este lote.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
-                </Paper>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        )}
+                    </Paper>
+                </div>
             )}
         </Box>
     );
