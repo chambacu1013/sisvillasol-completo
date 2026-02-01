@@ -83,7 +83,7 @@ const MapaFinca = () => {
 
                 // Opción B: CON MARGEN (OFFSET) 📐
                 // Calculamos dónde está el elemento y le restamos 100px (o lo que quieras) para que baje
-                const yOffset = -150; // <--- CAMBIA ESTE NÚMERO: Más negativo = Más abajo queda el título
+                const yOffset = -300; // <--- CAMBIA ESTE NÚMERO: Más negativo = Más abajo queda el título
                 const element = detalleRef.current;
                 const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
 
