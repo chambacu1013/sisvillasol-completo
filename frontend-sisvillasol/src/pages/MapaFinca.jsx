@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
     Box, Typography, Paper, Chip, CircularProgress, 
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider 
 } from '@mui/material';
-import Grid from '@mui/material/Grid'; // Importación correcta de Grid v5
+import Grid from '@mui/material/Grid'; 
 import AgricultureIcon from '@mui/icons-material/Agriculture';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
@@ -49,11 +49,12 @@ const MapaFinca = () => {
     const [lotes, setLotes] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // ESTADOS NUEVOS PARA EL DETALLE 👇
+    // ESTADOS PARA EL DETALLE
     const [loteSeleccionado, setLoteSeleccionado] = useState(null);
     const [historialLote, setHistorialLote] = useState([]);
     const [loadingHistorial, setLoadingHistorial] = useState(false);
 
+    // Coordenadas centrales
     const centroFinca = [7.1471, -72.6690]; 
 
     useEffect(() => {
@@ -75,7 +76,6 @@ const MapaFinca = () => {
         setLoteSeleccionado(lote);
         setLoadingHistorial(true);
         try {
-            // Llamamos al nuevo endpoint que creamos en el backend
             const res = await api.get(`/actividades/historial-lote/${lote.id_lote}`);
             setHistorialLote(res.data);
         } catch (error) {
@@ -104,8 +104,21 @@ const MapaFinca = () => {
                     🗺️ Mapa Fitosanitario - Villasol
                 </Typography>
 
+                {/* --- MAPA ESTÁTICO (NO SE MUEVE) --- */}
                 <Box sx={{ height: '500px', width: '100%', borderRadius: '10px', overflow: 'hidden' }}>
-                    <MapContainer center={centroFinca} zoom={16} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
+                    <MapContainer 
+                        center={centroFinca} 
+                        zoom={17} // Ajusta este número si 24 es demasiado cerca (usualmente max es 18-19)
+                        style={{ height: '100%', width: '100%' }}
+                        
+                        // BLOQUEOS PARA QUE SEA ESTÁTICO 🔒
+                        dragging={false} 
+                        scrollWheelZoom={false} 
+                        doubleClickZoom={false} 
+                        touchZoom={false} 
+                        zoomControl={false} 
+                        keyboard={false}
+                    >
                         <TileLayer
                             attribution='&copy; Esri World Imagery'
                             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -130,7 +143,7 @@ const MapaFinca = () => {
                                     position={[lat, lng]}
                                     icon={lote.estado_sanitario === 'RIESGO' ? redIcon : greenIcon}
                                     eventHandlers={{
-                                        click: () => handleSelectLote(lote), // <--- AQUÍ ACTIVAMOS EL CLICK
+                                        click: () => handleSelectLote(lote), // El click sigue funcionando ✅
                                     }}
                                 >
                                     <Tooltip direction="top" offset={[0, -20]} opacity={1}>{lote.nombre_lote}</Tooltip>
