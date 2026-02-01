@@ -507,7 +507,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="45%"
                                     labelLine={false}
-                                    outerRadius={120}
+                                    outerRadius={110}
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none" // <--- 1. QUITAMOS EL BORDE BLANCO
@@ -542,7 +542,7 @@ function Reportes() {
                                     data={dataTortas.gastos}
                                     cx="50%" cy="45%"
                                     innerRadius={70}
-                                    outerRadius={120}
+                                    outerRadius={110}
                                     // paddingAngle={5} <--- 2. ELIMINAMOS ESTA LÍNEA (Causaba los espacios grandes)
                                     dataKey="value"
                                     stroke="none" // <--- 3. QUITAMOS EL BORDE BLANCO
