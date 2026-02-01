@@ -41,7 +41,10 @@ export default function HomeScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.greeting}>Hola,</Text>
-        <Text style={styles.name}>{usuario?.nombre || "Agricultor"} 👨‍🌾</Text>
+        <Text style={styles.name}>
+          {usuario?.nombre || "Agricultor"} {usuario?.apellido || "Agricultor"}
+          👨‍🌾
+        </Text>
       </View>
 
       <View style={styles.menu}>
@@ -121,7 +124,7 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginTop: "auto", // Lo empuja al final
-    marginBottom: "27",
+    marginBottom: "70",
     backgroundColor: "#7dd37aff",
     padding: 20,
     borderRadius: 10,

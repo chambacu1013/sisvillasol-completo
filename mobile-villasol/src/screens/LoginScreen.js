@@ -22,15 +22,18 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [secureText, setSecureText] = useState(true);
 
-  // 1. NUEVO ESTADO PARA EL CHECKBOX
+  // NUEVO ESTADO PARA EL CHECKBOX
   const [rememberMe, setRememberMe] = useState(false);
+
+  // MENS AJE DE ESPERA (Opcional, para que sepan que está "despertando")
+  const [loadingText, setLoadingText] = useState("INGRESAR");
 
   const IMAGEN_FONDO = {
     uri: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1932&auto=format&fit=crop",
   };
   const LOGO_FINCA = require("../../assets/images/logo.png");
 
-  // 2. EFECTO: AL ABRIR LA PANTALLA, BUSCAMOS SI HAY ALGO GUARDADO
+  // EFECTO: AL ABRIR LA PANTALLA, BUSCAMOS SI HAY ALGO GUARDADO
   useEffect(() => {
     const cargarCredenciales = async () => {
       try {
@@ -41,8 +44,6 @@ export default function LoginScreen({ navigation }) {
           setDocumento(docGuardado);
           setPassword(passGuardado);
           setRememberMe(true);
-        } else {
-          console.log("🤷‍♂️ No había nada guardado o faltaba un dato.");
         }
       } catch (error) {
         console.log("❌ Error cargando credenciales", error);
@@ -63,68 +64,102 @@ export default function LoginScreen({ navigation }) {
       });
       return;
     }
+
     setLoading(true);
+    setLoadingText("Conectando..."); // Feedback visual
 
-    try {
-      const response = await api.post("/auth/login", {
-        documento: documentoLimpio,
-        password: passwordLimpio,
-      });
-      const usuarioData = response.data.usuario;
-      if (Number(usuarioData.id_rol) !== 2) {
-        Toast.show({
-          type: "error",
-          text1: "Acceso Denegado 🛑",
-          text2: "Esta App es exclusiva para Operarios/Agricultores.",
-          visibilityTime: 4000,
-        });
-        setLoading(false);
-        return; // <--- AQUÍ MUERE EL PROCESO. No entra.
-      }
-      const token = response.data.token;
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("usuario", JSON.stringify(usuarioData));
+    // --- LÓGICA DE REINTENTOS PARA "DESPERTAR" AL SERVIDOR 😴➡️😀 ---
+    let intentos = 0;
+    const MAX_INTENTOS = 5; // Intentará 5 veces (aprox 60-70 segundos en total)
+    let logueado = false;
 
-      if (rememberMe) {
-        await AsyncStorage.setItem("saved_documento", documentoLimpio);
-        await AsyncStorage.setItem("saved_password", passwordLimpio);
-      } else {
-        console.log(
-          "❌ El usuario NO marcó el check. Borrando credenciales viejas.",
+    while (intentos < MAX_INTENTOS && !logueado) {
+      try {
+        // Aumentamos el timeout a 15s por intento para darle tiempo de responder
+        const response = await api.post(
+          "/auth/login",
+          {
+            documento: documentoLimpio,
+            password: passwordLimpio,
+          },
+          { timeout: 15000 }, // Timeout explícito para axios
         );
-        await AsyncStorage.removeItem("saved_documento");
-        await AsyncStorage.removeItem("saved_password");
-      }
 
-      Toast.show({
-        type: "success", // Verde
-        text1: `¡Hola, ${usuarioData.nombre} ${usuarioData.apellido}!`,
-        text2: "Bienvenido a SISVILLASOL 🧑‍🌾🍎",
-        visibilityTime: 3000,
-      });
-      // Pequeña pausa para que vean el mensaje antes de cambiar de pantalla
-      setTimeout(() => {
-        navigation.replace("Home");
-      }, 1000);
-    } catch (error) {
-      console.error("Error Login:", error);
+        // SI LLEGA AQUÍ, ES QUE CONECTÓ ✅
+        const usuarioData = response.data.usuario;
 
-      // 4. ERROR CON TOAST ❌
-      if (error.response && error.response.status === 404) {
+        // Validación de Rol
+        if (Number(usuarioData.id_rol) !== 2) {
+          Toast.show({
+            type: "error",
+            text1: "Acceso Denegado 🛑",
+            text2: "Esta App es exclusiva para Operarios/Agricultores.",
+            visibilityTime: 4000,
+          });
+          setLoading(false);
+          return; // Salimos, no hay nada más que hacer
+        }
+
+        // Guardado de Token y Datos
+        const token = response.data.token;
+        await AsyncStorage.setItem("token", token);
+        await AsyncStorage.setItem("usuario", JSON.stringify(usuarioData));
+
+        if (rememberMe) {
+          await AsyncStorage.setItem("saved_documento", documentoLimpio);
+          await AsyncStorage.setItem("saved_password", passwordLimpio);
+        } else {
+          await AsyncStorage.removeItem("saved_documento");
+          await AsyncStorage.removeItem("saved_password");
+        }
+
         Toast.show({
-          type: "error", // Rojo
-          text1: "Acceso Denegado",
-          text2: "Documento o contraseña incorrectos 🚫",
+          type: "success",
+          text1: `¡Hola, ${usuarioData.nombre} ${usuarioData.apellido}!`,
+          text2: "Bienvenido a SISVILLASOL 🧑‍🌾🍎",
+          visibilityTime: 3000,
         });
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Error de Conexión",
-          text2: "No se pudo conectar con el servidor 📡",
-        });
+
+        logueado = true; // Rompemos el bucle
+
+        setTimeout(() => {
+          navigation.replace("Home");
+        }, 1000);
+      } catch (error) {
+        // --- MANEJO DE ERRORES INTELIGENTE ---
+
+        // 1. SI ES CREDENCIALES INCORRECTAS (404/401) -> NO REINTENTAR ❌
+        if (
+          error.response &&
+          (error.response.status === 404 || error.response.status === 401)
+        ) {
+          Toast.show({
+            type: "error",
+            text1: "Acceso Denegado",
+            text2: "Documento o contraseña incorrectos 🚫",
+          });
+          setLoading(false);
+          return; // Salimos del bucle
+        }
+
+        // 2. SI ES ERROR DE SERVIDOR/CONEXIÓN -> REINTENTAR 🔄
+        intentos++;
+        console.log(`Intento ${intentos} fallido. Esperando servidor...`);
+
+        if (intentos >= MAX_INTENTOS) {
+          // Si ya probamos 5 veces y nada, ahí sí mostramos error
+          Toast.show({
+            type: "error",
+            text1: "Error de Conexión",
+            text2: "El servidor no responde. Verifica tu internet 📡",
+          });
+          setLoading(false);
+        } else {
+          // Esperamos 3 segundos antes de volver a intentar (Backoff)
+          setLoadingText(`Iniciando servidor... (${intentos}/${MAX_INTENTOS})`);
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -175,7 +210,7 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* 4. CHECKBOX "RECORDARME" (Nuevo Componente Visual) */}
+            {/* CHECKBOX "RECORDARME" */}
             <TouchableOpacity
               style={styles.rememberContainer}
               onPress={() => setRememberMe(!rememberMe)}
@@ -195,7 +230,18 @@ export default function LoginScreen({ navigation }) {
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="white" />
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <ActivityIndicator color="white" />
+                  <Text style={{ color: "white", fontWeight: "bold" }}>
+                    {loadingText}
+                  </Text>
+                </View>
               ) : (
                 <Text style={styles.buttonText}>INGRESAR</Text>
               )}
@@ -215,14 +261,14 @@ const styles = StyleSheet.create({
   background: { flex: 1, width: "100%", height: "100%" },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(22, 20, 20, 0.84)", // Un poco más claro para ver fondo
+    backgroundColor: "rgba(22, 20, 20, 0.84)",
     justifyContent: "center",
     padding: 20,
   },
   keyboardContainer: { flex: 1, justifyContent: "center" },
   logoContainer: { alignItems: "center", marginBottom: 40 },
   logo: {
-    width: 330, // Ajusté un poco el tamaño para que no ocupe tanto
+    width: 330,
     height: 170,
     marginBottom: 30,
     resizeMode: "contain",
@@ -243,7 +289,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     paddingHorizontal: 20,
     paddingVertical: 5,
-    marginBottom: 15, // Un poco menos de margen
+    marginBottom: 15,
     elevation: 5,
     height: 55,
   },
@@ -253,7 +299,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
-  // ESTILOS NUEVOS PARA EL CHECKBOX
   rememberContainer: {
     flexDirection: "row",
     alignItems: "center",

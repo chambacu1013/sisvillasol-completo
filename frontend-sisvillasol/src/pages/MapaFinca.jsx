@@ -78,12 +78,12 @@ const MapaFinca = () => {
     useEffect(() => {
         if (loteSeleccionado && detalleRef.current) {
             setTimeout(() => {
-                // Opción A: La que tenías (muy pegada al borde)
+                // Opción A: (muy pegada al borde)
                 // detalleRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
                 // Opción B: CON MARGEN (OFFSET) 📐
                 // Calculamos dónde está el elemento y le restamos 100px (o lo que quieras) para que baje
-                const yOffset = -10; // <--- CAMBIA ESTE NÚMERO: Más negativo = Más abajo queda el título
+                const yOffset = -10; 
                 const element = detalleRef.current;
                 const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
 

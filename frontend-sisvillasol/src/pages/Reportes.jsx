@@ -489,12 +489,11 @@ function Reportes() {
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>
-            {/* --- 2.5 GRÁFICAS DE PASTEL (VERSIÓN FINAL: LEYENDA Y MÁS GRANDE) --- */}
+            {/* --- 2.5 GRÁFICAS DE PASTEL --- */}
             <Grid container spacing={4} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
 
                 {/* TORTA 1: DISTRIBUCIÓN DE CULTIVOS */}
                 <Grid item xs={12} md={6}>
-                    {/* Aumentamos altura a 450px para la leyenda */}
                     <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             🌱 Ingresos por Cultivo
@@ -506,32 +505,29 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="45%" // Subimos un poquito el centro para dejar espacio abajo
-                                    // QUITALOS LAS ETIQUETAS DIRECTAS
+                                    cx="50%" cy="45%"
                                     labelLine={false}
-                                    // AUMENTAMOS EL TAMAÑO: Ahora es mucho más ancha
-                                    outerRadius={120} 
+                                    outerRadius={120}
                                     fill="#8884d8"
                                     dataKey="value"
+                                    stroke="none" // <--- 1. QUITAMOS EL BORDE BLANCO
                                 >
                                     {dataTortas.cultivos.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORES_CULTIVOS[index % COLORES_CULTIVOS.length]} />
                                     ))}
                                 </Pie>
-                                {/* TOOLTIP MEJORADO: Muestra valor y porcentaje al pasar el mouse */}
-                                <Tooltip formatter={(value, name, props) => {
+                                <Tooltip formatter={(value, name) => {
                                     const total = dataTortas.cultivos.reduce((a, b) => a + b.value, 0);
                                     const percent = ((value / total) * 100).toFixed(1);
                                     return [`$${Number(value).toLocaleString()} (${percent}%)`, name];
                                 }} />
-                                {/* LEYENDA AGREGADA AQUI */}
                                 <Legend verticalAlign="bottom" height={60} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
                 </Grid>
 
-                {/* TORTA 2: INVERSIÓN (INSUMOS VS MANO DE OBRA) */}
+                {/* TORTA 2: INVERSIÓN (DONA) */}
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
@@ -546,15 +542,15 @@ function Reportes() {
                                     data={dataTortas.gastos}
                                     cx="50%" cy="45%"
                                     innerRadius={70}
-                                    outerRadius={120} // Aumentado para que coincida con la otra
-                                    paddingAngle={5}
+                                    outerRadius={120}
+                                    // paddingAngle={5} <--- 2. ELIMINAMOS ESTA LÍNEA (Causaba los espacios grandes)
                                     dataKey="value"
+                                    stroke="none" // <--- 3. QUITAMOS EL BORDE BLANCO
                                 >
                                     {dataTortas.gastos.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORES_GASTOS[index % COLORES_GASTOS.length]} />
                                     ))}
                                 </Pie>
-                                {/* TOOLTIP MEJORADO TAMBIÉN AQUÍ */}
                                 <Tooltip formatter={(value, name) => {
                                      const total = dataTortas.gastos.reduce((a, b) => a + b.value, 0);
                                      const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;

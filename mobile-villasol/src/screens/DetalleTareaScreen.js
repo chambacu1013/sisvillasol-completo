@@ -87,7 +87,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
         "General",
       ];
       const insumosFiltrados = res.data.filter((item) =>
-        categoriasConsumibles.includes(item.nombre_categoria)
+        categoriasConsumibles.includes(item.nombre_categoria),
       );
       setListaInsumos(insumosFiltrados);
     } catch (error) {
@@ -99,7 +99,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
   const abrirEdicion = (insumo) => {
     setInsumoAEditar(insumo);
     setNuevaCantidad(
-      (insumo.cantidad_usada || insumo.cantidad || 0).toString()
+      (insumo.cantidad_usada || insumo.cantidad || 0).toString(),
     );
     setModalEditarVisible(true);
   };
@@ -223,7 +223,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
     const cantidadIngresada = parseFloat(cantidadInput);
     const factor = calcularFactor(
       insumoTemporal.nombre_unidad,
-      unidadSeleccionada
+      unidadSeleccionada,
     );
     const cantidadRealADescontar = cantidadIngresada * factor;
 
@@ -276,7 +276,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
       [
         { text: "Cancelar", style: "cancel" },
         { text: "FINALIZAR", onPress: enviarDatos },
-      ]
+      ],
     );
   };
 
@@ -483,7 +483,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
               <TouchableOpacity
                 onPress={() => {
                   const nuevaLista = insumosSeleccionados.filter(
-                    (_, i) => i !== index
+                    (_, i) => i !== index,
                   );
                   setInsumosSeleccionados(nuevaLista);
                 }}
@@ -568,7 +568,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
               style={estiloJornada(
                 jornadaSeleccionada === "MANANA",
                 "#fff9c4",
-                "#fbc02d"
+                "#fbc02d",
               )}
             >
               <Text style={{ fontSize: 20 }}>🌅</Text>
@@ -583,7 +583,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
               style={estiloJornada(
                 jornadaSeleccionada === "TARDE",
                 "#d7ccc8",
-                "#5d4037"
+                "#5d4037",
               )}
             >
               <Text style={{ fontSize: 20 }}>🌇</Text>
@@ -598,7 +598,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
               style={estiloJornada(
                 jornadaSeleccionada === "COMPLETA",
                 "#c8e6c9",
-                "#2e7d32"
+                "#2e7d32",
               )}
             >
               <Text style={{ fontSize: 20 }}>☀️</Text>
@@ -859,12 +859,12 @@ const styles = StyleSheet.create({
   detalleItem: { fontSize: 14, color: "#1b5e20" },
   btnFinalizar: {
     backgroundColor: "#2e7d32",
-    padding: 15,
+    padding: 22,
     borderRadius: 10,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 5,
+    elevation: 7,
     marginBottom: 30,
   },
   textoBtnFinalizar: {
