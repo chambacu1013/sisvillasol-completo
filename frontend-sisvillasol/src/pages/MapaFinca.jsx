@@ -108,7 +108,7 @@ const MapaFinca = () => {
                 <Box sx={{ height: '500px', width: '100%', borderRadius: '10px', overflow: 'hidden' }}>
                     <MapContainer 
                         center={centroFinca} 
-                        zoom={17} // Ajusta este número si 24 es demasiado cerca (usualmente max es 18-19)
+                        zoom={24} // Ajusta este número si 24 es demasiado cerca (usualmente max es 18-19)
                         style={{ height: '100%', width: '100%' }}
                         
                         // BLOQUEOS PARA QUE SEA ESTÁTICO 🔒
