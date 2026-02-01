@@ -77,9 +77,18 @@ const MapaFinca = () => {
     // --- EFECTO DE AUTO-SCROLL MÁGICO ✨ ---
     useEffect(() => {
         if (loteSeleccionado && detalleRef.current) {
-            // Esperamos un poquito (100ms) para que el componente se renderice y luego bajamos
             setTimeout(() => {
-                detalleRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Opción A: La que tenías (muy pegada al borde)
+                // detalleRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Opción B: CON MARGEN (OFFSET) 📐
+                // Calculamos dónde está el elemento y le restamos 100px (o lo que quieras) para que baje
+                const yOffset = -100; // <--- CAMBIA ESTE NÚMERO: Más negativo = Más abajo queda el título
+                const element = detalleRef.current;
+                const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+
+                window.scrollTo({ top: y, behavior: 'smooth' });
+                
             }, 100);
         }
     }, [loteSeleccionado]); // Se activa cada vez que seleccionas un lote
