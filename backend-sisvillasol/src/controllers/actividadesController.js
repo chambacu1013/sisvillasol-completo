@@ -195,30 +195,38 @@ const obtenerDatosFormulario = async (req, res) => {
   }
 };
 
-// 5. HISTORIAL
-const getHistorial = async (req, res) => {
+// 5. OBTENER HISTORIAL POR LOTE (Para el Mapa) 🗺️
+const getHistorialPorLote = async (req, res) => {
+  const { id_lote } = req.params;
   try {
     const query = `
-            SELECT t.id_tarea, t.descripcion, t.fecha_programada, t.fecha_ejecucion, t.estado, t.jornada,
-                u.nombre AS nombre_agricultor, l.nombre_lote, c.nombre_variedad, ta.nombre_tipo_actividad,
+            SELECT 
+                t.id_tarea, 
+                t.fecha_ejecucion, 
+                ta.nombre_tipo_actividad, 
+                u.nombre || ' ' || u.apellido as nombre_agricultor,
                 (SELECT json_agg(json_build_object('nombre', i.nombre, 'cantidad', ci.cantidad_usada, 'unidad', un.nombre_unidad))
                  FROM sisvillasol.consumo_insumos ci
                  JOIN sisvillasol.insumos i ON ci.id_insumo_consumo = i.id_insumo
-                 JOIN sisvillasol.unidades un ON i.id_unidad = un.id_unidad
+                 LEFT JOIN sisvillasol.unidades un ON i.id_unidad = un.id_unidad
                  WHERE ci.id_tarea_consumo = t.id_tarea) AS insumos_usados
             FROM sisvillasol.tareas t
-            JOIN sisvillasol.usuarios u ON t.id_usuario_asignado = u.id_usuario
-            JOIN sisvillasol.lotes l ON t.id_lote_tarea = l.id_lote
-            JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
-            JOIN sisvillasol.tipos_actividad ta ON t.id_tipo_actividad_tarea = ta.id_tipo_actividad
-            ORDER BY t.fecha_ejecucion DESC, t.fecha_programada DESC;`;
-    const response = await pool.query(query);
+            LEFT JOIN sisvillasol.usuarios u ON t.id_usuario_asignado = u.id_usuario
+            LEFT JOIN sisvillasol.tipos_actividad ta ON t.id_tipo_actividad_tarea = ta.id_tipo_actividad
+            WHERE t.id_lote_tarea = $1 
+            AND t.estado = 'HECHO'
+            ORDER BY t.fecha_ejecucion DESC
+        `;
+    const response = await pool.query(query, [id_lote]);
     res.json(response.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error obteniendo el historial" });
+    res.status(500).json({ error: "Error obteniendo historial del lote" });
   }
 };
+
+// NO OLVIDES AGREGARLO AL module.exports AL FINAL DEL ARCHIVO
+// module.exports = { ..., getHistorialPorLote };
 
 // 6. INFO LOTES (Se mantiene porque el Mapa de actividades usa esto)
 const obtenerLotesDetallados = async (req, res) => {
@@ -446,7 +454,7 @@ module.exports = {
   obtenerDatosFormulario,
   obtenerLotesDetallados,
   finalizarTarea,
-  getHistorial,
+  getHistorialPorLote,
   actualizarEstadosLotes,
   obtenerInsumosPorTarea,
   corregirCantidadInsumo,

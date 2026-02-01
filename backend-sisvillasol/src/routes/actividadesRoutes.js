@@ -9,7 +9,7 @@ const {
   obtenerDatosFormulario,
   obtenerLotesDetallados,
   finalizarTarea,
-  getHistorial,
+  getHistorialPorLote,
   obtenerInsumosPorTarea,
   corregirCantidadInsumo,
 } = require("../controllers/actividadesController");
@@ -17,7 +17,6 @@ const {
 const verificarToken = require("../middleware/authMiddleware");
 
 // 1. RUTAS ESPECÍFICAS (Deben ir PRIMERO)
-router.get("/historial", verificarToken, getHistorial);
 router.get("/info-lotes", verificarToken, obtenerLotesDetallados);
 router.get("/insumos-tarea/:id_tarea", verificarToken, obtenerInsumosPorTarea);
 router.get("/datos-formulario", verificarToken, obtenerDatosFormulario);
@@ -28,6 +27,7 @@ router.get("/", verificarToken, obtenerActividades);
 router.post("/", verificarToken, crearActividad);
 
 // 3. Rutas con PARÁMETROS /:id (Siempre deben ir AL FINAL)
+router.get("/historial-lote/:id_lote", verificarToken, getHistorialPorLote);
 router.put("/finalizar/:id", verificarToken, finalizarTarea);
 router.put("/:id", verificarToken, actualizarTarea);
 
