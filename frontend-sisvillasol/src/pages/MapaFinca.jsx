@@ -180,18 +180,35 @@ const MapaFinca = () => {
                         />
                     </Box>
 
+                   {/* --- DETALLES DEL LOTE (ACTUALIZADO CON ÁRBOLES) --- */}
                     <Grid container spacing={2} sx={{ mb: 3 }}>
-                        <Grid item xs={12} sm={4}>
+                        <Grid item xs={6} sm={3}>
                             <Typography variant="subtitle2" color="textSecondary">Cultivo:</Typography>
-                            <Typography variant="h6">{loteSeleccionado.nombre_variedad || 'Sin Cultivo'}</Typography>
+                            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+                                {loteSeleccionado.nombre_variedad || 'Sin Cultivo'}
+                            </Typography>
                         </Grid>
-                        <Grid item xs={12} sm={4}>
+
+                        <Grid item xs={6} sm={3}>
                             <Typography variant="subtitle2" color="textSecondary">Área:</Typography>
-                            <Typography variant="h6">{loteSeleccionado.area_hectareas} Has</Typography>
+                            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+                                {loteSeleccionado.area_hectareas} Has
+                            </Typography>
                         </Grid>
-                        <Grid item xs={12} sm={4}>
+
+                        {/* AQUÍ AGREGAMOS LA CANTIDAD DE ÁRBOLES 🌳 */}
+                        <Grid item xs={6} sm={3}>
+                            <Typography variant="subtitle2" color="textSecondary">N° Árboles:</Typography>
+                            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#2e7d32' }}>
+                                {loteSeleccionado.cantidad_arboles || 0} 🌳
+                            </Typography>
+                        </Grid>
+
+                        <Grid item xs={6} sm={3}>
                             <Typography variant="subtitle2" color="textSecondary">Cosecha Estimada:</Typography>
-                            <Typography variant="h6">{loteSeleccionado.dias_estimados_cosecha || 'N/A'} días</Typography>
+                            <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+                                {loteSeleccionado.dias_estimados_cosecha || 'N/A'} días
+                            </Typography>
                         </Grid>
                     </Grid>
 

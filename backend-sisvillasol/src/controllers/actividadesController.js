@@ -233,8 +233,9 @@ const obtenerLotesDetallados = async (req, res) => {
   try {
     await actualizarEstadosLotes();
     const response = await pool.query(`
-            SELECT l.id_lote, l.nombre_lote, l.area_hectareas, l.estado_sanitario, l.ubicacion,
-                c.nombre_variedad, c.nombre_cientifico, c.dias_estimados_cosecha
+            SELECT l.id_lote, l.nombre_lote, l.area_hectareas,
+            l.estado_sanitario, l.ubicacion,l.cantidad_arboles,
+            c.nombre_variedad, c.nombre_cientifico, c.dias_estimados_cosecha
             FROM sisvillasol.lotes l
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
             ORDER BY l.nombre_lote ASC

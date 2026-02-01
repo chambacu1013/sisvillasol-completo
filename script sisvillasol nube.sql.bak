@@ -1,0 +1,191 @@
+drop schema if exists sisvillasol cascade;
+
+create schema sisvillasol;
+-- ==========================================
+-- TABLAS FLOTANTES
+-- ==========================================
+-- 1. Crear la tabla para la Identidad Corporativa de la finca
+CREATE TABLE sisvillasol.identidad_corporativa (
+    id_identidad SERIAL PRIMARY KEY,
+    nombre_empresa VARCHAR(100) DEFAULT 'FINCA VILLASOL',
+    mision TEXT NOT NULL,
+    vision TEXT NOT NULL,
+    objetivos TEXT NOT NULL,
+    ultimo_cambio TIMESTAMP DEFAULT NOW()
+);
+
+-- 1.2. Insertar LA ÚNICA FILA que existirá (Datos iniciales)
+INSERT INTO sisvillasol.identidad_corporativa (mision, vision, objetivos)
+VALUES (
+    'Cultivar y comercializar productos agrícolas de la más alta calidad
+	en la Vereda de Bartaqui, Chitagá, Norte de Santander,
+	promoviendo prácticas sostenibles y contribuyendo al bienestar de nuestra comunidad.', 
+    'Ser reconocidos como el referente de la agricultura sostenible y la innovación en la región,
+	expandiendo nuestro impacto positivo en el medio ambiente y la sociedad para el año 2030.', 
+    '1. Aumentar la producción a 20 ton/ha anual.
+	 2. Reducir costos operativos en un 30%.
+	 3. Implementar reportes diarios de cultivo y rendimiento.'
+);
+-- 2. tabla de notas(recordatorios de la finca)
+CREATE TABLE sisvillasol.notas(
+id_nota SERIAL PRIMARY KEY,
+contenido TEXT NOT NULL,
+fecha_creacion TIMESTAMP DEFAULT NOW(),
+completada BOOLEAN DEFAULT FALSE
+);
+-- ==========================================
+-- TABLAS PRINCIPALES
+-- ==========================================
+-- 3.. Tabla de Roles (Para diferenciar Admin de Agricultor)
+CREATE TABLE sisvillasol.roles (
+    id_rol SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE -- Ej: 'ADMIN', 'AGRICULTOR'
+);
+
+-- 4. Tabla de Usuarios (Login)
+CREATE TABLE sisvillasol.usuarios (
+    id_usuario SERIAL PRIMARY KEY,
+    id_rol INT REFERENCES sisvillasol.roles(id_rol) ON DELETE RESTRICT,
+    nombre VARCHAR(50) NOT NULL,
+	apellido VARCHAR(50) NOT NULL,
+    documento VARCHAR(20) UNIQUE NOT NULL,
+    telefono VARCHAR(20) NULL,
+    password_hash VARCHAR(255) NOT NULL, -- Aquí guardaremos la clave encriptada
+    estado BOOLEAN DEFAULT TRUE -- TRUE=Activo, FALSE=Despedido
+);
+
+-- 5. Tabla de unidades(Ej: 'Litros', 'Kg', 'Bultos')
+CREATE TABLE sisvillasol.unidades(
+id_unidad SERIAL PRIMARY KEY,
+nombre_unidad VARCHAR(50) NOT NULL UNIQUE
+);
+-- 6. Tabla de categorias (Eje: fungicida, herbicidas)
+CREATE TABLE sisvillasol.categorias(
+id_categoria SERIAL PRIMARY KEY,
+nombre_categoria VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- 7. Tabla de Insumos (Inventario)
+CREATE TABLE sisvillasol.insumos (
+    id_insumo SERIAL PRIMARY KEY,
+    nombre_insumo VARCHAR(100) NOT NULL,
+	id_categoria_insumo INT REFERENCES sisvillasol.categorias(id_categoria) ON DELETE RESTRICT,
+    id_unidad INT REFERENCES sisvillasol.unidades(id_unidad)ON DELETE RESTRICT,
+	nivel_toxicidad VARCHAR(5) NOT NULL DEFAULT 'U'
+    CHECK (nivel_toxicidad IN ('Ia', 'Ib', 'II', 'III', 'U')),
+    cantidad_stock DECIMAL(10,2) DEFAULT 0 CHECK (cantidad_stock >= 0),
+    stock_minimo DECIMAL(10,2) DEFAULT 0.5 CHECK (stock_minimo >= 0), -- Para la Alerta
+    costo_unitario_promedio DECIMAL(12,2), -- Para reportes financieros
+	estado_insumo VARCHAR(20) DEFAULT 'NORMAL' -- 'NORMAL', 'BAJO STOCK', 'FUERA DE MERCADO'
+);
+
+-- 8. Tabla de Cultivos (Variedades: Ciruela Horvin, Manzana Anna, etc.)
+CREATE TABLE sisvillasol.cultivos (
+    id_cultivo SERIAL PRIMARY KEY,
+    nombre_variedad VARCHAR(100) NOT NULL,
+    nombre_cientifico VARCHAR(100) NOT NULL,
+    dias_estimados_cosecha INT NOT NULL-- Para alertas de recolección
+);
+-- 9. Tabla de Lotes (Terreno)
+CREATE TABLE sisvillasol.lotes (
+    id_lote SERIAL PRIMARY KEY,
+    id_cultivo_actual INT REFERENCES sisvillasol.cultivos(id_cultivo) ON DELETE RESTRICT,
+    nombre_lote VARCHAR(50) NOT NULL, -- Ej: 'Lote 1 A'
+    area_hectareas DECIMAL(5,2) NOT NULL,
+    ubicacion TEXT NOT NULL, -- Para el Mapa (longitud, latitud)
+    estado_sanitario VARCHAR(50) DEFAULT 'OPTIMO' -- 'OPTIMO', 'EN_TRATAMIENTO', 'CUARENTENA'
+);
+
+-- ==========================================
+-- TABLAS TRANSACCIONALES (OPERACIÓN DIARIA)
+-- ==========================================
+
+-- 10. tipo de actividad en la finca
+CREATE TABLE sisvillasol.tipos_actividad (
+    id_tipo_actividad       SERIAL PRIMARY KEY,
+    nombre_tipo_actividad   VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- 11. Tabla de Tareas (El corazón del sistema)
+CREATE TABLE sisvillasol.tareas (
+    id_tarea SERIAL PRIMARY KEY,
+    id_lote_tarea INT REFERENCES sisvillasol.lotes(id_lote) ON DELETE RESTRICT,
+    id_usuario_asignado INT REFERENCES sisvillasol.usuarios(id_usuario) ON DELETE RESTRICT,
+    id_tipo_actividad_tarea INT REFERENCES sisvillasol.tipos_actividad(id_tipo_actividad) ON DELETE RESTRICT,
+    descripcion TEXT NOT NULL,
+    fecha_programada DATE DEFAULT CURRENT_DATE,
+    fecha_ejecucion DATE NULL, -- Cuando el agricultor le da "Finalizar"
+	jornada VARCHAR(20) NOT NULL DEFAULT 'COMPLETA',
+    estado VARCHAR(20) NOT NULL DEFAULT 'PENDIENTE', -- 'PENDIENTE', 'HECHO', 'NO REALIZADA'
+    origen VARCHAR(20) NOT NULL DEFAULT 'CALENDARIO', -- 'CALENDARIO' (Admin) o 'CAMPO' (Imprevisto)
+    costo_mano_obra DECIMAL(12,2) DEFAULT 0 CHECK (costo_mano_obra >= 0)
+);
+
+-- 12. Tabla Pivote: Consumo de Insumos por Tarea
+-- Relación N:M (Muchos Insumos en Muchas Tareas)
+
+CREATE TABLE sisvillasol.consumo_insumos (
+    id_consumo SERIAL PRIMARY KEY,
+    id_tarea_consumo INT REFERENCES sisvillasol.tareas(id_tarea) ON DELETE CASCADE,
+    id_insumo_consumo INT REFERENCES sisvillasol.insumos(id_insumo) ON DELETE RESTRICT,
+    cantidad_usada DECIMAL(10,2) NOT NULL CHECK (cantidad_usada > 0),
+    costo_calculado DECIMAL(12,2) DEFAULT 0 CHECK (costo_calculado >= 0)	-- Se guarda el costo histórico del momento
+);
+
+-- 13. Tabla de Ventas (Ingresos)
+CREATE TABLE sisvillasol.ventas (
+    id_venta SERIAL PRIMARY KEY,
+    id_lote INT REFERENCES sisvillasol.lotes(id_lote) ON DELETE RESTRICT, -- Para saber qué lote produjo la plata
+    fecha_venta DATE DEFAULT CURRENT_DATE,
+    cliente VARCHAR(100) NOT NULL, -- A quién se le vendió (Intermediario)
+    kilos_vendidos DECIMAL(10,2) NOT NULL CHECK (kilos_vendidos > 0),
+    precio_total DECIMAL(12,2) NOT NULL CHECK (precio_total >= 0)
+);
+
+-- ==========================================
+-- INSERTS
+-- ==========================================
+-- Usuario Admin por defecto (Clave: 3102266204 - Ojo, en prod debe ir encriptada)
+INSERT INTO sisvillasol.roles (nombre) VALUES ('ADMIN'), ('AGRICULTOR');
+INSERT INTO sisvillasol.usuarios (id_rol, nombre, apellido, documento, telefono, password_hash)
+VALUES (1, 'Jaime Anatolio', 'Rodriguez', '88164381', '3102266204','3102266204'),
+(1, 'Rosa Sulley', 'Mogollon', '60255139', '3103368924','3103368924');
+INSERT INTO sisvillasol.unidades (id_unidad, nombre_unidad) VALUES 
+(1, 'Litros'),
+(2, 'Mililitros'),
+(3, 'Kilogramos'),
+(4, 'Gramos'),
+(5, 'Metros'),
+(6, 'Rollo'),
+(7, 'Bultos'),
+(8, 'Galon'),
+(9, 'Unidades');
+
+INSERT INTO sisvillasol.categorias(nombre_categoria) VALUES 
+('Fungicida'), ('Insecticida'), ('Herbicida'),
+('Regulador'), ('Fertilizante'), ('Herramienta'),
+('Maquinaria'),('General');
+
+--las que hay actualmente en la finca villasol
+INSERT INTO sisvillasol.cultivos (nombre_variedad,nombre_cientifico, dias_estimados_cosecha) 
+VALUES ('Manzana Anna','Malus domestica', 100), ('Ciruela Horvin','Prunus domestica', 120),
+('Durazno Gran Jarillo','Prunus persica', 90), ('Aguacates hass','Persea americana', 240), 
+('Morauva Silvestre','Rubus glaucus',90),('Feijoa sellowiana','Acca sellowiana',150),
+('Cereza Bing', 'Prunus avium', 90),('Pera Williams', 'Pyrus communis', 130),('Mantenimiento General Finca','No Aplica',0);
+
+-- el tipo de actividades mas comunes en la finca villasol
+INSERT INTO sisvillasol.tipos_actividad (nombre_tipo_actividad) 
+VALUES ('Fumigacion'),('Poda'),('Cercar'),('Sembrar'),('Guarañar'),
+('Fertilizacion'),('Cosecha'),('Desyerbe'),('Riego'),('otros');
+
+--Lotes donde se ubican aproximadamente los arboles frutales
+INSERT INTO sisvillasol.lotes (nombre_lote,id_cultivo_actual,area_hectareas,ubicacion)
+VALUES ('Lote 1',1,0.45,'-72.669772, 7.146497'),('Lote 2',1,0.22,'-72.669516, 7.1468806'),
+('Lote 3',1,0.43,'-72.669586, 7.147692'),('Lote 4',2,0.46,'-72.66981, 7.147324'),
+('Lote 4',3,0.46,'-72.670045, 7.147194'),('Lote 4',6,0.46,'-72.669888, 7.147128'),
+('Lote 5',4,0.26,'-72.668822, 7.1477556'),('Lote 6',3,0.25,'-72.670203, 7.1468889'),
+('Lote 7',8,0.1,'-72.669978, 7.1480111'),('Lote 7',7,0.1,'-72.670118, 7.148142'),
+('Lote 8',5,0.1,'-72.670494, 7.1466556'),('Lote 9',3,2.16,'-72.66745, 7.146558'),
+('Lote General',9,0.0,'Áreas comunes, pozos, caminos, cunetas, casa');
+
+select * from sisvillasol.usuarios where id_usuario= 5
