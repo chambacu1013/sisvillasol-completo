@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'; // <--- AGREGAMOS useRef
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
@@ -256,7 +256,7 @@ const MapaFinca = () => {
                                         {historialLote.length > 0 ? (
                                             historialLote.map((fila) => (
                                                 <TableRow key={fila.id_tarea} hover>
-                                                    <TableCell>{new Date(fila.fecha_ejecucion).toLocaleDateString()}</TableCell>
+                                                    <TableCell>{new Date(fila.fecha_ejecucion).toLocaleDateString('es-CO', { timeZone: 'UTC' })}</TableCell>
                                                     <TableCell>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                             {getIconoActividad(fila.nombre_tipo_actividad)}
