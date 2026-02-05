@@ -202,8 +202,9 @@ const getHistorialPorLote = async (req, res) => {
     const query = `
             SELECT 
                 t.id_tarea, 
-                t.fecha_ejecucion, 
-                ta.nombre_tipo_actividad, 
+                t.fecha_ejecucion,
+                t.descripcion,
+                ta.nombre_tipo_actividad,                
                 u.nombre || ' ' || u.apellido as nombre_agricultor,
                 (SELECT json_agg(json_build_object('nombre', i.nombre, 'cantidad', ci.cantidad_usada, 'unidad', un.nombre_unidad))
                  FROM sisvillasol.consumo_insumos ci

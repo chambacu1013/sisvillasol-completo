@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
-    Box, Typography, Paper, Chip, CircularProgress, 
+    Box, Typography, Paper, Chip, CircularProgress, Popover,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider 
 } from '@mui/material';
 import Grid from '@mui/material/Grid'; 
@@ -10,7 +10,7 @@ import AgricultureIcon from '@mui/icons-material/Agriculture';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
-
+import InfoIcon from '@mui/icons-material/Info'; // Icono visual de ayuda
 import L from 'leaflet';
 import api from '../services/api';
 
@@ -53,7 +53,9 @@ const MapaFinca = () => {
     const [loteSeleccionado, setLoteSeleccionado] = useState(null);
     const [historialLote, setHistorialLote] = useState([]);
     const [loadingHistorial, setLoadingHistorial] = useState(false);
-
+    // --- NUEVO: ESTADOS PARA LA BURBUJA DE DESCRIPCIÓN (POPOVER) ---
+    const [anchorEl, setAnchorEl] = useState(null); // Guarda DONDE hiciste click
+    const [descripcionActiva, setDescripcionActiva] = useState(''); // Guarda EL TEXTO a mostrar
     // REFERENCIA PARA EL AUTO-SCROLL 👇
     const detalleRef = useRef(null);
 
@@ -83,7 +85,7 @@ const MapaFinca = () => {
 
                 // Opción B: CON MARGEN (OFFSET) 📐
                 // Calculamos dónde está el elemento y le restamos 100px (o lo que quieras) para que baje
-                const yOffset = -10; 
+                const yOffset = -100; 
                 const element = detalleRef.current;
                 const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
 
@@ -107,7 +109,19 @@ const MapaFinca = () => {
             setLoadingHistorial(false);
         }
     };
+    // --- FUNCIONES DEL POPOVER (DESCRIPCIÓN) ---
+    const handleClickDescripcion = (event, descripcion) => {
+        setAnchorEl(event.currentTarget); // Guardamos el elemento clickeado
+        setDescripcionActiva(descripcion || 'Sin detalles adicionales registrados.');
+    };
 
+    const handleClosePopover = () => {
+        setAnchorEl(null);
+        setDescripcionActiva('');
+    };
+
+    const openPopover = Boolean(anchorEl);
+    // -------------------------------------------
     // Helper para icono de actividad
     const getIconoActividad = (nombre) => {
         const n = nombre.toLowerCase();
@@ -257,12 +271,26 @@ const MapaFinca = () => {
                                             historialLote.map((fila) => (
                                                 <TableRow key={fila.id_tarea} hover>
                                                     <TableCell>{new Date(fila.fecha_ejecucion).toLocaleDateString('es-CO', { timeZone: 'UTC' })}</TableCell>
-                                                    <TableCell>
+                                                    <TableCell 
+                                                        onClick={(e) => handleClickDescripcion(e, fila.descripcion)}
+                                                        sx={{ 
+                                                            cursor: 'pointer', 
+                                                            '&:hover': { backgroundColor: '#f5f5f5' },
+                                                            textDecoration: 'underline dotted', // Pista visual de que hay algo más
+                                                            textDecorationColor: '#999'
+                                                        }}
+                                                        title="Ver detalles"
+                                                    >
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                             {getIconoActividad(fila.nombre_tipo_actividad)}
-                                                            {fila.nombre_tipo_actividad}
+                                                            <Typography variant="body2" sx={{ fontWeight: '500' }}>
+                                                                {fila.nombre_tipo_actividad}
+                                                            </Typography>
+                                                            {/* Ícono pequeñito de 'info' para que sepan que hay detalles */}
+                                                            {fila.descripcion && <InfoIcon sx={{ fontSize: 14, color: '#1b5e20', opacity: 0.6 }} />}
                                                         </Box>
                                                     </TableCell>
+                                                    {/* ------------------------------------ */}
                                                     <TableCell>{fila.nombre_agricultor}</TableCell>
                                                     <TableCell>
                                                         {fila.insumos_usados ? (
@@ -293,6 +321,24 @@ const MapaFinca = () => {
                     </Paper>
                 </div>
             )}
+            {/* --- COMPONENTE FLOTANTE (POPOVER) --- */}
+            <Popover
+                open={openPopover}
+                anchorEl={anchorEl}
+                onClose={handleClosePopover}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                PaperProps={{
+                    sx: { p: 2, maxWidth: 300, bgcolor: '#fffde7', border: '1px solid #fbc02d' }
+                }}
+            >
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0.5 }}>
+                    📝 Detalles de la actividad:
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#333' }}>
+                    {descripcionActiva}
+                </Typography>
+            </Popover>
         </Box>
     );
 };
