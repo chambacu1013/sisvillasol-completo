@@ -1,3 +1,4 @@
+import React from 'react';
 import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Box, Divider, Tooltip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -10,7 +11,7 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
 
-const drawerWidth = 240; // Ancho cuando está abierto
+const drawerWidth = 240; // Ancho FIJO siempre
 
 const menuItems = [
     { text: 'Inicio', icon: <HomeIcon />, path: '/inicio' },
@@ -21,112 +22,100 @@ const menuItems = [
     { text: 'Gestión de usuarios', icon: <PeopleIcon />, path: '/usuarios' },
 ];
 
-// 1. CORRECCIÓN DE SEGURIDAD: Agregamos valores por defecto para evitar el "toteo"
-function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {} }) {
+// NOTA: Ya no usamos 'open' para nada visual. Solo 'mobileOpen'.
+function Sidebar({ mobileOpen = false, handleDrawerToggle = () => {} }) {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Contenido del Drawer (Lo separamos para usarlo en móvil y escritorio)
+    // Contenido del Drawer (IGUAL PARA AMBOS, SIEMPRE EXPANDIDO)
     const drawerContent = (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1b5e20', color: 'white' }}>
             
-            {/* 1. CABECERA LOGO (Sin Padding, pegado arriba) */}
+            {/* 1. CABECERA LOGO (SIEMPRE GRANDE) */}
             <Box 
                 sx={{ 
-                    // Ajuste: si es mobileOpen también debe mostrarse grande
-                    height: (open || mobileOpen) ? 140 : 64, 
+                    height: 140, // Altura fija
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
-                    backgroundColor: '#144a17', // Un verde un poco más oscuro para el logo
-                    transition: '0.3s',
-                    overflow: 'hidden'
+                    backgroundColor: '#144a17',
                 }}
             >
-                {(open || mobileOpen) ? (
-                    // LOGO GRANDE (Cuando está abierto)
-                    <Box 
-                        component="img"
-                        src="/logo1.png" 
-                        alt="Logo Villasol"
-                        sx={{ width: '99%', height: 'auto', objectFit: 'contain' }}
-                    />
-                ) : (
-                    // LOGO PEQUEÑO O TEXTO (Cuando está cerrado)
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>FV</Typography>
-                )}
+                <Box 
+                    component="img"
+                    src="/logo1.png" 
+                    alt="Logo Villasol"
+                    sx={{ width: '90%', height: 'auto', objectFit: 'contain' }}
+                />
             </Box>
 
             {/* 2. LISTA DE MÓDULOS */}
             <List sx={{ flexGrow: 1, pt: 2 }}>
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                        <Tooltip title={(!open && !mobileOpen) ? item.text : ""} placement="right">
-                            <ListItemButton
+                        <ListItemButton
+                            sx={{
+                                minHeight: 48,
+                                justifyContent: 'initial', // Siempre alineado a la izquierda
+                                px: 2.5,
+                                backgroundColor: location.pathname === item.path ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
+                            }}
+                            onClick={() => {
+                                navigate(item.path); 
+                                // CIERRE AUTOMÁTICO SOLO EN MÓVIL
+                                if (mobileOpen) {
+                                    handleDrawerToggle();
+                                }
+                            }}
+                        >
+                            <ListItemIcon
                                 sx={{
-                                    minHeight: 48,
-                                    justifyContent: (open || mobileOpen) ? 'initial' : 'center',
-                                    px: 2.5,
-                                    backgroundColor: location.pathname === item.path ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
-                                }}
-                                onClick={() => {
-                                    navigate(item.path); // 1. Navega a la ruta
-                                    // 2. CORRECCIÓN: Si estamos en móvil, cerramos el menú al hacer clic
-                                    if (mobileOpen) {
-                                        handleDrawerToggle();
-                                    }
+                                    minWidth: 0,
+                                    mr: 3, // Margen fijo siempre
+                                    justifyContent: 'center',
+                                    color: 'white'
                                 }}
                             >
-                                <ListItemIcon
-                                    sx={{
-                                        minWidth: 0,
-                                        mr: (open || mobileOpen) ? 3 : 'auto',
-                                        justifyContent: 'center',
-                                        color: 'white'
-                                    }}
-                                >
-                                    {item.icon}
-                                </ListItemIcon>
-                                <ListItemText primary={item.text} sx={{ opacity: (open || mobileOpen) ? 1 : 0 }} />
-                            </ListItemButton>
-                        </Tooltip>
+                                {item.icon}
+                            </ListItemIcon>
+                            {/* TEXTO SIEMPRE VISIBLE */}
+                            <ListItemText primary={item.text} sx={{ opacity: 1 }} />
+                        </ListItemButton>
                     </ListItem>
                 ))}
             </List>
 
-            {/* 3. BOTÓN SALIR Y PIE DE PÁGINA */}
             <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
             
+            {/* 3. BOTÓN SALIR */}
             <List>
                 <ListItemButton 
                     onClick={() => { localStorage.clear(); navigate('/'); }}
-                    sx={{ minHeight: 48, justifyContent: (open || mobileOpen) ? 'initial' : 'center', px: 2.5 }}
+                    sx={{ minHeight: 48, justifyContent: 'initial', px: 2.5 }}
                 >
-                    <ListItemIcon sx={{ minWidth: 0, mr: (open || mobileOpen) ? 3 : 'auto', justifyContent: 'center', color: '#ffcdd2' }}>
+                    <ListItemIcon sx={{ minWidth: 0, mr: 3, justifyContent: 'center', color: '#ffcdd2' }}>
                         <LogoutIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Salir" sx={{ opacity: (open || mobileOpen) ? 1 : 0, color: '#ffcdd2' }} />
+                    <ListItemText primary="Salir" sx={{ opacity: 1, color: '#ffcdd2' }} />
                 </ListItemButton>
             </List>
 
-            {/* Texto de Copyright (Solo visible si está abierto) */}
-            {(open || mobileOpen) && (
-                <Box sx={{ p: 2, textAlign: 'center', fontSize: '0.5rem', opacity: 0.7 }}>
-                    <Typography variant="caption" display="block">SISVILLASOL Vereda de Bartaquí, Chitagá</Typography>
-                    <Typography variant="caption" display="block">Norte de Santander 2026</Typography>
-                </Box>
-            )}
+            {/* Copyright */}
+            <Box sx={{ p: 2, textAlign: 'center', fontSize: '0.5rem', opacity: 0.7 }}>
+                <Typography variant="caption" display="block">SISVILLASOL 2026</Typography>
+            </Box>
         </Box>
     );
 
     return (
-        <Box component="nav" sx={{ width: { sm: open ? drawerWidth : 65 }, flexShrink: { sm: 0 }, transition: 'width 0.3s' }}>
-            {/* Drawer Temporal para Móviles (Se abre encima de todo) */}
+        <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
+            
+            {/* --- DRAWER MÓVIL (TEMPORAL) --- 
+                Este es el que se abre con el botón de las 3 rayitas */}
             <Drawer
                 variant="temporary"
-                // 3. CORRECCIÓN FINAL: Aseguramos que open sea siempre un booleano (!!mobileOpen)
-                open={!!mobileOpen}
+                open={!!mobileOpen} 
                 onClose={handleDrawerToggle}
                 ModalProps={{ keepMounted: true }}
                 sx={{
@@ -137,20 +126,19 @@ function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {
                 {drawerContent}
             </Drawer>
 
-            {/* Drawer Permanente para Escritorio (Se encoge) */}
+            {/* --- DRAWER ESCRITORIO (FIJO) --- 
+                Siempre visible en pantallas grandes */}
             <Drawer
                 variant="permanent"
                 sx={{
                     display: { xs: 'none', sm: 'block' },
                     '& .MuiDrawer-paper': {
                         boxSizing: 'border-box',
-                        width: open ? drawerWidth : 65,
-                        transition: 'width 0.3s',
-                        overflowX: 'hidden',
+                        width: drawerWidth, // ANCHO FIJO, NADA DE 65px
                         borderRight: 'none'
                     },
                 }}
-                open={open}
+                open // Siempre abierto en PC
             >
                 {drawerContent}
             </Drawer>
