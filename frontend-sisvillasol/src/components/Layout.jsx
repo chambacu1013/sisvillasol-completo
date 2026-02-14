@@ -3,7 +3,6 @@ import { Box, AppBar, Toolbar, Typography, Avatar, Menu, MenuItem, ListItemIcon,
 import Sidebar from './Sidebar';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import EditarEmpresaModal from './EditarEmpresaModal';
-// 1. IMPORTAR LA CAMPANA
 import NotificationBell from './NotificationBell'; 
 
 // Iconos
@@ -11,19 +10,29 @@ import BusinessIcon from '@mui/icons-material/Business';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu'; 
 
+const drawerWidth = 240; // ANCHO FIJO DEL MENÚ
+
 function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
     
-    // ESTADOS PARA EL SIDEBAR
-    const [open, setOpen] = useState(true); 
+    // YA NO USAMOS 'open' PARA COLAPSAR. EL MENÚ SIEMPRE ESTÁ ABIERTO EN PC.
+    // Solo manejamos el estado móvil.
     const [mobileOpen, setMobileOpen] = useState(false); 
+    
     const [usuarioActual, setUsuarioActual] = useState({
         nombre: 'Usuario',
         apellido: '',
         rol: 'Invitado',
         iniciales: 'US'
     });
+
+    // Estado para el menú del perfil (Avatar)
+    const [anchorEl, setAnchorEl] = useState(null);
+    const openMenu = Boolean(anchorEl);
+
+    // Estado Modal Empresa
+    const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
         const nombre = localStorage.getItem('usuarioNombre') || 'Usuario';
@@ -34,93 +43,114 @@ function Layout() {
         setUsuarioActual({ nombre, apellido, rol, iniciales });
     }, []);
 
-    const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
-    const handleDesktopToggle = () => setOpen(!open);
-
-    const getTituloPagina = () => {
-        switch(location.pathname) {
-            case '/dashboard': return 'Panel de Control'; 
-            case '/inicio': return 'Identidad Corporativa';
-            case '/lotes': return 'Gestión de Lotes (Mapa)';
-            case '/calendario': return 'Calendario de Actividades';
-            case '/inventario': return 'Inventario de Insumos';
-            case '/reportes': return 'Reportes Financieros';
-            case '/usuarios': return 'Gestión de Usuarios';
-            default: return 'Sistema SISVILLASOL';
-        }
+    // --- FUNCIÓN ÚNICA: ABRIR/CERRAR MENÚ MÓVIL ---
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
     };
 
-    const [anchorEl, setAnchorEl] = useState(null);
-    const openMenu = Boolean(anchorEl);
-    const [modalOpen, setModalOpen] = useState(false);
-
+    // Funciones del menú perfil
     const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
-    const handleAbrirConfig = () => { handleMenuClose(); setModalOpen(true); };
-    const handleLogout = () => { localStorage.clear(); navigate('/'); };
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate('/');
+    };
+    const handleAbrirConfig = () => {
+        setModalOpen(true);
+        handleMenuClose();
+    };
+
+    // Título dinámico según la ruta
+    const getTitulo = () => {
+        switch(location.pathname) {
+            case '/home': return 'Resumen General';
+            case '/actividades': return 'Gestión de Actividades';
+            case '/finanzas': return 'Finanzas e Insumos';
+            case '/mapa': return 'Mapa Fitosanitario';
+            case '/lotes': return 'Gestión de Lotes';
+            case '/calendario': return 'Calendario Agrícola';
+            case '/reportes': return 'Reportes y Estadísticas';
+            default: return 'SISVILLASOL';
+        }
+    };
 
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
-            
+
+            {/* --- BARRA SUPERIOR (NAVBAR) --- */}
             <AppBar 
                 position="fixed" 
                 sx={{ 
-                    width: { sm: `calc(100% - ${open ? 240 : 65}px)` }, 
-                    ml: { sm: `${open ? 240 : 65}px` },
-                    backgroundColor: 'white', 
-                    color: '#1b5e20',
-                    boxShadow: '0px 1px 4px rgba(0,0,0,0.1)',
-                    transition: 'width 0.3s, margin 0.3s'
+                    // EN PC: Ancho total MENOS el menú (que ahora es fijo)
+                    width: { sm: `calc(100% - ${drawerWidth}px)` },
+                    // EN PC: Empuja la barra a la derecha
+                    ml: { sm: `${drawerWidth}px` },
+                    bgcolor: '#fff', 
+                    color: '#333',
+                    boxShadow: 1
                 }}
             >
                 <Toolbar>
+                    {/* BOTÓN HAMBURGUESA (3 RAYITAS) 
+                        - display: { sm: 'none' } -> SOLO SE VE EN MÓVIL
+                        - onClick: Abre el sidebar móvil
+                    */}
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
                         edge="start"
-                        onClick={() => {
-                            if (window.innerWidth < 600) handleDrawerToggle();
-                            else handleDesktopToggle();
-                        }}
-                        sx={{ mr: 2 }}
+                        onClick={handleDrawerToggle}
+                        sx={{ mr: 2, display: { sm: 'none' } }} 
                     >
                         <MenuIcon />
                     </IconButton>
 
-                    <Typography variant="h5" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-                        {getTituloPagina()}
+                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: '#1b5e20' }}>
+                        {getTitulo()}
                     </Typography>
 
-                    {/* --- AQUÍ INSERTAMOS LA CAMPANA --- */}
-                    {/* La ponemos justo antes de la sección del usuario */}
-                    <NotificationBell />
-
-                    {/* SECCIÓN DE USUARIO */}
-                    <Box 
-                        sx={{ display: 'flex', alignItems: 'center', textAlign: 'right', cursor: 'pointer' }}
-                        onClick={handleMenuClick}
-                    >
-                        <Box sx={{ marginRight: 2, display: { xs: 'none', sm: 'block' } }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#333' }}>
-                                {usuarioActual.nombre} {usuarioActual.apellido}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#666' }}>
-                                {usuarioActual.rol}
-                            </Typography>
-                        </Box>
+                    {/* CAMPANA Y PERFIL */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <NotificationBell />
                         
-                        <Avatar sx={{ bgcolor: '#2e7d32' }}>
-                            {usuarioActual.iniciales}
-                        </Avatar>
+                        <IconButton onClick={handleMenuClick} size="small" sx={{ ml: 2 }}>
+                            <Avatar sx={{ bgcolor: '#1b5e20', width: 35, height: 35, fontSize: '0.9rem' }}>
+                                {usuarioActual.iniciales}
+                            </Avatar>
+                        </IconButton>
                     </Box>
 
+                    {/* MENÚ DESPLEGABLE PERFIL */}
                     <Menu
                         anchorEl={anchorEl}
                         open={openMenu}
                         onClose={handleMenuClose}
-                        PaperProps={{ elevation: 3, sx: { mt: 1.5 } }}
+                        onClick={handleMenuClose}
+                        PaperProps={{
+                            elevation: 0,
+                            sx: {
+                                overflow: 'visible',
+                                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                                mt: 1.5,
+                                '&:before': {
+                                    content: '""', display: 'block', position: 'absolute', top: 0, right: 14, width: 10, height: 10, bgcolor: 'background.paper', transform: 'translateY(-50%) rotate(45deg)', zIndex: 0,
+                                },
+                            },
+                        }}
+                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                     >
+                        <MenuItem disabled>
+                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#333' }}>
+                                    {usuarioActual.nombre} {usuarioActual.apellido}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#666' }}>
+                                    {usuarioActual.rol}
+                                </Typography>
+                            </Box>
+                        </MenuItem>
                         <MenuItem onClick={handleAbrirConfig}>
                             <ListItemIcon><BusinessIcon fontSize="small" /></ListItemIcon>
                             Configurar identidad corporativa
@@ -133,21 +163,26 @@ function Layout() {
                 </Toolbar>
             </AppBar>
 
+            {/* --- SIDEBAR --- 
+                Le pasamos open={true} fijo para PC 
+                Y mobileOpen conectado al estado del botón hamburguesa
+            */}
             <Sidebar 
-                open={open} 
+                open={true} 
                 mobileOpen={mobileOpen} 
                 handleDrawerToggle={handleDrawerToggle} 
             />
 
+            {/* --- CONTENIDO PRINCIPAL --- */}
             <Box 
                 component="main" 
                 sx={{ 
                     flexGrow: 1, 
                     p: 3, 
-                    backgroundColor: '#f4f6f8', 
+                    bgcolor: '#f4f6f8', 
                     minHeight: '100vh',
-                    width: { sm: `calc(100% - ${open ? 240 : 65}px)` },
-                    transition: 'width 0.3s',
+                    // ANCHO FIJO: Restamos 240px siempre en escritorio
+                    width: { sm: `calc(100% - ${drawerWidth}px)` },
                     marginTop: '64px' 
                 }}
             >
