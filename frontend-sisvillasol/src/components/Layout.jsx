@@ -63,14 +63,14 @@ function Layout() {
     // Título dinámico según la ruta
     const getTitulo = () => {
         switch(location.pathname) {
-            case '/home': return 'Resumen General';
-            case '/actividades': return 'Gestión de Actividades';
-            case '/finanzas': return 'Finanzas e Insumos';
-            case '/mapa': return 'Mapa Fitosanitario';
-            case '/lotes': return 'Gestión de Lotes';
-            case '/calendario': return 'Calendario Agrícola';
-            case '/reportes': return 'Reportes y Estadísticas';
-            default: return 'SISVILLASOL';
+            case '/dashboard': return 'Panel de Control'; 
+            case '/inicio': return 'Identidad Corporativa';
+            case '/lotes': return 'Gestión de Lotes (Mapa)';
+            case '/calendario': return 'Calendario de Actividades';
+            case '/inventario': return 'Inventario de Insumos';
+            case '/reportes': return 'Reportes Financieros';
+            case '/usuarios': return 'Gestión de Usuarios';
+            default: return 'Sistema SISVILLASOL';
         }
     };
 

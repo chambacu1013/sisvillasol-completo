@@ -34,18 +34,21 @@ function Sidebar({ mobileOpen = false, handleDrawerToggle = () => {} }) {
             {/* 1. CABECERA LOGO (SIEMPRE GRANDE) */}
             <Box 
                 sx={{ 
-                    height: 140, // Altura fija
+                    // Ajuste: si es mobileOpen también debe mostrarse grande
+                    height: (open || mobileOpen) ? 140 : 64, 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
-                    backgroundColor: '#144a17',
+                    backgroundColor: '#144a17', // Un verde un poco más oscuro para el logo
+                    transition: '0.3s',
+                    overflow: 'hidden'
                 }}
             >
                 <Box 
                     component="img"
                     src="/logo1.png" 
                     alt="Logo Villasol"
-                    sx={{ width: '90%', height: 'auto', objectFit: 'contain' }}
+                    sx={{ width: '99%', height: 'auto', objectFit: 'contain' }}
                 />
             </Box>
 
@@ -103,7 +106,8 @@ function Sidebar({ mobileOpen = false, handleDrawerToggle = () => {} }) {
 
             {/* Copyright */}
             <Box sx={{ p: 2, textAlign: 'center', fontSize: '0.5rem', opacity: 0.7 }}>
-                <Typography variant="caption" display="block">SISVILLASOL 2026</Typography>
+                <Typography variant="caption" display="block">SISVILLASOL Vereda de Bartaquí, Chitagá</Typography>
+                <Typography variant="caption" display="block">Norte de Santander 2026</Typography>
             </Box>
         </Box>
     );
