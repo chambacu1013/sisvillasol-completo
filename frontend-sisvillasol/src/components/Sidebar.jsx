@@ -1,112 +1,130 @@
-import React from 'react';
-import { 
-    Box, Drawer, List, ListItem, ListItemButton, 
-    ListItemIcon, ListItemText, Toolbar, Divider, Typography 
-} from '@mui/material';
+import React from 'react'; // Asegúrate de importar React
+import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Box, Divider, Tooltip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 // Iconos
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import HomeIcon from '@mui/icons-material/Home';
 import MapIcon from '@mui/icons-material/Map';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import InventoryIcon from '@mui/icons-material/Inventory2';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
-import AgricultureIcon from '@mui/icons-material/Agriculture';
 
-const drawerWidth = 240;
+const drawerWidth = 240; // Ancho cuando está abierto
 
-// RECIBIMOS LAS PROPIEDADES DEL LAYOUT (ESTO FALTABA PARA QUE NO SE TOTEE)
-const Sidebar = ({ mobileOpen = false, handleDrawerToggle = () => {} }) => { 
+const menuItems = [
+    { text: 'Inicio', icon: <HomeIcon />, path: '/inicio' },
+    { text: 'Lotes (Mapa)', icon: <MapIcon />, path: '/lotes' },
+    { text: 'Calendario', icon: <CalendarTodayIcon />, path: '/calendario' },
+    { text: 'Inventario', icon: <InventoryIcon />, path: '/inventario' },
+    { text: 'Reportes', icon: <AssessmentIcon />, path: '/reportes' },
+    { text: 'Gestión de usuarios', icon: <PeopleIcon />, path: '/usuarios' },
+];
+
+// AQUÍ AGREGUÉ VALORES POR DEFECTO PARA EVITAR EL "TOTEO" (CRASH)
+function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {} }) {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const menuItems = [
-        { text: 'Resumen', icon: <DashboardIcon />, path: '/home' },
-        { text: 'Actividades', icon: <AssignmentIcon />, path: '/actividades' },
-        { text: 'Finanzas', icon: <MonetizationOnIcon />, path: '/finanzas' },
-        { text: 'Mapa', icon: <MapIcon />, path: '/mapa' },
-    ];
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/');
-    };
-
+    // Contenido del Drawer (Lo separamos para usarlo en móvil y escritorio)
     const drawerContent = (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Toolbar sx={{ bgcolor: '#2e7d32', color: 'white' }}>
-                <AgricultureIcon sx={{ mr: 2 }} />
-                <Typography variant="h6" noWrap component="div">
-                    SISVILLASOL
-                </Typography>
-            </Toolbar>
-            <Divider />
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#1b5e20', color: 'white' }}>
             
-            <List>
+            {/* 1. CABECERA LOGO (Sin Padding, pegado arriba) */}
+            <Box 
+                sx={{ 
+                    height: (open || mobileOpen) ? 140 : 64, // Ajuste para que en celular (mobileOpen) se vea el logo grande
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    backgroundColor: '#144a17', // Un verde un poco más oscuro para el logo
+                    transition: '0.3s',
+                    overflow: 'hidden'
+                }}
+            >
+                {(open || mobileOpen) ? (
+                    // LOGO GRANDE (Cuando está abierto o es móvil)
+                    <Box 
+                        component="img"
+                        src="/logo1.png" 
+                        alt="Logo Villasol"
+                        sx={{ width: '99%', height: 'auto', objectFit: 'contain' }}
+                    />
+                ) : (
+                    // LOGO PEQUEÑO O TEXTO (Cuando está cerrado en PC)
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>FV</Typography>
+                )}
+            </Box>
+
+            {/* 2. LISTA DE MÓDULOS */}
+            <List sx={{ flexGrow: 1, pt: 2 }}>
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                        <ListItemButton
-                            // --- TUS ESTILOS ORIGINALES RESTAURADOS ---
-                            sx={{
-                                minHeight: 48,
-                                justifyContent: 'initial',
-                                px: 2.5,
-                                // Tu diseño original: fondo transparente con tinte verde suave y borde izquierdo
-                                bgcolor: location.pathname === item.path ? 'rgba(27, 94, 32, 0.1)' : 'transparent', 
-                                borderLeft: location.pathname === item.path ? '4px solid #1b5e20' : '4px solid transparent'
-                            }}
-                            // ------------------------------------------
-                            onClick={() => {
-                                navigate(item.path);
-                                // LA LÓGICA CORREGIDA: Solo intenta cerrar si la función existe y estamos en modo móvil
-                                if (mobileOpen && typeof handleDrawerToggle === 'function') {
-                                    handleDrawerToggle();
-                                }
-                            }}
-                        >
-                            <ListItemIcon
+                        <Tooltip title={!open && !mobileOpen ? item.text : ""} placement="right">
+                            <ListItemButton
                                 sx={{
-                                    minWidth: 0,
-                                    mr: 2,
-                                    justifyContent: 'center',
-                                    // Tu color original para iconos
-                                    color: location.pathname === item.path ? '#1b5e20' : '#757575'
+                                    minHeight: 48,
+                                    justifyContent: (open || mobileOpen) ? 'initial' : 'center',
+                                    px: 2.5,
+                                    backgroundColor: location.pathname === item.path ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
+                                }}
+                                onClick={() => {
+                                    navigate(item.path); // 1. Navega a la ruta
+                                    if (mobileOpen) {
+                                        handleDrawerToggle(); // 2. Si es móvil (está abierto), CIÉRRALO.
+                                    }
                                 }}
                             >
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText 
-                                primary={item.text} 
-                                primaryTypographyProps={{ 
-                                    // Tu tipografía original
-                                    fontWeight: location.pathname === item.path ? 'bold' : 'normal',
-                                    color: location.pathname === item.path ? '#1b5e20' : 'inherit'
-                                }}
-                            />
-                        </ListItemButton>
+                                <ListItemIcon
+                                    sx={{
+                                        minWidth: 0,
+                                        mr: (open || mobileOpen) ? 3 : 'auto',
+                                        justifyContent: 'center',
+                                        color: 'white'
+                                    }}
+                                >
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText primary={item.text} sx={{ opacity: (open || mobileOpen) ? 1 : 0 }} />
+                            </ListItemButton>
+                        </Tooltip>
                     </ListItem>
                 ))}
             </List>
 
-            <Box sx={{ flexGrow: 1 }} />
-            <Divider />
+            {/* 3. BOTÓN SALIR Y PIE DE PÁGINA */}
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+            
             <List>
-                <ListItem disablePadding>
-                    <ListItemButton onClick={handleLogout}>
-                        <ListItemIcon><LogoutIcon color="error" /></ListItemIcon>
-                        <ListItemText primary="Cerrar Sesión" sx={{ color: '#d32f2f' }} />
-                    </ListItemButton>
-                </ListItem>
+                <ListItemButton 
+                    onClick={() => { localStorage.clear(); navigate('/'); }}
+                    sx={{ minHeight: 48, justifyContent: (open || mobileOpen) ? 'initial' : 'center', px: 2.5 }}
+                >
+                    <ListItemIcon sx={{ minWidth: 0, mr: (open || mobileOpen) ? 3 : 'auto', justifyContent: 'center', color: '#ffcdd2' }}>
+                        <LogoutIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Salir" sx={{ opacity: (open || mobileOpen) ? 1 : 0, color: '#ffcdd2' }} />
+                </ListItemButton>
             </List>
+
+            {/* Texto de Copyright (Solo visible si está abierto) */}
+            {(open || mobileOpen) && (
+                <Box sx={{ p: 2, textAlign: 'center', fontSize: '0.5rem', opacity: 0.7 }}>
+                    <Typography variant="caption" display="block">SISVILLASOL Vereda de Bartaquí, Chitagá</Typography>
+                    <Typography variant="caption" display="block">Norte de Santander 2026</Typography>
+                </Box>
+            )}
         </Box>
     );
 
     return (
-        <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
-            {/* --- DRAWER MÓVIL --- */}
+        <Box component="nav" sx={{ width: { sm: open ? drawerWidth : 65 }, flexShrink: { sm: 0 }, transition: 'width 0.3s' }}>
+            {/* Drawer Temporal para Móviles (Se abre encima de todo) */}
             <Drawer
                 variant="temporary"
-                open={!!mobileOpen} // Doble negación para asegurar que sea booleano y no se totee
+                open={Boolean(mobileOpen)} // EL BLINDAJE: Boolean() evita que se totee si mobileOpen es null
                 onClose={handleDrawerToggle}
                 ModalProps={{ keepMounted: true }}
                 sx={{
@@ -117,19 +135,25 @@ const Sidebar = ({ mobileOpen = false, handleDrawerToggle = () => {} }) => {
                 {drawerContent}
             </Drawer>
 
-            {/* --- DRAWER ESCRITORIO --- */}
+            {/* Drawer Permanente para Escritorio (Se encoge) */}
             <Drawer
                 variant="permanent"
                 sx={{
                     display: { xs: 'none', sm: 'block' },
-                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                    '& .MuiDrawer-paper': {
+                        boxSizing: 'border-box',
+                        width: open ? drawerWidth : 65,
+                        transition: 'width 0.3s',
+                        overflowX: 'hidden',
+                        borderRight: 'none'
+                    },
                 }}
-                open
+                open={open}
             >
                 {drawerContent}
             </Drawer>
         </Box>
     );
-};
+}
 
 export default Sidebar;
