@@ -1,4 +1,3 @@
-import React from 'react'; // Asegúrate de importar React
 import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography, Box, Divider, Tooltip } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -22,7 +21,7 @@ const menuItems = [
     { text: 'Gestión de usuarios', icon: <PeopleIcon />, path: '/usuarios' },
 ];
 
-// AQUÍ AGREGUÉ VALORES POR DEFECTO PARA EVITAR EL "TOTEO" (CRASH)
+// 1. CORRECCIÓN DE SEGURIDAD: Agregamos valores por defecto para evitar el "toteo"
 function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {} }) {
     const navigate = useNavigate();
     const location = useLocation();
@@ -34,7 +33,8 @@ function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {
             {/* 1. CABECERA LOGO (Sin Padding, pegado arriba) */}
             <Box 
                 sx={{ 
-                    height: (open || mobileOpen) ? 140 : 64, // Ajuste para que en celular (mobileOpen) se vea el logo grande
+                    // Ajuste: si es mobileOpen también debe mostrarse grande
+                    height: (open || mobileOpen) ? 140 : 64, 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
@@ -44,7 +44,7 @@ function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {
                 }}
             >
                 {(open || mobileOpen) ? (
-                    // LOGO GRANDE (Cuando está abierto o es móvil)
+                    // LOGO GRANDE (Cuando está abierto)
                     <Box 
                         component="img"
                         src="/logo1.png" 
@@ -52,7 +52,7 @@ function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {
                         sx={{ width: '99%', height: 'auto', objectFit: 'contain' }}
                     />
                 ) : (
-                    // LOGO PEQUEÑO O TEXTO (Cuando está cerrado en PC)
+                    // LOGO PEQUEÑO O TEXTO (Cuando está cerrado)
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>FV</Typography>
                 )}
             </Box>
@@ -61,7 +61,7 @@ function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {
             <List sx={{ flexGrow: 1, pt: 2 }}>
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                        <Tooltip title={!open && !mobileOpen ? item.text : ""} placement="right">
+                        <Tooltip title={(!open && !mobileOpen) ? item.text : ""} placement="right">
                             <ListItemButton
                                 sx={{
                                     minHeight: 48,
@@ -72,8 +72,9 @@ function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {
                                 }}
                                 onClick={() => {
                                     navigate(item.path); // 1. Navega a la ruta
+                                    // 2. CORRECCIÓN: Si estamos en móvil, cerramos el menú al hacer clic
                                     if (mobileOpen) {
-                                        handleDrawerToggle(); // 2. Si es móvil (está abierto), CIÉRRALO.
+                                        handleDrawerToggle();
                                     }
                                 }}
                             >
@@ -124,7 +125,8 @@ function Sidebar({ open = true, mobileOpen = false, handleDrawerToggle = () => {
             {/* Drawer Temporal para Móviles (Se abre encima de todo) */}
             <Drawer
                 variant="temporary"
-                open={Boolean(mobileOpen)} // EL BLINDAJE: Boolean() evita que se totee si mobileOpen es null
+                // 3. CORRECCIÓN FINAL: Aseguramos que open sea siempre un booleano (!!mobileOpen)
+                open={!!mobileOpen}
                 onClose={handleDrawerToggle}
                 ModalProps={{ keepMounted: true }}
                 sx={{
