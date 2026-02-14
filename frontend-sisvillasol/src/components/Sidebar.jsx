@@ -55,33 +55,46 @@ function Sidebar({ open, mobileOpen, handleDrawerToggle }) {
             </Box>
 
             {/* 2. LISTA DE MÓDULOS */}
-            <List sx={{ flexGrow: 1, pt: 2 }}>
+           <List>
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                        <Tooltip title={!open ? item.text : ""} placement="right">
-                            <ListItemButton
-                                onClick={() => navigate(item.path)}
+                        <ListItemButton
+                            sx={{
+                                minHeight: 48,
+                                justifyContent: open ? 'initial' : 'center',
+                                px: 2.5,
+                                bgcolor: location.pathname === item.path ? 'rgba(27, 94, 32, 0.1)' : 'transparent', // Resaltar activo
+                                borderLeft: location.pathname === item.path ? '4px solid #1b5e20' : '4px solid transparent'
+                            }}
+                            
+                            // --- AQUÍ ESTÁ LA MAGIA CORREGIDA ✨ ---
+                            onClick={() => {
+                                navigate(item.path); // 1. Navega a la ruta
+                                if (mobileOpen) {
+                                    handleDrawerToggle(); // 2. Si es móvil (está abierto), CIÉRRALO.
+                                }
+                            }}
+                            // ---------------------------------------
+                        >
+                            <ListItemIcon
                                 sx={{
-                                    minHeight: 48,
-                                    justifyContent: open ? 'initial' : 'center',
-                                    px: 2.5,
-                                    backgroundColor: location.pathname === item.path ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
-                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
+                                    minWidth: 0,
+                                    mr: open ? 3 : 'auto',
+                                    justifyContent: 'center',
+                                    color: location.pathname === item.path ? '#1b5e20' : '#757575'
                                 }}
                             >
-                                <ListItemIcon
-                                    sx={{
-                                        minWidth: 0,
-                                        mr: open ? 3 : 'auto',
-                                        justifyContent: 'center',
-                                        color: 'white'
-                                    }}
-                                >
-                                    {item.icon}
-                                </ListItemIcon>
-                                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
-                            </ListItemButton>
-                        </Tooltip>
+                                {item.icon}
+                            </ListItemIcon>
+                            <ListItemText 
+                                primary={item.text} 
+                                sx={{ opacity: open ? 1 : 0 }} 
+                                primaryTypographyProps={{ 
+                                    fontWeight: location.pathname === item.path ? 'bold' : 'normal',
+                                    color: location.pathname === item.path ? '#1b5e20' : 'inherit'
+                                }}
+                            />
+                        </ListItemButton>
                     </ListItem>
                 ))}
             </List>
