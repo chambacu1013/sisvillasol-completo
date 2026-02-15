@@ -11,7 +11,7 @@ const registrarVenta = async (req, res) => {
       `INSERT INTO sisvillasol.ventas (id_lote, fecha_venta, cliente, kilos_vendidos, precio_total)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
-      [id_lote, fecha_venta, cliente, kilos_vendidos, precio_total]
+      [id_lote, fecha_venta, cliente, kilos_vendidos, precio_total],
     );
 
     res.json({

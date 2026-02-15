@@ -40,7 +40,7 @@ import NuevaVentaModal from '../components/NuevaVentaModal';
 function Reportes() {
     // --- ESTADOS ---
     const [kpis, setKpis] = useState({ 
-        ingresos: 0, gastos: 0, ganancia: 0, 
+        ingresos: 0, gastos: 0,  
         mejorLote: { nombre_lote: '---', nombre_variedad: '', total: 0 }, 
         peorLote: { nombre_lote: '---', nombre_variedad: '', total: 0 } 
     });
@@ -63,6 +63,8 @@ function Reportes() {
     });
     // ESTADOS PARA LAS TORTAS
     const [dataTortas, setDataTortas] = useState({ cultivos: [], gastos: [] });
+    //grafica de barras para kilos por lote hasta qui me enrede gemini!!!!!
+    const [dataKilos, setDataKilos] = useState([]);
 
     // COLORES PARA LAS GRÁFICAS
     const COLORES_CULTIVOS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -106,14 +108,19 @@ function Reportes() {
         } catch (error) { console.error("Error cargando tortas", error); }
     };
 
-    const cargarVentas = async (year) => { 
+    const cargarVentas = async (year) => {
         try { 
-            const res = await api.get(`/finanzas/ventas?year=${year}`); 
-            setVentas(res.data); 
+            const res = await api.get(`/finanzas/ventas?year=${year}`);
+            if (res.data.ventas) setVentas(res.data.ventas);
+            else if (Array.isArray(res.data)) setVentas(res.data);
+
+            if (res.data.kilosPorLote) {
+                setDataKilos(res.data.kilosPorLote);
+            }
         } catch (e) { console.error(e); } 
     };
 
-    // La gráfica ya estaba bien, pero asegurémonos
+    // La gráfica
     const cargarGrafica = async (year) => { 
         try { 
             const res = await api.get(`/finanzas/grafica?year=${year}`); 
@@ -303,7 +310,7 @@ function Reportes() {
                     </Card>
                 </Grid>
                 
-                {/* Ganancia */}
+                {/* Ganancia 
                 <Grid item xs={12} sm={6} md={2}>
                     <Card sx={{ bgcolor: '#e3f2fd', borderLeft: '4px solid #0288d1', height: '100%' }}>
                         <CardContent sx={{ p: 2 }}>
@@ -315,7 +322,7 @@ function Reportes() {
                         </CardContent>
                     </Card>
                 </Grid>
-                
+                */}
                 {/* Mejor Lote */}
                 <Grid item xs={12} sm={6} md={2}>
                     <Card sx={{ bgcolor: '#fff8e1', borderLeft: '4px solid #ffb300', height: '100%' }}>
@@ -558,6 +565,51 @@ function Reportes() {
                                 }} />
                                 <Legend verticalAlign="bottom" height={36} iconType="circle"/>
                             </PieChart>
+                        </ResponsiveContainer>
+                    </Paper>
+                </Grid>
+            </Grid>
+            {/* --- 4. GRÁFICA : KILOS POR LOTE --- */}
+            <Grid container spacing={4} sx={{ mb: 8 }}>
+                <Grid item xs={12}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 450 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 1 }}>
+                            ⚖️ Producción Física: Kilos Vendidos por Lote
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+                            Total de peso (Kg) comercializado por cada sector de la finca.
+                        </Typography>
+
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                data={dataKilos} // <--- Aquí usamos el estado que llenamos arriba
+                                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                
+                                {/* Eje X: Nombre del Lote */}
+                                <XAxis 
+                                    dataKey="nombre_lote" 
+                                    angle={-45} 
+                                    textAnchor="end" 
+                                    interval={0} 
+                                    height={80} 
+                                    tick={{fontSize: 12}}
+                                />
+                                
+                                <YAxis label={{ value: 'Kilos (Kg)', angle: -90, position: 'insideLeft' }} />
+                                <Tooltip formatter={(value) => [`${value} Kg`, 'Total Vendido']} />
+                                <Legend verticalAlign="top" height={36}/>
+                                
+                                {/* Barra Amarilla */}
+                                <Bar 
+                                    dataKey="total_kilos" // <--- Debe coincidir con tu SQL (as total_kilos)
+                                    name="Kilos Vendidos" 
+                                    fill="#ffb300" // Amarillo Cosecha
+                                    radius={[5, 5, 0, 0]}
+                                    barSize={50}
+                                />
+                            </BarChart>
                         </ResponsiveContainer>
                     </Paper>
                 </Grid>

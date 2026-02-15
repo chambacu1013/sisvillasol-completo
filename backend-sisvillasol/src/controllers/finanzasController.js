@@ -144,7 +144,7 @@ const obtenerVentas = async (req, res) => {
   const { year } = req.query;
   const anio = year || new Date().getFullYear();
   try {
-    const response = await pool.query(
+    const ventas = await pool.query(
       `
             SELECT v.*, l.nombre_lote, c.nombre_variedad
             FROM sisvillasol.ventas v
@@ -155,7 +155,20 @@ const obtenerVentas = async (req, res) => {
         `,
       [anio],
     );
-    res.json(response.rows);
+    //Kilos vendidos por lote
+    const kilosPorLote = await pool.query(`
+    SELECT 
+        l.nombre_lote, 
+        COALESCE(SUM(v.kilos_vendidos), 0) as total_kilos
+    FROM sisvillasol.lotes l
+    LEFT JOIN sisvillasol.ventas v ON l.id_lote = v.id_lote
+    GROUP BY l.nombre_lote
+    ORDER BY total_kilos DESC
+`);
+    res.json({
+      ventas: ventas.rows,
+      kilosPorLote: kilosPorLote.rows,
+    });
   } catch (error) {
     console.error("Error en Ventas:", error.message);
     res.status(500).send("Error ventas");
@@ -242,8 +255,7 @@ const obtenerDistribucionFinanciera = async (req, res) => {
       [anio],
     );
 
-    // 3. INSUMOS (CORREGIDO EL JOIN QUE ESTABA MAL) 🛠️
-    // Antes decía ci.id_tarea (incorrecto), ahora dice ci.id_tarea_consumo (correcto)
+    // 3. INSUMOS
     const insumosRes = await pool.query(
       `
             SELECT SUM(ci.costo_calculado) as total 
