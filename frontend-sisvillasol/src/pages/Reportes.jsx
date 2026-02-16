@@ -268,19 +268,19 @@ function Reportes() {
             </Paper>
 
             {/* --- 3. SECCIÓN CORREGIDA: 2 TORTAS Y 1 BARRA --- */}
-            {/* AQUÍ ESTABA EL ERROR: spacing={3} es lo correcto. spacing={10} las aplasta. */}
+            {/* AQUÍ ESTÁ EL CAMBIO CLAVE: spacing={3} en lugar de 10 */}
             <Grid container spacing={3} sx={{ mb: 8 }}>
                 
                 {/* Torta 1: Ingresos */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>🌱 Ingresos por Cultivo</Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie 
                                     data={dataTortas.cultivos} 
                                     cx="50%" cy="50%" 
-                                    outerRadius={105} // Tamaño seguro
+                                    outerRadius={110} // Tamaño ajustado para que no se corte
                                     fill="#8884d8" 
                                     dataKey="value" 
                                     stroke="none"
@@ -296,15 +296,15 @@ function Reportes() {
 
                 {/* Torta 2: Inversión */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>💸 Inversión (Gastos)</Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie 
                                     data={dataTortas.gastos} 
                                     cx="50%" cy="50%" 
-                                    innerRadius={60} 
-                                    outerRadius={105} // Tamaño seguro
+                                    innerRadius={65} 
+                                    outerRadius={110} // Tamaño igual a la otra
                                     dataKey="value" 
                                     stroke="none"
                                 >
