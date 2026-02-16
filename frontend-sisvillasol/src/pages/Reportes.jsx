@@ -496,14 +496,15 @@ function Reportes() {
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>
-        {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA) --- */}
-            {/* CAMBIO CLAVE: spacing={2} para que las tarjetas sean ANCHAS y no haya huecos gigantes */}
-            <Grid container spacing={2} alignItems="stretch" sx={{ mb: 8, mt: 4, width: '100%' }}>
+        {/* --- SECCIÓN DISTRIBUIDA: 2 ARRIBA (TORTAS) Y 1 ABAJO (BARRAS) --- */}
+            <Grid container spacing={3} sx={{ mb: 8, mt: 2 }}>
 
-                {/* 1. TORTA CULTIVOS */}
-                <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                {/* FILA 1: LAS DOS TORTAS (Ahora ocupan mitad y mitad -> md={6}) */}
+                
+                {/* 1. Ingresos */}
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             🌱 Ingresos / Cultivo
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
@@ -512,7 +513,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={120} // CAMBIO: Más grande para llenar el ancho
+                                    outerRadius={110} // Más grande porque ahora hay espacio
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -522,16 +523,16 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36}/>
+                                <Legend verticalAlign="bottom" height={36} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
                 </Grid>
 
-                {/* 2. TORTA GASTOS */}
-                <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                {/* 2. Gastos */}
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             💸 Inversión
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
@@ -539,8 +540,8 @@ function Reportes() {
                                 <Pie
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
-                                    innerRadius={70} // CAMBIO: Dona más gruesa
-                                    outerRadius={120} // CAMBIO: Más grande
+                                    innerRadius={60}
+                                    outerRadius={110} // Más grande
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -549,46 +550,52 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36}/>
+                                <Legend verticalAlign="bottom" height={36} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
                 </Grid>
 
-                {/* 3. GRÁFICA BARRAS KILOS */}
-                <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 1 }}>
-                            ⚖️ Kilos Vendidos
+                {/* FILA 2: BARRAS KILOS (Ocupa TODO el ancho -> md={12}) */}
+                {/* ¡AQUÍ ESTÁ LA SOLUCIÓN AL ANCHO! 🚜 */}
+                <Grid item xs={12} md={12}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0 }}>
+                            ⚖️ Producción Física: Kilos Vendidos
+                        </Typography>
+                        <Typography variant="caption" sx={{ mb: 2, color: '#666' }}>
+                            Comparativa total de peso por lote
                         </Typography>
                         
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 data={dataKilos}
-                                margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
+                                margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
+                                barCategoryGap="20%" // Espacio equilibrado entre barras
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis 
                                     dataKey="nombre_lote" 
-                                    angle={-45} 
-                                    textAnchor="end" 
+                                    angle={0} // Ahora que es ancha, el texto puede ir recto (o -30 si son muchos)
+                                    textAnchor="middle" 
                                     interval={0} 
-                                    height={60} 
-                                    tick={{fontSize: 11}} 
+                                    height={30} 
+                                    tick={{fontSize: 12}} 
                                 />
-                                <YAxis tick={{fontSize: 11}} width={35} />
+                                <YAxis tick={{fontSize: 12}} />
                                 
                                 <Tooltip 
+                                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
                                     content={({ active, payload, label }) => {
                                         if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
-                                                <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', padding: '10px', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-                                                    <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.9rem' }}>{label}</p>
-                                                    <p style={{ margin: '4px 0', color: '#2e7d32', fontSize: '0.8rem' }}>
+                                                <div style={{ backgroundColor: '#fff', padding: '12px', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                                                    <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.95rem' }}>{label}</p>
+                                                    <p style={{ margin: '4px 0', color: '#2e7d32', fontSize: '0.85rem' }}>
                                                         🌱 {data.nombre_variedad || 'Sin variedad'}
                                                     </p>
-                                                    <p style={{ margin: 0, color: '#f57f17', fontWeight: 'bold' }}>
+                                                    <p style={{ margin: 0, color: '#f57f17', fontWeight: 'bold', fontSize: '1rem' }}>
                                                         ⚖️ {Number(data.total_kilos).toLocaleString()} Kg
                                                     </p>
                                                 </div>
@@ -603,7 +610,7 @@ function Reportes() {
                                     name="Kilos" 
                                     fill="#ffb300" 
                                     radius={[4, 4, 0, 0]}
-                                    // barSize={50} <--- QUITÉ ESTO para que la barra engorde automáticamente si hay espacio
+                                    // barSize={60} // Opcional: Si quieres un grosor fijo
                                 />
                             </BarChart>
                         </ResponsiveContainer>
