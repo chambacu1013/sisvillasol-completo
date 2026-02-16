@@ -496,15 +496,15 @@ function Reportes() {
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>
-      {/* --- SECCIÓN CORREGIDA DEFINITIVA --- */}
-            {/* ERROR CORREGIDO: Usamos spacing={2}. Si pones 10, las gráficas se aplastan. */}
-            <Grid container spacing={2} sx={{ mb: 8, mt: 2 }}>
+      {/* --- SECCIÓN CORREGIDA: DISEÑO 2 ARRIBA + 1 ABAJO --- */}
+            {/* CORRECCIÓN CRÍTICA: Bajamos spacing a 3. Si pones 10, se rompe todo. */}
+            <Grid container spacing={3} sx={{ mb: 8, mt: 2 }}>
 
                 {/* --- FILA 1: LAS DOS TORTAS (MITAD Y MITAD) --- */}
                 
-                {/* 1. Torta Ingresos */}
+                {/* 1. Ingresos */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 420, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
                             🌱 Ingresos / Cultivo
                         </Typography>
@@ -512,9 +512,9 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="50%"
+                                    cx="50%" cy="45%" 
                                     labelLine={false}
-                                    outerRadius={105} // Tamaño ajustado para que no se corte
+                                    outerRadius={110} // Tamaño grande y seguro
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -530,9 +530,9 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* 2. Torta Inversión (Dona) */}
+                {/* 2. Inversión */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 420, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
                             💸 Inversión
                         </Typography>
@@ -540,9 +540,9 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="50%"
-                                    innerRadius={60}  // Agujero equilibrado
-                                    outerRadius={105} // Tamaño igual a la otra
+                                    cx="50%" cy="45%"
+                                    innerRadius={60}  // Dona gruesa
+                                    outerRadius={110} // Tamaño simétrico a la otra
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -557,7 +557,8 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* --- FILA 2: GRÁFICA DE BARRAS (ANCHO COMPLETO) --- */}
+                {/* --- FILA 2: GRÁFICA DE BARRAS (ANCHO COMPLETO - md={12}) --- */}
+                {/* Al usar md={12}, la gráfica se estira a todo el ancho y los nombres caben bien */}
                 <Grid item xs={12} md={12}>
                     <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 500, display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0 }}>
@@ -570,17 +571,17 @@ function Reportes() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 data={dataKilos}
-                                margin={{ top: 20, right: 30, left: 0, bottom: 30 }} // Margen inferior para nombres largos
+                                margin={{ top: 20, right: 30, left: 20, bottom: 60 }} // Margen inferior amplio para textos inclinados
                                 barCategoryGap="20%" 
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 
                                 <XAxis 
                                     dataKey="nombre_lote" 
-                                    angle={-45}        // Texto inclinado para que quepa
+                                    angle={-45}        // Texto inclinado
                                     textAnchor="end"   
                                     interval={0}       // Mostrar TODOS los lotes
-                                    height={80}        // Espacio suficiente abajo
+                                    height={100}       // Altura extra para que no se corten
                                     tick={{fontSize: 12, fill: '#333'}} 
                                 />
                                 <YAxis tick={{fontSize: 12}} />
