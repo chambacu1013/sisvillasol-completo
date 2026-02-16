@@ -497,7 +497,7 @@ function Reportes() {
                 />
             </Paper>
          {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA) --- */}
-            <Grid container spacing={4} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
+            <Grid container spacing={10} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
 
                 {/* 1. TORTA CULTIVOS (md={4}) */}
                 <Grid item xs={12} md={4}>
