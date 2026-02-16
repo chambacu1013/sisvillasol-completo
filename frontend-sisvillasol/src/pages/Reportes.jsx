@@ -270,7 +270,9 @@ function Reportes() {
         setModalOpen(true);
     };
     return (
-       <Box sx={{ px: 0, py: 3 }}> 
+       <Box sx={{ px: 0, py: 3, margin: '0 -32px !important',
+        width: 'calc(100% + 64px) !important',
+        maxWidth: 'none !important' }}> 
             <GlobalStyles styles={{ 
                 '.swal2-container': { 
                     zIndex: '2400 !important' // Mayor que el 1300 del Modal
