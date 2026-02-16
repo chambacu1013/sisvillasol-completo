@@ -270,9 +270,7 @@ function Reportes() {
         setModalOpen(true);
     };
     return (
-       <Box sx={{ px: 0, py: 3, margin: '0 -32px !important',
-        width: 'calc(100% + 64px) !important',
-        maxWidth: 'none !important' }}> 
+       <Box sx={{ px: 0, py: 3 }}> 
             <GlobalStyles styles={{ 
                 '.swal2-container': { 
                     zIndex: '2400 !important' // Mayor que el 1300 del Modal
@@ -498,15 +496,26 @@ function Reportes() {
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>
-        {/* --- SECCIÓN DISTRIBUIDA: 2 ARRIBA (TORTAS) Y 1 ABAJO (BARRAS) --- */}
-            <Grid container spacing={1} sx={{ mb: 8, mt: 4, width: '100%' }}>
+        {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA CON ANCHO COMPLETO) --- */}
+            <Box sx={{ 
+                display: 'flex', 
+                gap: 0.5,
+                mb: 8, 
+                mt: 4
+            }}>
 
-                {/* FILA 1: LAS DOS TORTAS (Ahora ocupan mitad y mitad -> md={6}) */}
-                
-                {/* 1. Ingresos */}
-                <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 1.5, borderRadius: 2, boxShadow: 3, height: 480, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                {/* 1. TORTA CULTIVOS */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Paper sx={{ 
+                        p: 1, 
+                        borderRadius: 2, 
+                        boxShadow: 3, 
+                        height: 500, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center' 
+                    }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             🌱 Ingresos / Cultivo
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
@@ -515,7 +524,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={135} // Más grande porque ahora hay espacio
+                                    outerRadius={145}
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -525,16 +534,24 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36} />
+                                <Legend verticalAlign="bottom" height={36}/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                </Box>
 
-                {/* 2. Gastos */}
-                <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 1.5, borderRadius: 2, boxShadow: 3, height: 480, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                {/* 2. TORTA GASTOS */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Paper sx={{ 
+                        p: 1, 
+                        borderRadius: 2, 
+                        boxShadow: 3, 
+                        height: 500, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center' 
+                    }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             💸 Inversión
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
@@ -543,7 +560,7 @@ function Reportes() {
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
                                     innerRadius={55}
-                                    outerRadius={135} // Más grande
+                                    outerRadius={145}
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -552,51 +569,55 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36} />
+                                <Legend verticalAlign="bottom" height={36}/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                </Box>
 
-                {/* FILA 2: BARRAS KILOS (Ocupa TODO el ancho -> md={12}) */}
-                <Grid item xs={12} md={12}>
-                    <Paper sx={{ p: 1.5, borderRadius: 2, boxShadow: 3, height: 480, display: 'flex', flexDirection: 'column' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0 }}>
-                            ⚖️ Producción Física: Kilos Vendidos
-                        </Typography>
-                        <Typography variant="caption" sx={{ mb: 2, color: '#666' }}>
-                            Comparativa total de peso por lote
+                {/* 3. GRÁFICA BARRAS KILOS */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Paper sx={{ 
+                        p: 1, 
+                        borderRadius: 2, 
+                        boxShadow: 3, 
+                        height: 500, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center' 
+                    }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 1 }}>
+                            ⚖️ Kilos Vendidos
                         </Typography>
                         
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 data={dataKilos}
-                                margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
-                                barCategoryGap="20%" // Espacio equilibrado entre barras
+                                margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis 
                                     dataKey="nombre_lote" 
-                                    angle={-45}        // 1. Inclinamos el texto para que no se solape
-                                    textAnchor="end"   // 2. Anclamos el final del texto al punto
-                                    interval={0}       // 3. Forzamos a que muestre TODOS los lotes
-                                    height={100}       // 4. Damos 100px de altura para que quepa el texto inclinado
-                                    tick={{fontSize: 12, fill: '#333'}}
+                                    angle={-45} 
+                                    textAnchor="end" 
+                                    interval={0} 
+                                    height={60} 
+                                    tick={{fontSize: 10}}
                                 />
-                                <YAxis tick={{fontSize: 12}} />
+                               <YAxis tick={{fontSize: 11}} width={35} />
                                 
+                                {/* TOOLTIP para las barras */}
                                 <Tooltip 
-                                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
                                     content={({ active, payload, label }) => {
                                         if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
-                                                <div style={{ backgroundColor: '#fff', padding: '12px', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-                                                    <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.95rem' }}>{label}</p>
-                                                    <p style={{ margin: '4px 0', color: '#2e7d32', fontSize: '0.85rem' }}>
+                                                <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', padding: '10px', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+                                                    <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.9rem' }}>{label}</p>
+                                                    <p style={{ margin: '4px 0', color: '#2e7d32', fontSize: '0.8rem' }}>
                                                         🌱 {data.nombre_variedad || 'Sin variedad'}
                                                     </p>
-                                                    <p style={{ margin: 0, color: '#f57f17', fontWeight: 'bold', fontSize: '1rem' }}>
+                                                    <p style={{ margin: 0, color: '#f57f17', fontWeight: 'bold' }}>
                                                         ⚖️ {Number(data.total_kilos).toLocaleString()} Kg
                                                     </p>
                                                 </div>
@@ -611,14 +632,14 @@ function Reportes() {
                                     name="Kilos" 
                                     fill="#ffb300" 
                                     radius={[4, 4, 0, 0]}
-                                    // barSize={60} // Opcional: Si quieres un grosor fijo
                                 />
                             </BarChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                </Box>
 
-            </Grid>
+            </Box>
+            
             {/* --- 5. MODAL CONECTADO (NUEVO COMPONENTE) --- */}
             <NuevaVentaModal 
                 open={modalOpen} 
