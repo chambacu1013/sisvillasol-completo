@@ -496,123 +496,119 @@ function Reportes() {
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>
-            {/* --- 2.5 GRÁFICAS DE PASTEL --- */}
-            <Grid container spacing={4} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
+         {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA) --- */}
+            <Grid container spacing={2} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
 
-                {/* TORTA 1: DISTRIBUCIÓN DE CULTIVOS */}
-                <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
-                            🌱 Ingresos por Cultivo
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: '#777', mb: 2 }}>
-                            (Pasa el mouse para ver valores)
+                {/* 1. TORTA CULTIVOS (md={4}) */}
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                            🌱 Ingresos / Cultivo
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="45%"
+                                    cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={110}
+                                    outerRadius={80} // Un poco más pequeña para que quepa
                                     fill="#8884d8"
                                     dataKey="value"
-                                    stroke="none" // <--- 1. QUITAMOS EL BORDE BLANCO
+                                    stroke="none"
                                 >
                                     {dataTortas.cultivos.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORES_CULTIVOS[index % COLORES_CULTIVOS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value, name) => {
-                                    const total = dataTortas.cultivos.reduce((a, b) => a + b.value, 0);
-                                    const percent = ((value / total) * 100).toFixed(1);
-                                    return [`$${Number(value).toLocaleString()} (${percent}%)`, name];
-                                }} />
-                                <Legend verticalAlign="bottom" height={60} iconType="circle"/>
+                                <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
+                                <Legend verticalAlign="bottom" height={36}/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
                 </Grid>
 
-                {/* TORTA 2: INVERSIÓN (DONA) */}
-                <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
-                            💸 Inversion Económica
-                        </Typography>
-                         <Typography variant="caption" sx={{ color: '#777', mb: 2 }}>
-                            (Distribución de Gastos)
+                {/* 2. TORTA GASTOS (md={4}) */}
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                            💸 Inversión
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="45%"
-                                    innerRadius={70}
-                                    outerRadius={110}
-                                    // paddingAngle={5} <--- 2. ELIMINAMOS ESTA LÍNEA (Causaba los espacios grandes)
+                                    cx="50%" cy="50%"
+                                    innerRadius={50}
+                                    outerRadius={80}
                                     dataKey="value"
-                                    stroke="none" // <--- 3. QUITAMOS EL BORDE BLANCO
+                                    stroke="none"
                                 >
                                     {dataTortas.gastos.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORES_GASTOS[index % COLORES_GASTOS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value, name) => {
-                                     const total = dataTortas.gastos.reduce((a, b) => a + b.value, 0);
-                                     const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                     return [`$${Number(value).toLocaleString()} (${percent}%)`, name];
-                                }} />
-                                <Legend verticalAlign="bottom" height={36} iconType="circle"/>
+                                <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
+                                <Legend verticalAlign="bottom" height={36}/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
                 </Grid>
-            </Grid>
-            {/* --- 4. GRÁFICA : KILOS POR LOTE --- */}
-            <Grid container spacing={4} sx={{ mb: 8 }}>
-                <Grid item xs={12}>
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 450 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 1 }}>
-                            ⚖️ Producción Física: Kilos Vendidos por Lote
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-                            Total de peso (Kg) comercializado por cada sector de la finca.
-                        </Typography>
 
+                {/* 3. GRÁFICA BARRAS KILOS (md={4}) - AHORA AQUÍ AL LADO */}
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 1 }}>
+                            ⚖️ Kilos Vendidos
+                        </Typography>
+                        
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
-                                data={dataKilos} // <--- Aquí usamos el estado que llenamos arriba
-                                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                data={dataKilos}
+                                margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                
-                                {/* Eje X: Nombre del Lote */}
                                 <XAxis 
                                     dataKey="nombre_lote" 
                                     angle={-45} 
                                     textAnchor="end" 
                                     interval={0} 
-                                    height={80} 
-                                    tick={{fontSize: 12}}
+                                    height={60} 
+                                    tick={{fontSize: 10}} // Letra más pequeña para que quepa
+                                />
+                                <YAxis tick={{fontSize: 10}} />
+                                
+                                {/* TOOLTIP MAGICO CON VARIEDAD 🍎 */}
+                                <Tooltip 
+                                    content={({ active, payload, label }) => {
+                                        if (active && payload && payload.length) {
+                                            const data = payload[0].payload; // Aquí están todos los datos (nombre, variedad, kilos)
+                                            return (
+                                                <div style={{ backgroundColor: '#fff', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
+                                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{label}</p>
+                                                    <p style={{ margin: 0, color: '#f57f17' }}>
+                                                        {`Cultivo: ${data.nombre_variedad || 'Sin variedad'}`}
+                                                    </p>
+                                                    <p style={{ margin: 0 }}>
+                                                        {`Peso: ${data.total_kilos} Kg`}
+                                                    </p>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
                                 />
                                 
-                                <YAxis label={{ value: 'Kilos (Kg)', angle: -90, position: 'insideLeft' }} />
-                                <Tooltip formatter={(value) => [`${value} Kg`, 'Total Vendido']} />
-                                <Legend verticalAlign="top" height={36}/>
-                                
-                                {/* Barra Amarilla */}
                                 <Bar 
-                                    dataKey="total_kilos" // <--- Debe coincidir con tu SQL (as total_kilos)
-                                    name="Kilos Vendidos" 
-                                    fill="#ffb300" // Amarillo Cosecha
-                                    radius={[5, 5, 0, 0]}
-                                    barSize={50}
+                                    dataKey="total_kilos" 
+                                    name="Kilos" 
+                                    fill="#ffb300" 
+                                    radius={[4, 4, 0, 0]}
                                 />
                             </BarChart>
                         </ResponsiveContainer>
                     </Paper>
                 </Grid>
+
             </Grid>
             {/* --- 5. MODAL CONECTADO (NUEVO COMPONENTE) --- */}
             <NuevaVentaModal 
