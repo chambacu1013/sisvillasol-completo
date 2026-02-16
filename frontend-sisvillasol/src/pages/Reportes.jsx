@@ -497,7 +497,7 @@ function Reportes() {
                 />
             </Paper>
          {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA) --- */}
-            <Grid container spacing={2} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
+            <Grid container spacing={4} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
 
                 {/* 1. TORTA CULTIVOS (md={4}) */}
                 <Grid item xs={12} md={4}>
@@ -577,19 +577,19 @@ function Reportes() {
                                 />
                                 <YAxis tick={{fontSize: 10}} />
                                 
-                                {/* TOOLTIP MAGICO CON VARIEDAD 🍎 */}
+                                {/* TOOLTIP para las barras */}
                                 <Tooltip 
                                     content={({ active, payload, label }) => {
                                         if (active && payload && payload.length) {
-                                            const data = payload[0].payload; // Aquí están todos los datos (nombre, variedad, kilos)
+                                            const data = payload[0].payload;
                                             return (
-                                                <div style={{ backgroundColor: '#fff', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}>
-                                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{label}</p>
-                                                    <p style={{ margin: 0, color: '#f57f17' }}>
-                                                        {`Cultivo: ${data.nombre_variedad || 'Sin variedad'}`}
+                                                <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', padding: '10px', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+                                                    <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.9rem' }}>{label}</p>
+                                                    <p style={{ margin: '4px 0', color: '#2e7d32', fontSize: '0.8rem' }}>
+                                                        🌱 {data.nombre_variedad || 'Sin variedad'}
                                                     </p>
-                                                    <p style={{ margin: 0 }}>
-                                                        {`Peso: ${data.total_kilos} Kg`}
+                                                    <p style={{ margin: 0, color: '#f57f17', fontWeight: 'bold' }}>
+                                                        ⚖️ {Number(data.total_kilos).toLocaleString()} Kg
                                                     </p>
                                                 </div>
                                             );
