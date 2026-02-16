@@ -156,16 +156,20 @@ const obtenerVentas = async (req, res) => {
       [anio],
     );
     //Kilos vendidos por lote
-    const kilosPorLote = await pool.query(`
+    const kilosPorLote = await pool.query(
+      `
     SELECT 
         l.nombre_lote, c.nombre_variedad,
         COALESCE(SUM(v.kilos_vendidos), 0) as total_kilos
     FROM sisvillasol.lotes l
     LEFT JOIN sisvillasol.ventas v ON l.id_lote = v.id_lote
     LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+    WHERE EXTRACT(YEAR FROM v.fecha_venta) = $1 
     GROUP BY l.nombre_lote, c.nombre_variedad
     ORDER BY total_kilos DESC
-`);
+  `,
+      [anio],
+    );
     res.json({
       ventas: ventas.rows,
       kilosPorLote: kilosPorLote.rows,

@@ -507,7 +507,7 @@ function Reportes() {
                         p: 1, 
                         borderRadius: 2, 
                         boxShadow: 3, 
-                        height: 500, 
+                        height: 520, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         alignItems: 'center' 
@@ -519,9 +519,9 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="45%"
+                                    cx="50%" cy="30%"
                                     labelLine={false}
-                                    outerRadius={120}
+                                    outerRadius={110}
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -531,7 +531,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={32}  iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={80} wrapperStyle={{ paddingTop: '10px' }} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -543,7 +543,7 @@ function Reportes() {
                         p: 1, 
                         borderRadius: 2, 
                         boxShadow: 3, 
-                        height: 500, 
+                        height: 520, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         alignItems: 'center' 
@@ -555,9 +555,9 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="45%"
+                                    cx="50%" cy="30%"
                                     innerRadius={50}
-                                    outerRadius={120}
+                                    outerRadius={110}
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -566,7 +566,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={32}  iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={80} wrapperStyle={{ paddingTop: '10px' }} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
