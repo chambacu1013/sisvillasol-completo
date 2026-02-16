@@ -162,289 +162,331 @@ function Reportes() {
             }
 
             const data = await response.json();
-            console.debug('OpenWeatherMap response:', data);
 
-            // Validar que traiga la estructura esperada
-            if (data && data.main && data.weather && data.weather.length > 0) {
-                const weatherMain = (data.weather[0].main || '').toLowerCase();
-                const weatherDesc = (data.weather[0].description || '').toLowerCase();
-                const iconKey = weatherMain || weatherDesc;
+            // Procesamiento real
+            const temp = Math.round(data.main.temp);
+            const desc = data.weather[0].description;
+            let icon = 'cloud';
+            const weatherMain = data.weather[0].main.toLowerCase();
 
-                setClima({
-                    temp: Math.round(data.main.temp),
-                    desc: data.weather[0].description,
-                    icon: iconKey,
-                    ciudad: 'Chitagá',
-                    status: response.status
-                });
-            } else {
-                setClima({ temp: '--', desc: 'Sin datos', icon: 'cloud', ciudad: 'Chitagá', status: response.status });
-            }
+            if (weatherMain.includes('clear')) icon = 'sunny';
+            else if (weatherMain.includes('rain') || weatherMain.includes('drizzle')) icon = 'rainy';
+            else if (weatherMain.includes('thunder')) icon = 'storm';
+            else if (weatherMain.includes('snow')) icon = 'snow';
+
+            setClima({ 
+                temp: `${temp}°C`, 
+                desc: desc.charAt(0).toUpperCase() + desc.slice(1), 
+                icon, 
+                ciudad: 'Chitagá',
+                status: 200 
+            });
+
         } catch (error) {
-            console.error("Error de conexión clima:", error);
+            console.error('Error obteniendo clima:', error);
+            setClima({ temp: '--', desc: 'Error clima', icon: 'cloud', ciudad: 'Chitagá', status: null });
         }
     };
-
-    const getClimaIcon = (tipo) => {
-        if (!tipo) return <CloudIcon sx={{ fontSize: 40, color: '#fff' }} />;
-        const t = tipo.toLowerCase();
-        // Inglés y español: lluvia, llovizna, nublado, nubes, claro, sol, tormenta, nieve
-        if (t.includes('rain') || t.includes('drizzle') || t.includes('lluv')) return <WaterDropIcon sx={{ fontSize: 40, color: '#fff' }} />;
-        if (t.includes('clear') || t.includes('sun') || t.includes('sol')) return <WbSunnyIcon sx={{ fontSize: 40, color: '#fff000' }} />;
-        if (t.includes('thunder') || t.includes('torment')) return <ThunderstormIcon sx={{ fontSize: 40, color: '#fff' }} />;
-        if (t.includes('snow') || t.includes('nieve')) return <AcUnitIcon sx={{ fontSize: 40, color: '#fff' }} />;
-        if (t.includes('cloud') || t.includes('nub') || t.includes('nubes') || t.includes('nublado')) return <CloudIcon sx={{ fontSize: 40, color: '#fff' }} />;
-        return <CloudIcon sx={{ fontSize: 40, color: '#fff' }} />;
-    };
-
-    const handleEliminarVenta = async (id) => {
-        Swal.fire({
-            title: '¿Eliminar venta?',
-            text: "Este registro desaparecerá de la contabilidad y afectará las gráficas.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d32f2f',
-            cancelButtonColor: '#1b5e20',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try { 
-                    await api.delete(`/finanzas/ventas/${id}`); 
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Eliminado',
-                        text: 'El registro ha sido borrado.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    recargarDatosAnuales();
-                    cargarKPIs(); 
-                    cargarVentas(); 
-                    cargarGrafica(anioSeleccionado);
-                    cargarDatosTortas();
-                } catch (e) { 
-                    console.error(e);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar.' });
-                }
-            }
-        });
-    };
-    // GENERADOR DE AÑOS AUTOMÁTICO 🧠
-    const anioActual = new Date().getFullYear();
-    const anioInicial = 2024; // Año en que fundaron SISVILLASOL
-    const listaAnios = [];
-
-    for (let i = anioInicial; i <= anioActual; i++) {
-        listaAnios.push(i);
-    }
-    // --- LÓGICA DE FILTRADO ---
-    // Filtramos por Cliente o Nombre del Lote
-    const ventasFiltradas = ventas.filter(v => 
-        (v.cliente && v.cliente.toLowerCase().includes(busqueda.toLowerCase())) ||
-        (v.nombre_lote && v.nombre_lote.toLowerCase().includes(busqueda.toLowerCase()))
-    );
-
-    // Cuando cambien de año o busquen algo, regresamos a la página 0
-    useEffect(() => {
-        setPage(0);
-    }, [anioSeleccionado, busqueda]);
-    // 1. Función para recargar todo (se usa al guardar o eliminar)
+    // --- RECARGAS ---
     const recargarDatosAnuales = () => {
+        // Cuando haces cambios (agregar/editar/eliminar venta), recargamos todo del año actual
         cargarKPIs(anioSeleccionado);
         cargarGrafica(anioSeleccionado);
         cargarDatosTortas(anioSeleccionado);
         cargarVentas(anioSeleccionado);
     };
 
-    // 2. Abrir el modal para CREAR (Limpia el formulario)
-    const handleAbrirNuevo = () => {
-        setVentaEditar(null);
+    // --- MODAL ---
+    const handleAbrirModal = () => {
+        setVentaEditar(null); // Limpiamos edición anterior
         setModalOpen(true);
     };
 
-    // 3. Abrir el modal para EDITAR (Carga los datos)
     const handleAbrirEditar = (venta) => {
         setVentaEditar(venta);
         setModalOpen(true);
     };
+
+    const handleEliminarVenta = async (id_venta) => {
+        const resultado = await Swal.fire({
+            title: '¿Eliminar esta venta?',
+            text: 'Esta acción no se puede deshacer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (resultado.isConfirmed) {
+            try {
+                await api.delete(`/finanzas/ventas/${id_venta}`);
+                Swal.fire('Eliminado', 'La venta se eliminó correctamente', 'success');
+                recargarDatosAnuales();
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'No se pudo eliminar la venta', 'error');
+            }
+        }
+    };
+    // FILTRADO de ventas por búsqueda
+    const ventasFiltradas = ventas.filter((venta) => 
+        venta.cliente.toLowerCase().includes(busqueda.toLowerCase()) ||
+        venta.nombre_lote.toLowerCase().includes(busqueda.toLowerCase())
+    );
+    // Cálculo de ganancias netas con validación
+    const ganancia = (kpis.ingresos || 0) - (kpis.gastos || 0);
+    const esPositiva = ganancia >= 0;
+
+    // --- ICONO DE CLIMA ---
+    const renderIconoClima = () => {
+        const iconStyle = { fontSize: 80, color: 'white', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' };
+        switch (clima.icon) {
+            case 'sunny':  return <WbSunnyIcon sx={iconStyle} />;
+            case 'rainy':  return <WaterDropIcon sx={iconStyle} />;
+            case 'storm':  return <ThunderstormIcon sx={iconStyle} />;
+            case 'snow':   return <AcUnitIcon sx={iconStyle} />;
+            default:       return <CloudIcon sx={iconStyle} />;
+        }
+    };
+
+    // Opciones de año (ej. 2020 a año actual + 1)
+    const añosDisponibles = Array.from(
+        { length: (new Date().getFullYear() + 1) - 2020 + 1 }, 
+        (_, i) => 2020 + i
+    );
+
     return (
-        <Box sx={{ pb: 5 }}>
-            <GlobalStyles styles={{ 
-                '.swal2-container': { 
-                    zIndex: '2400 !important' // Mayor que el 1300 del Modal
-                } 
-            }} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1b5e20' }}>Reportes Financieros</Typography>
-                <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#1b5e20' }} onClick={handleAbrirNuevo}>REGISTRAR VENTA</Button>
+        <Box sx={{ px: 4, py: 3 }}>
+            {/* ESTILOS GLOBALES MUY IMPORTANTES */}
+            <GlobalStyles styles={{ '*': { scrollbarWidth: 'none' } }} />
+
+            {/* --- 0. SELECTOR DE AÑO (ARRIBA DE TODO) --- */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+                <TextField
+                    select
+                    label="Año"
+                    value={anioSeleccionado}
+                    onChange={(e) => setAnioSeleccionado(Number(e.target.value))}
+                    variant="outlined"
+                    size="small"
+                    sx={{ width: 120 }}
+                >
+                    {añosDisponibles.map((año) => (
+                        <MenuItem key={año} value={año}>{año}</MenuItem>
+                    ))}
+                </TextField>
             </Box>
 
-            {/* --- 1. TARJETAS KPI --- */}
-            <Grid container spacing={2} sx={{ mb: 4 }}>
-                
-                {/* Ingresos */}
-                <Grid item xs={12} sm={6} md={2}>
-                    <Card sx={{ bgcolor: '#e8f5e9', borderLeft: '4px solid #2e7d32', height: '100%' }}>
-                        <CardContent sx={{ p: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                <AttachMoneyIcon sx={{ color: '#2e7d32', fontSize: 20 }} />
-                                <Typography variant="caption" fontWeight="bold">Total Ingresos</Typography>
+            {/* --- 1. TARJETAS FINANCIERAS (KPI's) --- */}
+            <Grid container spacing={3} sx={{ mb: 6 }}>
+                {/* Total Ingresos */}
+                <Grid item xs={12} md={3}>
+                    <Card sx={{ background: 'linear-gradient(135deg, #66BB6A 0%, #43A047 100%)', color: 'white', borderRadius: 2, boxShadow: 3 }}>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box>
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Ingresos</Typography>
+                                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                        ${(kpis.ingresos || 0).toLocaleString()}
+                                    </Typography>
+                                </Box>
+                                <AttachMoneyIcon sx={{ fontSize: 50, opacity: 0.3 }} />
                             </Box>
-                            <Typography variant="h6" fontWeight="bold" color="#2e7d32">${kpis.ingresos.toLocaleString()}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
-                
-                {/* Gastos */}
-                <Grid item xs={12} sm={6} md={2}>
-                    <Card sx={{ bgcolor: '#ffebee', borderLeft: '4px solid #d32f2f', height: '100%' }}>
-                        <CardContent sx={{ p: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                <TrendingDownIcon sx={{ color: '#d32f2f', fontSize: 20 }} />
-                                <Typography variant="caption" fontWeight="bold">Costos Operativos</Typography>
+
+                {/* Total Gastos */}
+                <Grid item xs={12} md={3}>
+                    <Card sx={{ background: 'linear-gradient(135deg, #EF5350 0%, #E53935 100%)', color: 'white', borderRadius: 2, boxShadow: 3 }}>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box>
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Inversión</Typography>
+                                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                        ${(kpis.gastos || 0).toLocaleString()}
+                                    </Typography>
+                                </Box>
+                                <TrendingDownIcon sx={{ fontSize: 50, opacity: 0.3 }} />
                             </Box>
-                            <Typography variant="h6" fontWeight="bold" color="#d32f2f">${kpis.gastos.toLocaleString()}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
-                
-                {/* Ganancia 
-                <Grid item xs={12} sm={6} md={2}>
-                    <Card sx={{ bgcolor: '#e3f2fd', borderLeft: '4px solid #0288d1', height: '100%' }}>
-                        <CardContent sx={{ p: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                <TrendingUpIcon sx={{ color: '#0288d1', fontSize: 20 }} />
-                                <Typography variant="caption" fontWeight="bold">Rentabilidad Neta</Typography>
-                            </Box>
-                            <Typography variant="h6" fontWeight="bold" color="#0288d1">${kpis.ganancia.toLocaleString()}</Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                */}
+
                 {/* Mejor Lote */}
-                <Grid item xs={12} sm={6} md={2}>
-                    <Card sx={{ bgcolor: '#fff8e1', borderLeft: '4px solid #ffb300', height: '100%' }}>
-                        <CardContent sx={{ p: 1.5 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                <EmojiEventsIcon sx={{ color: '#ffb300', fontSize: 20 }} />
-                                <Typography variant="caption" fontWeight="bold">Mejor Lote</Typography>
+                <Grid item xs={12} md={3}>
+                    <Card sx={{ background: 'linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%)', color: 'white', borderRadius: 2, boxShadow: 3 }}>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box>
+                                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Mejor Lote</Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                        {kpis.mejorLote.nombre_lote || '---'}
+                                    </Typography>
+                                    {kpis.mejorLote.nombre_variedad && (
+                                        <Typography variant="caption">
+                                            {kpis.mejorLote.nombre_variedad}
+                                        </Typography>
+                                    )}
+                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 0.5 }}>
+                                        ${Number(kpis.mejorLote.total || 0).toLocaleString()}
+                                    </Typography>
+                                </Box>
+                                <EmojiEventsIcon sx={{ fontSize: 50, opacity: 0.3 }} />
                             </Box>
-                            <Typography variant="body2" noWrap title={kpis.mejorLote.nombre_lote}>{kpis.mejorLote.nombre_lote}</Typography>
-                            <Typography variant="caption" display="block" color="textSecondary" noWrap>{kpis.mejorLote.nombre_variedad || 'Sin Cultivo'}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
 
                 {/* Peor Lote */}
-                <Grid item xs={12} sm={6} md={2}>
-                    <Card sx={{ bgcolor: '#eceff1', borderLeft: '4px solid #607d8b', height: '100%' }}>
-                        <CardContent sx={{ p: 1.5 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                <ThumbDownIcon sx={{ color: '#607d8b', fontSize: 20 }} />
-                                <Typography variant="caption" fontWeight="bold">Menor Rend.</Typography>
+                <Grid item xs={12} md={3}>
+                    <Card sx={{ background: 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)', color: 'white', borderRadius: 2, boxShadow: 3 }}>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box>
+                                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Peor Lote</Typography>
+                                    <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                        {kpis.peorLote.nombre_lote || '---'}
+                                    </Typography>
+                                    {kpis.peorLote.nombre_variedad && (
+                                        <Typography variant="caption">
+                                            {kpis.peorLote.nombre_variedad}
+                                        </Typography>
+                                    )}
+                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 0.5 }}>
+                                        ${Number(kpis.peorLote.total || 0).toLocaleString()}
+                                    </Typography>
+                                </Box>
+                                <ThumbDownIcon sx={{ fontSize: 50, opacity: 0.3 }} />
                             </Box>
-                            <Typography variant="body2" noWrap title={kpis.peorLote.nombre_lote}>{kpis.peorLote.nombre_lote}</Typography>
-                            <Typography variant="caption" display="block" color="textSecondary" noWrap>{kpis.peorLote.nombre_variedad || 'Sin Cultivo'}</Typography>
                         </CardContent>
                     </Card>
                 </Grid>
-
-                {/* --- TARJETA CLIMA REAL --- */}
-                <Grid item xs={12} sm={6} md={2}>
-                    <Card sx={{ 
-                        background: 'linear-gradient(135deg, #42a5f5 30%, #1e88e5 90%)', 
-                        color: 'white',
-                        height: '100%' 
-                    }}>
-                        <CardContent sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Box>
-                                <Typography variant="caption" sx={{ opacity: 0.9 }}>{clima.ciudad}</Typography>
-                                <Typography variant="h5" fontWeight="bold">{clima.temp}°C</Typography>
-                                <Typography variant="caption" sx={{ textTransform: 'capitalize', display: 'block', lineHeight: 1 }}>
-                                    {clima.desc}
-                                </Typography>
-                                {/* Indicador cuando la API Key devuelve 401 */}
-                                {clima.status === 401 && (
-                                    <Box sx={{ mt: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
-                                        <Chip label="Clave OpenWeather inactiva (401)" color="warning" size="small" />
-                                        <Button size="small" variant="contained" onClick={obtenerClima} sx={{ bgcolor: '#fff', color: '#1b5e20' }}>Reintentar</Button>
-                                    </Box>
-                                )}
-                            </Box>
-                            {getClimaIcon(clima.icon)}
-                        </CardContent>
-                    </Card>
-                </Grid>
-
             </Grid>
 
-            {/* --- 2. GRÁFICA --- */}
-            <Paper sx={{ p: 3, mb: 4, borderRadius: 2, boxShadow: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555' }}>Ingresos vs. Egresos</Typography>
-                    <TextField 
-                        select 
-                        size="small" 
-                        value={anioSeleccionado} 
-                        onChange={(e) => setAnioSeleccionado(e.target.value)} 
-                        sx={{ width: 100 }}
+            {/* --- 2. GRÁFICA DE INGRESOS vs GASTOS + CLIMA --- */}
+            <Grid container spacing={3} sx={{ mb: 6 }}>
+                {/* Gráfica Principal */}
+                <Grid item xs={12} md={9}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#333' }}>
+                            Ingresos vs Inversión Mensual
+                        </Typography>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={datosGrafica} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
+                                <YAxis tick={{ fontSize: 12 }} />
+                                <Tooltip 
+                                    formatter={(value) => `$${Number(value).toLocaleString()}`}
+                                    contentStyle={{ borderRadius: 8 }}
+                                />
+                                <Legend wrapperStyle={{ fontSize: '14px' }} />
+                                <Bar dataKey="ingresos" fill="#4CAF50" name="Ingresos" radius={[8, 8, 0, 0]} />
+                                <Bar dataKey="gastos" fill="#F44336" name="Inversión" radius={[8, 8, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </Paper>
+                </Grid>
+
+                {/* Tarjeta del Clima */}
+                <Grid item xs={12} md={3}>
+                    <Paper 
+                        sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            boxShadow: 3,
+                            background: 'linear-gradient(135deg, #42A5F5 0%, #1E88E5 100%)',
+                            color: 'white',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            minHeight: 280
+                        }}
                     >
-                        {/* Mapeo Automático */}
-                        {listaAnios.map((anio) => (
-                            <MenuItem key={anio} value={anio}>
-                                {anio}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                </Box>
-                <Box sx={{ height: 350, width: '100%' }}>
-                    <ResponsiveContainer>
-                        <BarChart data={datosGrafica}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="name" />
-                            <YAxis width={70} />
-                            <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
-                            <Legend />
-                            <Bar dataKey="Costos" fill="#e91e63 " name="Egresos" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="Ingresos" fill="#008f39" name="Ingresos" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </Box>
+                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                            {clima.ciudad}
+                        </Typography>
+                        {renderIconoClima()}
+                        <Typography variant="h3" sx={{ fontWeight: 'bold', my: 2 }}>
+                            {clima.temp}
+                        </Typography>
+                        <Typography variant="body1" sx={{ textAlign: 'center', fontStyle: 'italic' }}>
+                            {clima.desc}
+                        </Typography>
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            {/* --- 3. GANANCIAS NETAS --- */}
+            <Paper sx={{ p: 3, mb: 6, borderRadius: 2, boxShadow: 3, textAlign: 'center' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                    Ganancia Neta
+                </Typography>
+                <Typography 
+                    variant="h3" 
+                    sx={{ fontWeight: 'bold', color: esPositiva ? '#4CAF50' : '#F44336' }}
+                >
+                    ${ganancia.toLocaleString()}
+                </Typography>
             </Paper>
 
-          {/* --- 3. TABLA DE VENTAS CON BUSCADOR Y PAGINACIÓN --- */}
-            <Paper sx={{ borderRadius: 2, boxShadow: 2, mb: 8 }}>
-                
-                {/* BARRA DE BÚSQUEDA INTERNA */}
-                <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
-                    <TextField
-                        placeholder="Buscar por cliente o lote..."
-                        size="small"
-                        value={busqueda}
-                        onChange={(e) => setBusqueda(e.target.value)}
-                        sx={{ width: 300 }}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchIcon color="action" />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
+            {/* --- 4. TABLA DE VENTAS --- */}
+            <Paper sx={{ p: 3, mb: 6, borderRadius: 2, boxShadow: 3 }}>
+                {/* BARRA SUPERIOR: Título, Buscador y Botón */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
+                        Historial de Ventas
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        {/* Buscador */}
+                        <TextField
+                            variant="outlined"
+                            size="small"
+                            placeholder="Buscar cliente o lote..."
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon />
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{ width: 250 }}
+                        />
+                        {/* Botón Nueva Venta */}
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={handleAbrirModal}
+                            sx={{
+                                backgroundColor: '#4CAF50',
+                                '&:hover': { backgroundColor: '#45a049' },
+                                textTransform: 'none',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            Nueva Venta
+                        </Button>
+                    </Box>
                 </Box>
 
+                {/* TABLA */}
                 <TableContainer>
                     <Table>
-                        <TableHead sx={{ bgcolor: '#f5f5f5' }}>
-                            <TableRow>
-                                <TableCell><b>Fecha</b></TableCell>
-                                <TableCell><b>Lote (Cultivo)</b></TableCell>
-                                <TableCell><b>Cliente</b></TableCell>
-                                <TableCell><b>Kilos</b></TableCell>
-                                <TableCell><b>Total Venta</b></TableCell>
-                                <TableCell><b>Acciones</b></TableCell>
+                        <TableHead>
+                            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Fecha</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Lote</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Cliente</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }} align="right">Kilos</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }} align="right">Precio Total</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }} align="center">Acciones</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -452,17 +494,18 @@ function Reportes() {
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((venta) => (
                                     <TableRow key={venta.id_venta} hover>
-                                       <TableCell>{new Date(venta.fecha_venta).toLocaleDateString('es-CO', { timeZone: 'UTC' })}</TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2" fontWeight="bold">{venta.nombre_lote}</Typography>
-                                            <Chip label={venta.nombre_variedad || 'Sin Cultivo'} size="small" variant="outlined" />
+                                        <TableCell>{new Date(venta.fecha_venta).toLocaleDateString('es-ES')}</TableCell>
+                                        <TableCell>{venta.nombre_lote}</TableCell>
+                                        <TableCell>{venta.cliente}</TableCell>
+                                        <TableCell align="right">{Number(venta.kilos_vendidos).toLocaleString()}</TableCell>
+                                        <TableCell align="right">
+                                            <Chip 
+                                                label={`$${Number(venta.precio_total).toLocaleString()}`} 
+                                                color="success" 
+                                                size="small" 
+                                            />
                                         </TableCell>
-                                        <TableCell>{venta.cliente || '---'}</TableCell>
-                                        <TableCell>{venta.kilos_vendidos} Kg</TableCell>
-                                        <TableCell sx={{ color: '#2e7d32', fontWeight: 'bold' }}>
-                                            ${Number(venta.precio_total).toLocaleString()}
-                                        </TableCell>
-                                        <TableCell>
+                                        <TableCell align="center">
                                             <IconButton color="primary" onClick={() => handleAbrirEditar(venta)}>
                                                 <EditIcon />
                                             </IconButton>
@@ -496,12 +539,21 @@ function Reportes() {
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>
-         {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA) --- */}
-            <Grid container spacing={10} justifyContent="center" sx={{ mb: 8, mt: 4 }}>
+
+         {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA CON ANCHO COMPLETO) --- */}
+            <Grid container spacing={2} sx={{ mb: 8, mt: 4 }}>
 
                 {/* 1. TORTA CULTIVOS (md={4}) */}
                 <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ 
+                        p: 2, 
+                        borderRadius: 2, 
+                        boxShadow: 3, 
+                        height: 420, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center' 
+                    }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             🌱 Ingresos / Cultivo
                         </Typography>
@@ -511,7 +563,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={100} // Un poco más pequeña para que quepa
+                                    outerRadius={110}
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -529,7 +581,15 @@ function Reportes() {
 
                 {/* 2. TORTA GASTOS (md={4}) */}
                 <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ 
+                        p: 2, 
+                        borderRadius: 2, 
+                        boxShadow: 3, 
+                        height: 420, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center' 
+                    }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             💸 Inversión
                         </Typography>
@@ -539,7 +599,7 @@ function Reportes() {
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
                                     innerRadius={50}
-                                    outerRadius={100}
+                                    outerRadius={110}
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -554,9 +614,17 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* 3. GRÁFICA BARRAS KILOS (md={4}) - AHORA AQUÍ AL LADO */}
+                {/* 3. GRÁFICA BARRAS KILOS (md={4}) */}
                 <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ 
+                        p: 2, 
+                        borderRadius: 2, 
+                        boxShadow: 3, 
+                        height: 420, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center' 
+                    }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 1 }}>
                             ⚖️ Kilos Vendidos
                         </Typography>
@@ -573,7 +641,7 @@ function Reportes() {
                                     textAnchor="end" 
                                     interval={0} 
                                     height={60} 
-                                    tick={{fontSize: 10}} // Letra más pequeña para que quepa
+                                    tick={{fontSize: 10}}
                                 />
                                <YAxis tick={{fontSize: 11}} width={35} />
                                 
@@ -610,13 +678,14 @@ function Reportes() {
                 </Grid>
 
             </Grid>
+            
             {/* --- 5. MODAL CONECTADO (NUEVO COMPONENTE) --- */}
             <NuevaVentaModal 
                 open={modalOpen} 
                 onClose={() => setModalOpen(false)} 
                 ventaEditar={ventaEditar} 
-                onSuccess={recargarDatosAnuales} // Al guardar, recargamos gráficas y tablas
-                listaLotes={listaLotes} // Le pasamos la lista para que no tenga que consultarla de nuevo
+                onSuccess={recargarDatosAnuales}
+                listaLotes={listaLotes}
             />
         </Box>
     );
