@@ -497,7 +497,7 @@ function Reportes() {
                 />
             </Paper>
         {/* --- SECCIÓN DISTRIBUIDA: 2 ARRIBA (TORTAS) Y 1 ABAJO (BARRAS) --- */}
-            <Grid container spacing={3} sx={{ mb: 8, mt: 2 }}>
+            <Grid container spacing={4} sx={{ mb: 8, mt: 2 }}>
 
                 {/* FILA 1: LAS DOS TORTAS (Ahora ocupan mitad y mitad -> md={6}) */}
                 
@@ -540,7 +540,7 @@ function Reportes() {
                                 <Pie
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
-                                    innerRadius={60}
+                                    innerRadius={50}
                                     outerRadius={110} // Más grande
                                     dataKey="value"
                                     stroke="none"
@@ -557,7 +557,6 @@ function Reportes() {
                 </Grid>
 
                 {/* FILA 2: BARRAS KILOS (Ocupa TODO el ancho -> md={12}) */}
-                {/* ¡AQUÍ ESTÁ LA SOLUCIÓN AL ANCHO! 🚜 */}
                 <Grid item xs={12} md={12}>
                     <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0 }}>
@@ -570,17 +569,17 @@ function Reportes() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 data={dataKilos}
-                                margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
+                                margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
                                 barCategoryGap="20%" // Espacio equilibrado entre barras
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis 
                                     dataKey="nombre_lote" 
-                                    angle={0} // Ahora que es ancha, el texto puede ir recto (o -30 si son muchos)
-                                    textAnchor="middle" 
-                                    interval={0} 
-                                    height={30} 
-                                    tick={{fontSize: 12}} 
+                                    angle={-45}        // 1. Inclinamos el texto para que no se solape
+                                    textAnchor="end"   // 2. Anclamos el final del texto al punto
+                                    interval={0}       // 3. Forzamos a que muestre TODOS los lotes
+                                    height={100}       // 4. Damos 100px de altura para que quepa el texto inclinado
+                                    tick={{fontSize: 12, fill: '#333'}}
                                 />
                                 <YAxis tick={{fontSize: 12}} />
                                 
