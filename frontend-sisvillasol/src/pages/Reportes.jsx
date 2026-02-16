@@ -111,13 +111,10 @@ function Reportes() {
     const cargarVentas = async (year) => {
         try { 
             const res = await api.get(`/finanzas/ventas?year=${year}`);
-            if (res.data.ventas) setVentas(res.data.ventas);
-            else if (Array.isArray(res.data)) setVentas(res.data);
-
-            if (res.data.kilosPorLote) {
-                setDataKilos(res.data.kilosPorLote);
-            }
-        } catch (e) { console.error(e); } 
+            setVentas(res.data.ventas);
+            setDataKilos(res.data.kilosPorLote);
+            
+        } catch (e) { console.error("Error cargando ventas",e); } 
     };
 
     // La gráfica
@@ -515,14 +512,14 @@ function Reportes() {
                         flexDirection: 'column', 
                         alignItems: 'center' 
                     }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 0.3 }}>
                             🌱 Ingresos / Cultivo
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="50%"
+                                    cx="50%" cy="45%"
                                     labelLine={false}
                                     outerRadius={120}
                                     fill="#8884d8"
@@ -534,7 +531,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36}/>
+                                <Legend verticalAlign="bottom" height={32}  iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -558,7 +555,7 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="50%"
+                                    cx="50%" cy="45%"
                                     innerRadius={50}
                                     outerRadius={120}
                                     dataKey="value"
@@ -569,7 +566,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36}/>
+                                <Legend verticalAlign="bottom" height={32}  iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
