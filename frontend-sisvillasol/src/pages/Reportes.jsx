@@ -48,7 +48,7 @@ function Reportes() {
     const [modalOpen, setModalOpen] = useState(false);
     const [ventaEditar, setVentaEditar] = useState(null);
     const [dataTortas, setDataTortas] = useState({ cultivos: [], gastos: [] });
-    const [dataKilos, setDataKilos] = useState([]); // Datos para la gráfica de barras
+    const [dataKilos, setDataKilos] = useState([]); 
 
     // COLORES
     const COLORES_CULTIVOS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -97,7 +97,6 @@ function Reportes() {
             if (res.data.ventas) setVentas(res.data.ventas);
             else if (Array.isArray(res.data)) setVentas(res.data);
 
-            // AQUÍ CAPTURAMOS LOS DATOS PARA LA GRÁFICA DE BARRAS
             if (res.data.kilosPorLote) {
                 setDataKilos(res.data.kilosPorLote);
             }
@@ -245,7 +244,7 @@ function Reportes() {
                 </Grid>
             </Grid>
 
-            {/* --- 2. GRÁFICA DE BARRAS GENERAL (INGRESOS vs EGRESOS) --- */}
+            {/* --- 2. GRÁFICA GENERAL (Balance) --- */}
             <Paper sx={{ p: 3, mb: 4, borderRadius: 2, boxShadow: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555' }}>Balance General</Typography>
@@ -268,16 +267,24 @@ function Reportes() {
                 </Box>
             </Paper>
 
-            {/* --- 3. SECCIÓN DE GRÁFICAS ESPECÍFICAS (AQUÍ ESTÁ LA CORRECCIÓN) --- */}
+            {/* --- 3. SECCIÓN CORREGIDA: 2 TORTAS Y 1 BARRA --- */}
+            {/* AQUÍ ESTABA EL ERROR: spacing={3} es lo correcto. spacing={10} las aplasta. */}
             <Grid container spacing={3} sx={{ mb: 8 }}>
                 
-                {/* FILA 1: TORTAS (Mitad y Mitad) */}
+                {/* Torta 1: Ingresos */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 420, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>🌱 Ingresos por Cultivo</Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
-                                <Pie data={dataTortas.cultivos} cx="50%" cy="50%" outerRadius={100} fill="#8884d8" dataKey="value" label>
+                                <Pie 
+                                    data={dataTortas.cultivos} 
+                                    cx="50%" cy="50%" 
+                                    outerRadius={105} // Tamaño seguro
+                                    fill="#8884d8" 
+                                    dataKey="value" 
+                                    stroke="none"
+                                >
                                     {dataTortas.cultivos.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORES_CULTIVOS[index % COLORES_CULTIVOS.length]} />)}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
@@ -287,12 +294,20 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
+                {/* Torta 2: Inversión */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 420, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>💸 Inversión (Gastos)</Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
-                                <Pie data={dataTortas.gastos} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" label>
+                                <Pie 
+                                    data={dataTortas.gastos} 
+                                    cx="50%" cy="50%" 
+                                    innerRadius={60} 
+                                    outerRadius={105} // Tamaño seguro
+                                    dataKey="value" 
+                                    stroke="none"
+                                >
                                     {dataTortas.gastos.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORES_GASTOS[index % COLORES_GASTOS.length]} />)}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
@@ -302,21 +317,25 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* FILA 2: BARRAS KILOS (ANCHO COMPLETO - SOLUCIÓN DEFINITIVA) */}
+                {/* Barra Kilos (ANCHO COMPLETO md={12}) */}
                 <Grid item xs={12} md={12}>
                     <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 500, display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17' }}>⚖️ Kilos Vendidos por Lote</Typography>
                         <Typography variant="caption" sx={{ mb: 2, color: '#666' }}>Comparativa de producción física</Typography>
                         
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={dataKilos} margin={{ top: 20, right: 30, left: 20, bottom: 70 }} barCategoryGap="20%">
+                            <BarChart 
+                                data={dataKilos} 
+                                margin={{ top: 20, right: 30, left: 20, bottom: 70 }} // Margen inferior para etiquetas inclinadas
+                                barCategoryGap="20%"
+                            >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis 
                                     dataKey="nombre_lote" 
                                     angle={-45} 
                                     textAnchor="end" 
                                     interval={0} 
-                                    height={100} 
+                                    height={100} // Altura extra para el texto
                                     tick={{fontSize: 12, fill: '#333'}} 
                                 />
                                 <YAxis />
