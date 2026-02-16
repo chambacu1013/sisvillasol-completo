@@ -43,12 +43,24 @@ function Reportes() {
     const [ventas, setVentas] = useState([]);
     const [datosGrafica, setDatosGrafica] = useState([]);
     const [anioSeleccionado, setAnioSeleccionado] = useState(new Date().getFullYear());
+    
+    // Estado del Clima
     const [clima, setClima] = useState({ temp: '--', desc: 'Esperando activación...', icon: 'cloud', ciudad: 'Chitagá', status: null });
+
+    // Listas y Modales
     const [listaLotes, setListaLotes] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
     const [ventaEditar, setVentaEditar] = useState(null);
+    
+    // Formulario (no usado aquí directamente, pero declarado)
+    const [nuevaVenta, setNuevaVenta] = useState({
+        fecha_venta: new Date().toLocaleDateString('en-CA'),
+        id_lote: '', cliente: '', kilos_vendidos: '', precio_total: ''
+    });
+    // ESTADOS PARA LAS TORTAS
     const [dataTortas, setDataTortas] = useState({ cultivos: [], gastos: [] });
-    const [dataKilos, setDataKilos] = useState([]); 
+    // ESTADO PARA BARRAS KILOS
+    const [dataKilos, setDataKilos] = useState([]);
 
     // COLORES
     const COLORES_CULTIVOS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -244,7 +256,7 @@ function Reportes() {
                 </Grid>
             </Grid>
 
-            {/* --- 2. GRÁFICA GENERAL (Balance) --- */}
+            {/* --- 2. GRÁFICA GENERAL --- */}
             <Paper sx={{ p: 3, mb: 4, borderRadius: 2, boxShadow: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555' }}>Balance General</Typography>
@@ -267,20 +279,22 @@ function Reportes() {
                 </Box>
             </Paper>
 
-            {/* --- 3. SECCIÓN CORREGIDA: 2 TORTAS Y 1 BARRA --- */}
-            {/* AQUÍ ESTÁ EL CAMBIO CLAVE: spacing={3} en lugar de 10 */}
+            {/* --- 3. SECCIÓN DE GRÁFICAS ESPECÍFICAS (CORREGIDA) --- */}
+            
+            {/* SPACING = 3 (NO 10). Esto permite que las gráficas respiren y se expandan */}
             <Grid container spacing={3} sx={{ mb: 8 }}>
                 
-                {/* Torta 1: Ingresos */}
+                {/* --- FILA 1: LAS DOS TORTAS (Mitad y Mitad) --- */}
+                
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>🌱 Ingresos por Cultivo</Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie 
                                     data={dataTortas.cultivos} 
                                     cx="50%" cy="50%" 
-                                    outerRadius={110} // Tamaño ajustado para que no se corte
+                                    outerRadius={110} // Tamaño ajustado
                                     fill="#8884d8" 
                                     dataKey="value" 
                                     stroke="none"
@@ -294,9 +308,8 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* Torta 2: Inversión */}
                 <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>💸 Inversión (Gastos)</Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -304,7 +317,7 @@ function Reportes() {
                                     data={dataTortas.gastos} 
                                     cx="50%" cy="50%" 
                                     innerRadius={65} 
-                                    outerRadius={110} // Tamaño igual a la otra
+                                    outerRadius={110} // Tamaño ajustado
                                     dataKey="value" 
                                     stroke="none"
                                 >
@@ -317,7 +330,8 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* Barra Kilos (ANCHO COMPLETO md={12}) */}
+                {/* --- FILA 2: GRÁFICA DE BARRAS (Ancho Total) --- */}
+                {/* md={12} asegura que ocupe todo el ancho de la pantalla */}
                 <Grid item xs={12} md={12}>
                     <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 500, display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17' }}>⚖️ Kilos Vendidos por Lote</Typography>
@@ -326,7 +340,7 @@ function Reportes() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart 
                                 data={dataKilos} 
-                                margin={{ top: 20, right: 30, left: 20, bottom: 70 }} // Margen inferior para etiquetas inclinadas
+                                margin={{ top: 20, right: 30, left: 20, bottom: 70 }} // Margen inferior para que quepan los nombres inclinados
                                 barCategoryGap="20%"
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -335,7 +349,7 @@ function Reportes() {
                                     angle={-45} 
                                     textAnchor="end" 
                                     interval={0} 
-                                    height={100} // Altura extra para el texto
+                                    height={100} // Altura extra para el texto inclinado
                                     tick={{fontSize: 12, fill: '#333'}} 
                                 />
                                 <YAxis />
