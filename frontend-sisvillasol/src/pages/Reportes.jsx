@@ -505,7 +505,7 @@ function Reportes() {
             }}>
 
                 {/* 1. TORTA CULTIVOS */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ flex: 0.70, minWidth: 0 }}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
@@ -524,7 +524,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={145}
+                                    outerRadius={120}
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -541,7 +541,7 @@ function Reportes() {
                 </Box>
 
                 {/* 2. TORTA GASTOS */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ flex: 0.70, minWidth: 0 }}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
@@ -559,8 +559,8 @@ function Reportes() {
                                 <Pie
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
-                                    innerRadius={55}
-                                    outerRadius={145}
+                                    innerRadius={50}
+                                    outerRadius={120}
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -576,7 +576,7 @@ function Reportes() {
                 </Box>
 
                 {/* 3. GRÁFICA BARRAS KILOS */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ flex: 1.4, minWidth: 0 }}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
