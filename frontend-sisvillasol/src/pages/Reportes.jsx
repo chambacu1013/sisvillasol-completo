@@ -511,7 +511,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={80} // Un poco más pequeña para que quepa
+                                    outerRadius={100} // Un poco más pequeña para que quepa
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -539,7 +539,7 @@ function Reportes() {
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
                                     innerRadius={50}
-                                    outerRadius={80}
+                                    outerRadius={100}
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -575,7 +575,7 @@ function Reportes() {
                                     height={60} 
                                     tick={{fontSize: 10}} // Letra más pequeña para que quepa
                                 />
-                                <YAxis tick={{fontSize: 10}} />
+                               <YAxis tick={{fontSize: 11}} width={35} />
                                 
                                 {/* TOOLTIP para las barras */}
                                 <Tooltip 
