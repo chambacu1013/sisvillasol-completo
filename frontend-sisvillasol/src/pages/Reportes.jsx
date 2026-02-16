@@ -497,7 +497,7 @@ function Reportes() {
                 />
             </Paper>
         {/* --- SECCIÓN DISTRIBUIDA: 2 ARRIBA (TORTAS) Y 1 ABAJO (BARRAS) --- */}
-            <Grid container spacing={6} sx={{ mb: 4, mt: 2 }}>
+            <Grid container spacing={8} sx={{ mb: 8, mt: 4 }}>
 
                 {/* FILA 1: LAS DOS TORTAS (Ahora ocupan mitad y mitad -> md={6}) */}
                 
