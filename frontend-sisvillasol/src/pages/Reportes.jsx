@@ -496,22 +496,26 @@ function Reportes() {
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>
-        {/* --- SECCIÓN DISTRIBUIDA: 2 ARRIBA (TORTAS) Y 1 ABAJO (BARRAS) --- */}
-          <Grid container spacing={2} sx={{ mb: 8, mt: 4 }} alignItems="stretch">
+      {/* --- SECCIÓN CORREGIDA: 2 TORTAS ARRIBA, 1 BARRAS ABAJO --- */}
+            
+            {/* 1. CAMBIO CRÍTICO: spacing={2} (No 10). Esto da espacio a las tarjetas. */}
+            <Grid container spacing={2} sx={{ mb: 8, mt: 2 }}>
 
-                {/* --- GRÁFICA 1: INGRESOS (TORTA) --- */}
-                <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
+                {/* --- FILA 1: TORTAS --- */}
+                
+                {/* Torta Ingresos */}
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
                             🌱 Ingresos / Cultivo
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="45%" // Subimos un poco el centro
+                                    cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={90} // <--- AJUSTE CLAVE: 90 es el tamaño perfecto para 3 columnas
+                                    outerRadius={120} // Radio grande
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -527,19 +531,19 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* --- GRÁFICA 2: INVERSIÓN (DONA) --- */}
-                <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
+                {/* Torta Inversión */}
+                <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
                             💸 Inversión
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="45%"
-                                    innerRadius={50} // Dona gruesa
-                                    outerRadius={90} // <--- AJUSTE CLAVE: Igual que la otra para simetría
+                                    cx="50%" cy="50%"
+                                    innerRadius={60}  // Dona gruesa
+                                    outerRadius={120} // Radio grande igual a la otra
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -554,9 +558,9 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* FILA 2: BARRAS KILOS (Ocupa TODO el ancho -> md={12}) */}
+                {/* --- FILA 2: BARRAS KILOS (ANCHO COMPLETO) --- */}
                 <Grid item xs={12} md={12}>
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column' }}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 500, display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0 }}>
                             ⚖️ Producción Física: Kilos Vendidos
                         </Typography>
@@ -567,17 +571,18 @@ function Reportes() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 data={dataKilos}
-                                margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
-                                barCategoryGap="20%" // Espacio equilibrado entre barras
+                                margin={{ top: 10, right: 30, left: 0, bottom: 60 }} // Margen inferior amplio
+                                barCategoryGap="20%" 
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                
                                 <XAxis 
                                     dataKey="nombre_lote" 
-                                    angle={-45}        // 1. Inclinamos el texto para que no se solape
-                                    textAnchor="end"   // 2. Anclamos el final del texto al punto
-                                    interval={0}       // 3. Forzamos a que muestre TODOS los lotes
-                                    height={100}       // 4. Damos 100px de altura para que quepa el texto inclinado
-                                    tick={{fontSize: 12, fill: '#333'}}
+                                    angle={-45}        // Texto inclinado
+                                    textAnchor="end"   
+                                    interval={0}       // Mostrar todos
+                                    height={80}        // Altura suficiente
+                                    tick={{fontSize: 12, fill: '#333'}} 
                                 />
                                 <YAxis tick={{fontSize: 12}} />
                                 
@@ -607,7 +612,6 @@ function Reportes() {
                                     name="Kilos" 
                                     fill="#ffb300" 
                                     radius={[4, 4, 0, 0]}
-                                    // barSize={60} // Opcional: Si quieres un grosor fijo
                                 />
                             </BarChart>
                         </ResponsiveContainer>
