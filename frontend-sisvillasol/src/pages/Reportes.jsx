@@ -270,7 +270,7 @@ function Reportes() {
         setModalOpen(true);
     };
     return (
-        <Box sx={{ pb: 5 }}>
+       <Box sx={{ px: 2, py: 3 }}> 
             <GlobalStyles styles={{ 
                 '.swal2-container': { 
                     zIndex: '2400 !important' // Mayor que el 1300 del Modal
@@ -497,12 +497,12 @@ function Reportes() {
                 />
             </Paper>
         {/* --- SECCIÓN DISTRIBUIDA: 2 ARRIBA (TORTAS) Y 1 ABAJO (BARRAS) --- */}
-            <Grid container spacing={4} sx={{ mb: 8, mt: 2 }}>
+            <Grid container spacing={1.5} sx={{ mb: 8, mt: 4 }}>
 
                 {/* FILA 1: LAS DOS TORTAS (Ahora ocupan mitad y mitad -> md={6}) */}
                 
                 {/* 1. Ingresos */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={4}>
                     <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             🌱 Ingresos / Cultivo
@@ -513,7 +513,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={110} // Más grande porque ahora hay espacio
+                                    outerRadius={125} // Más grande porque ahora hay espacio
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -530,8 +530,8 @@ function Reportes() {
                 </Grid>
 
                 {/* 2. Gastos */}
-                <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             💸 Inversión
                         </Typography>
@@ -540,8 +540,8 @@ function Reportes() {
                                 <Pie
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
-                                    innerRadius={50}
-                                    outerRadius={110} // Más grande
+                                    innerRadius={55}
+                                    outerRadius={125} // Más grande
                                     dataKey="value"
                                     stroke="none"
                                 >
