@@ -507,7 +507,7 @@ function Reportes() {
                         p: 1, 
                         borderRadius: 2, 
                         boxShadow: 3, 
-                        height: 520, 
+                        height: 500, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         alignItems: 'center' 
@@ -519,7 +519,7 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="40%"
+                                    cx="50%" cy="45%"
                                     labelLine={false}
                                     outerRadius={110}
                                     fill="#8884d8"
@@ -531,7 +531,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={160} iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={170} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -543,7 +543,7 @@ function Reportes() {
                         p: 1, 
                         borderRadius: 2, 
                         boxShadow: 3, 
-                        height: 520, 
+                        height: 500, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         alignItems: 'center' 
@@ -555,7 +555,7 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="40%"
+                                    cx="50%" cy="45%"
                                     innerRadius={50}
                                     outerRadius={110}
                                     dataKey="value"
@@ -566,7 +566,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={160} iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={170} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
