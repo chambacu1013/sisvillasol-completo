@@ -519,7 +519,7 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="32%"
+                                    cx="50%" cy="30%"
                                     labelLine={false}
                                     outerRadius={110}
                                     fill="#8884d8"
@@ -531,7 +531,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={30} wrapperStyle={{ paddingTop: '0px' }} iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={36} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -555,7 +555,7 @@ function Reportes() {
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="32%"
+                                    cx="50%" cy="30%"
                                     innerRadius={50}
                                     outerRadius={110}
                                     dataKey="value"
@@ -566,7 +566,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={30} wrapperStyle={{ paddingTop: '0px' }} iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={36} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
