@@ -496,14 +496,13 @@ function Reportes() {
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>
-      {/* --- SECCIÓN CORREGIDA: 2 TORTAS ARRIBA, 1 BARRAS ABAJO --- */}
-            
-            {/* 1. CAMBIO CRÍTICO: spacing={2} (No 10). Esto da espacio a las tarjetas. */}
+      {/* --- SECCIÓN CORREGIDA DEFINITIVA --- */}
+            {/* ERROR CORREGIDO: Usamos spacing={2}. Si pones 10, las gráficas se aplastan. */}
             <Grid container spacing={2} sx={{ mb: 8, mt: 2 }}>
 
-                {/* --- FILA 1: TORTAS --- */}
+                {/* --- FILA 1: LAS DOS TORTAS (MITAD Y MITAD) --- */}
                 
-                {/* Torta Ingresos */}
+                {/* 1. Torta Ingresos */}
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
@@ -515,7 +514,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={120} // Radio grande
+                                    outerRadius={105} // Tamaño ajustado para que no se corte
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -531,7 +530,7 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* Torta Inversión */}
+                {/* 2. Torta Inversión (Dona) */}
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
@@ -542,8 +541,8 @@ function Reportes() {
                                 <Pie
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
-                                    innerRadius={60}  // Dona gruesa
-                                    outerRadius={120} // Radio grande igual a la otra
+                                    innerRadius={60}  // Agujero equilibrado
+                                    outerRadius={105} // Tamaño igual a la otra
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -558,7 +557,7 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* --- FILA 2: BARRAS KILOS (ANCHO COMPLETO) --- */}
+                {/* --- FILA 2: GRÁFICA DE BARRAS (ANCHO COMPLETO) --- */}
                 <Grid item xs={12} md={12}>
                     <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 500, display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0 }}>
@@ -571,17 +570,17 @@ function Reportes() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                                 data={dataKilos}
-                                margin={{ top: 10, right: 30, left: 0, bottom: 60 }} // Margen inferior amplio
+                                margin={{ top: 20, right: 30, left: 0, bottom: 30 }} // Margen inferior para nombres largos
                                 barCategoryGap="20%" 
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 
                                 <XAxis 
                                     dataKey="nombre_lote" 
-                                    angle={-45}        // Texto inclinado
+                                    angle={-45}        // Texto inclinado para que quepa
                                     textAnchor="end"   
-                                    interval={0}       // Mostrar todos
-                                    height={80}        // Altura suficiente
+                                    interval={0}       // Mostrar TODOS los lotes
+                                    height={80}        // Espacio suficiente abajo
                                     tick={{fontSize: 12, fill: '#333'}} 
                                 />
                                 <YAxis tick={{fontSize: 12}} />
