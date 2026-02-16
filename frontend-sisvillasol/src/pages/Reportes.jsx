@@ -494,9 +494,22 @@ function Reportes() {
                 />
             </Paper>
         {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA CON ANCHO COMPLETO) --- */}
-             <Grid container spacing={0.5} sx={{ mb: 8, mt: 4 }}>
+            <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap',
+                gap: 0.5,
+                mb: 8, 
+                mt: 4
+            }}>
+
                 {/* 1. TORTA CULTIVOS */}
-                <Grid item xs={12} md={3}>
+                <Box sx={{ 
+                    flex: '1 1 calc(25% - 4px)',
+                    minWidth: 0,
+                    '@media (max-width: 900px)': {
+                        flex: '1 1 100%'
+                    }
+                }}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
@@ -529,10 +542,16 @@ function Reportes() {
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                </Box>
 
                 {/* 2. TORTA GASTOS */}
-               <Grid item xs={12} md={3}>
+                <Box sx={{ 
+                    flex: '1 1 calc(25% - 4px)',
+                    minWidth: 0,
+                    '@media (max-width: 900px)': {
+                        flex: '1 1 100%'
+                    }
+                }}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
@@ -564,10 +583,16 @@ function Reportes() {
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                </Box>
 
                 {/* 3. GRÁFICA BARRAS KILOS */}
-                <Grid item xs={12} md={6}>
+                <Box sx={{ 
+                    flex: '1 1 calc(50% - 4px)',
+                    minWidth: 0,
+                    '@media (max-width: 900px)': {
+                        flex: '1 1 100%'
+                    }
+                }}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
@@ -627,9 +652,9 @@ function Reportes() {
                             </BarChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Grid>
+                </Box>
 
-            </Grid>
+            </Box>
             
             {/* --- 5. MODAL CONECTADO (NUEVO COMPONENTE) --- */}
             <NuevaVentaModal 
