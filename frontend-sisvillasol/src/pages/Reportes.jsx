@@ -494,15 +494,9 @@ function Reportes() {
                 />
             </Paper>
         {/* --- SECCIÓN UNIFICADA: TORTAS Y BARRAS (3 EN LINEA CON ANCHO COMPLETO) --- */}
-            <Box sx={{ 
-                display: 'flex', 
-                gap: 0.5,
-                mb: 8, 
-                mt: 4
-            }}>
-
+             <Grid container spacing={0.5} sx={{ mb: 8, mt: 4 }}>
                 {/* 1. TORTA CULTIVOS */}
-                <Box sx={{ flex: 0.70, minWidth: 0 }}>
+                <Grid item xs={12} md={3}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
@@ -535,10 +529,10 @@ function Reportes() {
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Box>
+                </Grid>
 
                 {/* 2. TORTA GASTOS */}
-                <Box sx={{ flex: 0.70, minWidth: 0 }}>
+               <Grid item xs={12} md={3}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
@@ -570,10 +564,10 @@ function Reportes() {
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Box>
+                </Grid>
 
                 {/* 3. GRÁFICA BARRAS KILOS */}
-                <Box sx={{ flex: 1.4, minWidth: 0 }}>
+                <Grid item xs={12} md={6}>
                     <Paper sx={{ 
                         p: 1, 
                         borderRadius: 2, 
@@ -633,9 +627,9 @@ function Reportes() {
                             </BarChart>
                         </ResponsiveContainer>
                     </Paper>
-                </Box>
+                </Grid>
 
-            </Box>
+            </Grid>
             
             {/* --- 5. MODAL CONECTADO (NUEVO COMPONENTE) --- */}
             <NuevaVentaModal 
