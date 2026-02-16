@@ -531,7 +531,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={16} iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={80} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -566,7 +566,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={16} iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={80} iconType="circle"/>
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
