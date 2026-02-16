@@ -497,23 +497,21 @@ function Reportes() {
                 />
             </Paper>
         {/* --- SECCIÓN DISTRIBUIDA: 2 ARRIBA (TORTAS) Y 1 ABAJO (BARRAS) --- */}
-            <Grid container spacing={8} sx={{ mb: 8, mt: 4 }}>
+          <Grid container spacing={2} sx={{ mb: 8, mt: 4 }} alignItems="stretch">
 
-                {/* FILA 1: LAS DOS TORTAS (Ahora ocupan mitad y mitad -> md={6}) */}
-                
-                {/* 1. Ingresos */}
-                <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                {/* --- GRÁFICA 1: INGRESOS (TORTA) --- */}
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
                             🌱 Ingresos / Cultivo
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.cultivos}
-                                    cx="50%" cy="50%"
+                                    cx="50%" cy="45%" // Subimos un poco el centro
                                     labelLine={false}
-                                    outerRadius={110} // Más grande porque ahora hay espacio
+                                    outerRadius={90} // <--- AJUSTE CLAVE: 90 es el tamaño perfecto para 3 columnas
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -529,19 +527,19 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
-                {/* 2. Gastos */}
-                <Grid item xs={12} md={6}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
+                {/* --- GRÁFICA 2: INVERSIÓN (DONA) --- */}
+                <Grid item xs={12} md={4}>
+                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>
                             💸 Inversión
                         </Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={dataTortas.gastos}
-                                    cx="50%" cy="50%"
-                                    innerRadius={50}
-                                    outerRadius={110} // Más grande
+                                    cx="50%" cy="45%"
+                                    innerRadius={50} // Dona gruesa
+                                    outerRadius={90} // <--- AJUSTE CLAVE: Igual que la otra para simetría
                                     dataKey="value"
                                     stroke="none"
                                 >
