@@ -267,13 +267,10 @@ function Reportes() {
                 </Box>
             </Paper>
 
-            {/* --- 3. SECCIÓN DE GRÁFICAS ESPECÍFICAS (CORREGIDA) --- */}
-            
-            {/* SPACING = 3 (NO 10). Esto permite que las gráficas respiren */}
-            <Grid container spacing={3} sx={{ mb: 8 }}>
+            {/* --- 3. SECCIÓN GRÁFICAS - CONTENEDOR 1 (TORTAS) --- */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
                 
-                {/* --- FILA 1: LAS DOS TORTAS (md=6 CADA UNA) --- */}
-                
+                {/* Torta 1: Ingresos */}
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>🌱 Ingresos por Cultivo</Typography>
@@ -296,6 +293,7 @@ function Reportes() {
                     </Paper>
                 </Grid>
 
+                {/* Torta 2: Inversión */}
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 2 }}>💸 Inversión (Gastos)</Typography>
@@ -304,8 +302,8 @@ function Reportes() {
                                 <Pie 
                                     data={dataTortas.gastos} 
                                     cx="50%" cy="50%" 
-                                    innerRadius={60} 
-                                    outerRadius={110}
+                                    innerRadius={65} 
+                                    outerRadius={110} 
                                     dataKey="value" 
                                     stroke="none"
                                 >
@@ -317,20 +315,13 @@ function Reportes() {
                         </ResponsiveContainer>
                     </Paper>
                 </Grid>
+            </Grid>
 
-                {/* --- FILA 2: GRÁFICA DE BARRAS (ANCHO COMPLETO - md=12) --- */}
-                {/* 🚨 AQUÍ EL CAMBIO: ocupa los 12 espacios para verse ancha 🚨 */}
-                <Grid item xs={12} md={12}>
-                    <Paper sx={{ 
-                        p: 3, 
-                        borderRadius: 2, 
-                        boxShadow: 3, 
-                        height: 500, 
-                        display: 'flex', 
-                        flexDirection: 'column',
-                        // --- BORDE ROJO TEMPORAL PARA QUE VEAS QUE SÍ SE ACTUALIZÓ ---
-                        border: '3px solid #ff0000' 
-                    }}>
+            {/* --- 4. SECCIÓN GRÁFICAS - CONTENEDOR 2 (BARRAS KILOS) --- */}
+            {/* AL ESTAR EN SU PROPIO GRID CONTAINER, OCUPARÁ OBLIGATORIAMENTE OTRA FILA */}
+            <Grid container spacing={3} sx={{ mb: 8 }}>
+                <Grid item xs={12}>
+                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 500, display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17' }}>⚖️ Kilos Vendidos por Lote</Typography>
                         <Typography variant="caption" sx={{ mb: 2, color: '#666' }}>Comparativa de producción física</Typography>
                         
@@ -370,7 +361,7 @@ function Reportes() {
                 </Grid>
             </Grid>
 
-            {/* --- 4. TABLA DE VENTAS --- */}
+            {/* --- 5. TABLA DE VENTAS --- */}
             <Paper sx={{ borderRadius: 2, boxShadow: 2, mb: 8 }}>
                 <Box sx={{ p: 2 }}>
                     <TextField 
