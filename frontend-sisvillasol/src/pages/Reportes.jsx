@@ -270,7 +270,7 @@ function Reportes() {
         setModalOpen(true);
     };
     return (
-       <Box sx={{ px: 2, py: 3 }}> 
+       <Box sx={{ px: 0, py: 3 }}> 
             <GlobalStyles styles={{ 
                 '.swal2-container': { 
                     zIndex: '2400 !important' // Mayor que el 1300 del Modal
@@ -497,13 +497,13 @@ function Reportes() {
                 />
             </Paper>
         {/* --- SECCIÓN DISTRIBUIDA: 2 ARRIBA (TORTAS) Y 1 ABAJO (BARRAS) --- */}
-            <Grid container spacing={1.5} sx={{ mb: 8, mt: 4 }}>
+            <Grid container spacing={1} sx={{ mb: 8, mt: 4, width: '100%' }}>
 
                 {/* FILA 1: LAS DOS TORTAS (Ahora ocupan mitad y mitad -> md={6}) */}
                 
                 {/* 1. Ingresos */}
                 <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 380, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 1.5, borderRadius: 2, boxShadow: 3, height: 480, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             🌱 Ingresos / Cultivo
                         </Typography>
@@ -513,7 +513,7 @@ function Reportes() {
                                     data={dataTortas.cultivos}
                                     cx="50%" cy="50%"
                                     labelLine={false}
-                                    outerRadius={125} // Más grande porque ahora hay espacio
+                                    outerRadius={135} // Más grande porque ahora hay espacio
                                     fill="#8884d8"
                                     dataKey="value"
                                     stroke="none"
@@ -523,7 +523,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36} iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={36} />
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -531,7 +531,7 @@ function Reportes() {
 
                 {/* 2. Gastos */}
                 <Grid item xs={12} md={4}>
-                    <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, height: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Paper sx={{ p: 1.5, borderRadius: 2, boxShadow: 3, height: 480, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
                             💸 Inversión
                         </Typography>
@@ -541,7 +541,7 @@ function Reportes() {
                                     data={dataTortas.gastos}
                                     cx="50%" cy="50%"
                                     innerRadius={55}
-                                    outerRadius={125} // Más grande
+                                    outerRadius={135} // Más grande
                                     dataKey="value"
                                     stroke="none"
                                 >
@@ -550,7 +550,7 @@ function Reportes() {
                                     ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
-                                <Legend verticalAlign="bottom" height={36} iconType="circle"/>
+                                <Legend verticalAlign="bottom" height={36} />
                             </PieChart>
                         </ResponsiveContainer>
                     </Paper>
@@ -558,7 +558,7 @@ function Reportes() {
 
                 {/* FILA 2: BARRAS KILOS (Ocupa TODO el ancho -> md={12}) */}
                 <Grid item xs={12} md={12}>
-                    <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: 400, display: 'flex', flexDirection: 'column' }}>
+                    <Paper sx={{ p: 1.5, borderRadius: 2, boxShadow: 3, height: 480, display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f57f17', mb: 0 }}>
                             ⚖️ Producción Física: Kilos Vendidos
                         </Typography>
