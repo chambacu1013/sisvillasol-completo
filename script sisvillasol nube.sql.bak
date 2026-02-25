@@ -95,7 +95,8 @@ CREATE TABLE sisvillasol.lotes (
     ubicacion TEXT NOT NULL, -- Para el Mapa (longitud, latitud)
     estado_sanitario VARCHAR(50) DEFAULT 'OPTIMO' -- 'OPTIMO', 'EN_TRATAMIENTO', 'CUARENTENA'
 );
-
+ALTER TABLE sisvillasol.lotes 
+ADD COLUMN cantidad_arboles INTEGER DEFAULT 0;
 -- ==========================================
 -- TABLAS TRANSACCIONALES (OPERACIÓN DIARIA)
 -- ==========================================

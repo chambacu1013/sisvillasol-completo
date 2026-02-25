@@ -92,10 +92,7 @@ function Layout() {
                 }}
             >
                 <Toolbar>
-                    {/* BOTÓN HAMBURGUESA (3 RAYITAS) 
-                        - display: { sm: 'none' } -> SOLO SE VE EN MÓVIL
-                        - onClick: Abre el sidebar móvil
-                    */}
+                    {/* BOTÓN HAMBURGUESA (3 RAYITAS) */}
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
@@ -106,15 +103,29 @@ function Layout() {
                         <MenuIcon />
                     </IconButton>
 
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: '#1b5e20' }}>
+                    {/* TÍTULO */}
+                    <Typography 
+                        variant="h6" 
+                        noWrap 
+                        component="div" 
+                        sx={{ 
+                            flexGrow: 1, 
+                            fontWeight: 'bold', 
+                            color: '#1b5e20',
+                            // En celular, hacemos la letra un poco más pequeña para que no empuje todo
+                            fontSize: { xs: '1.1rem', sm: '1.25rem' } 
+                        }}
+                    >
                         {getTitulo()}
                     </Typography>
 
-                    {/* CAMPANA Y PERFIL */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {/* CAMPANA Y PERFIL (CONTENEDOR RÍGIDO) */}
+                    {/* Añadimos flexShrink: 0 para que NUNCA se encoja ni se mueva */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexShrink: 0 }}>
                         <NotificationBell />
                         
-                        <IconButton onClick={handleMenuClick} size="small" sx={{ ml: 2 }}>
+                        {/* Quitamos el ml: 2 de aquí porque el gap de arriba ya hace el trabajo */}
+                        <IconButton onClick={handleMenuClick} size="small" sx={{ p: 0.5 }}>
                             <Avatar sx={{ bgcolor: '#1b5e20', width: 35, height: 35, fontSize: '0.9rem' }}>
                                 {usuarioActual.iniciales}
                             </Avatar>
@@ -127,6 +138,8 @@ function Layout() {
                         open={openMenu}
                         onClose={handleMenuClose}
                         onClick={handleMenuClose}
+                        // 🚨 ESTA ES LA LÍNEA MÁGICA QUE EVITA EL SALTO EN CELULARES 🚨
+                        disableScrollLock={true} 
                         PaperProps={{
                             elevation: 0,
                             sx: {
@@ -163,10 +176,7 @@ function Layout() {
                 </Toolbar>
             </AppBar>
 
-            {/* --- SIDEBAR --- 
-                Le pasamos open={true} fijo para PC 
-                Y mobileOpen conectado al estado del botón hamburguesa
-            */}
+            {/* --- SIDEBAR --- */}
             <Sidebar 
                 open={true} 
                 mobileOpen={mobileOpen} 
@@ -181,7 +191,6 @@ function Layout() {
                     p: 3, 
                     bgcolor: '#f4f6f8', 
                     minHeight: '100vh',
-                    // ANCHO FIJO: Restamos 240px siempre en escritorio
                     width: { sm: `calc(100% - ${drawerWidth}px)` },
                     marginTop: '64px' 
                 }}
