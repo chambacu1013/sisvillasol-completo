@@ -10,14 +10,12 @@ import BusinessIcon from '@mui/icons-material/Business';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu'; 
 
-const drawerWidth = 240; // ANCHO FIJO DEL MENÚ
+const drawerWidth = 240; 
 
 function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
     
-    // YA NO USAMOS 'open' PARA COLAPSAR. EL MENÚ SIEMPRE ESTÁ ABIERTO EN PC.
-    // Solo manejamos el estado móvil.
     const [mobileOpen, setMobileOpen] = useState(false); 
     
     const [usuarioActual, setUsuarioActual] = useState({
@@ -27,11 +25,8 @@ function Layout() {
         iniciales: 'US'
     });
 
-    // Estado para el menú del perfil (Avatar)
     const [anchorEl, setAnchorEl] = useState(null);
     const openMenu = Boolean(anchorEl);
-
-    // Estado Modal Empresa
     const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
@@ -43,29 +38,28 @@ function Layout() {
         setUsuarioActual({ nombre, apellido, rol, iniciales });
     }, []);
 
-    // --- FUNCIÓN ÚNICA: ABRIR/CERRAR MENÚ MÓVIL ---
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
 
-    // Funciones del menú perfil
     const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
+    
     const handleLogout = () => {
         localStorage.clear();
         navigate('/');
     };
+    
     const handleAbrirConfig = () => {
         setModalOpen(true);
         handleMenuClose();
     };
 
-    // Título dinámico según la ruta
     const getTitulo = () => {
         switch(location.pathname) {
             case '/dashboard': return 'Panel de Control'; 
             case '/inicio': return 'Identidad Corporativa';
-            case '/lotes': return 'Gestión de Lotes (Mapa)';
+            case '/lotes': return 'Gestión de Lotes';
             case '/calendario': return 'Calendario de Actividades';
             case '/inventario': return 'Inventario de Insumos';
             case '/reportes': return 'Reportes Financieros';
@@ -75,35 +69,36 @@ function Layout() {
     };
 
     return (
-        <Box sx={{ display: 'flex' }}>
+        // 🚨 CAMBIO 1: Bloqueo absoluto de scroll horizontal a nivel de la raíz 🚨
+        <Box sx={{ display: 'flex', width: '100vw', overflowX: 'hidden' }}>
             <CssBaseline />
 
             {/* --- BARRA SUPERIOR (NAVBAR) --- */}
             <AppBar 
                 position="fixed" 
                 sx={{ 
-                    // EN PC: Ancho total MENOS el menú (que ahora es fijo)
-                    width: { sm: `calc(100% - ${drawerWidth}px)` },
-                    // EN PC: Empuja la barra a la derecha
+                    width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
                     ml: { sm: `${drawerWidth}px` },
                     bgcolor: '#fff', 
                     color: '#333',
-                    boxShadow: 1
+                    boxShadow: 1,
+                    right: 0 // Forzamos a que nunca pase del borde derecho
                 }}
             >
-                <Toolbar>
-                    {/* BOTÓN HAMBURGUESA (3 RAYITAS) */}
+                {/* 🚨 CAMBIO 2: Padding reducido en móvil para ganar espacio */}
+                <Toolbar sx={{ px: { xs: 1, sm: 2 } }}>
+                    
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
                         edge="start"
                         onClick={handleDrawerToggle}
-                        sx={{ mr: 2, display: { sm: 'none' } }} 
+                        sx={{ mr: { xs: 1, sm: 2 }, display: { sm: 'none' } }} 
                     >
                         <MenuIcon />
                     </IconButton>
 
-                    {/* TÍTULO */}
+                    {/* 🚨 CAMBIO 3: Magia para que el texto NO empuje al Avatar 🚨 */}
                     <Typography 
                         variant="h6" 
                         noWrap 
@@ -112,21 +107,22 @@ function Layout() {
                             flexGrow: 1, 
                             fontWeight: 'bold', 
                             color: '#1b5e20',
-                            // En celular, hacemos la letra un poco más pequeña para que no empuje todo
-                            fontSize: { xs: '1.1rem', sm: '1.25rem' } 
+                            fontSize: { xs: '1rem', sm: '1.25rem' }, // Letra un poco menor en celular
+                            minWidth: 0, // <--- ESTO ES VITAL: Obliga al texto a encogerse si no hay espacio
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            mr: 1
                         }}
                     >
                         {getTitulo()}
                     </Typography>
 
-                    {/* CAMPANA Y PERFIL (CONTENEDOR RÍGIDO) */}
-                    {/* Añadimos flexShrink: 0 para que NUNCA se encoja ni se mueva */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexShrink: 0 }}>
+                    {/* 🚨 CAMBIO 4: blindamos la caja de iconos para que sea intocable */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 2 }, flexShrink: 0 }}>
                         <NotificationBell />
                         
-                        {/* Quitamos el ml: 2 de aquí porque el gap de arriba ya hace el trabajo */}
                         <IconButton onClick={handleMenuClick} size="small" sx={{ p: 0.5 }}>
-                            <Avatar sx={{ bgcolor: '#1b5e20', width: 35, height: 35, fontSize: '0.9rem' }}>
+                            <Avatar sx={{ bgcolor: '#1b5e20', width: { xs: 32, sm: 35 }, height: { xs: 32, sm: 35 }, fontSize: '0.9rem' }}>
                                 {usuarioActual.iniciales}
                             </Avatar>
                         </IconButton>
@@ -138,8 +134,7 @@ function Layout() {
                         open={openMenu}
                         onClose={handleMenuClose}
                         onClick={handleMenuClose}
-                        // 🚨 ESTA ES LA LÍNEA MÁGICA QUE EVITA EL SALTO EN CELULARES 🚨
-                        disableScrollLock={true} 
+                        disableScrollLock={true} // Evita el salto al hacer clic
                         PaperProps={{
                             elevation: 0,
                             sx: {
@@ -176,7 +171,6 @@ function Layout() {
                 </Toolbar>
             </AppBar>
 
-            {/* --- SIDEBAR --- */}
             <Sidebar 
                 open={true} 
                 mobileOpen={mobileOpen} 
@@ -188,11 +182,12 @@ function Layout() {
                 component="main" 
                 sx={{ 
                     flexGrow: 1, 
-                    p: 3, 
+                    p: { xs: 2, sm: 3 }, // Menos margen en celular para aprovechar pantalla
                     bgcolor: '#f4f6f8', 
                     minHeight: '100vh',
-                    width: { sm: `calc(100% - ${drawerWidth}px)` },
-                    marginTop: '64px' 
+                    width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
+                    marginTop: '64px',
+                    overflowX: 'hidden' // Evita que tablas largas creen scroll horizontal global
                 }}
             >
                 <Outlet />
