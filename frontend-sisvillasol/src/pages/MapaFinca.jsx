@@ -60,7 +60,7 @@ const MapaFinca = () => {
     const detalleRef = useRef(null);
 
     // Coordenadas centrales
-    const centroFinca = [7.1471, -72.6690]; 
+    const centroFinca = [7.1470, -72.6690]; 
 
     useEffect(() => {
         const cargarLotes = async () => {
