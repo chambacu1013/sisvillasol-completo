@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -30,7 +31,33 @@ export default function ReportarScreen({ navigation }) {
 
   useEffect(() => {
     cargarListas();
-  }, []);
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      // Si el formulario está vacío, lo dejamos salir normal sin molestar
+      if (!form.id_tipo_actividad && !form.id_lote && !form.descripcion) {
+        return;
+      }
+
+      // Si hay algo escrito, detenemos la acción de salir
+      e.preventDefault();
+
+      // Mostramos la alerta nativa del celular
+      Alert.alert(
+        "¿Salir sin guardar?",
+        "Tienes datos escritos. Si sales, se perderá todo.",
+        [
+          { text: "No, seguir editando", style: "cancel", onPress: () => {} },
+          {
+            text: "Sí, salir",
+            style: "destructive",
+            // Si dice que sí, forzamos la salida que intentó hacer
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ],
+      );
+    });
+
+    return unsubscribe;
+  }, [navigation, form]);
 
   const cargarListas = async () => {
     try {

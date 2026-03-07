@@ -50,7 +50,48 @@ export default function DetalleTareaScreen({ route, navigation }) {
     if (tarea?.estado === "HECHO") {
       cargarInsumosUsados();
     }
-  }, [tarea]);
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      // 1. Si el modal principal está abierto, ATRÁS solo cierra el modal
+      if (modalVisible) {
+        e.preventDefault();
+        limpiarModal();
+        return;
+      }
+
+      // 2. Si el modal de editar está abierto, ATRÁS solo cierra ese modal
+      if (modalEditarVisible) {
+        e.preventDefault();
+        setModalEditarVisible(false);
+        return;
+      }
+
+      // 3. Si no hay modales abiertos, pero tiene insumos sin guardar
+      if (tarea?.estado === "PENDIENTE" && insumosSeleccionados.length > 0) {
+        e.preventDefault();
+        Alert.alert(
+          "¿Salir sin guardar?",
+          "Agregaste insumos a la lista pero no has finalizado la tarea. Se perderán.",
+          [
+            { text: "No, revisar", style: "cancel", onPress: () => {} },
+            {
+              text: "Sí, salir",
+              style: "destructive",
+              onPress: () => navigation.dispatch(e.data.action),
+            },
+          ],
+        );
+        return;
+      }
+      // Si no pasa nada de lo anterior, el usuario sale de la pantalla tranquilamente
+    });
+    return unsubscribe;
+  }, [
+    navigation,
+    modalVisible,
+    modalEditarVisible,
+    insumosSeleccionados,
+    tarea,
+  ]);
 
   const cargarInsumosUsados = async () => {
     try {
@@ -196,7 +237,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
       case "Bultos":
         return ["Bultos", "Kilogramos", "Gramos"]; // Puedo sacar kilos de un bulto
       case "Kilogramos":
-        return ["Kilogramos", "Gramos", "Bultos"];
+        return ["Kilogramos", "Gramos"];
       case "Gramos":
         return ["Gramos", "Kilogramos"];
 
@@ -621,7 +662,12 @@ export default function DetalleTareaScreen({ route, navigation }) {
       )}
 
       {/* MODAL */}
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={limpiarModal}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Seleccionar de Bodega</Text>
