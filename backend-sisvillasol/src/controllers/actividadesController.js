@@ -170,7 +170,7 @@ const actualizarTarea = async (req, res) => {
   }
 };
 
-// 4. DATOS FORMULARIO (SOLO LO NECESARIO PARA TAREAS: Lotes, Usuarios, Tipos)
+// 4. DATOS FORMULARIO
 const obtenerDatosFormulario = async (req, res) => {
   try {
     await actualizarEstadosLotes();
@@ -226,7 +226,7 @@ const getHistorialPorLote = async (req, res) => {
   }
 };
 
-// 6. INFO LOTES (Se mantiene porque el Mapa de actividades usa esto)
+// 6. INFO LOTES
 const obtenerLotesDetallados = async (req, res) => {
   try {
     await actualizarEstadosLotes();
@@ -245,7 +245,7 @@ const obtenerLotesDetallados = async (req, res) => {
   }
 };
 
-// 7. FINALIZAR TAREA (ACTUALIZA ESTADOS AUTOMÁTICAMENTE)
+// 7. FINALIZAR TAREA (CÁLCULO DE COSTOS CORREGIDO 💵✅)
 const finalizarTarea = async (req, res) => {
   const { id } = req.params;
   const { insumosUsados, jornada, fecha_ejecucion } = req.body;
@@ -254,7 +254,7 @@ const finalizarTarea = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // 1. Actualizar la Tarea (Estado, Jornada, Fecha)
+    // 1. Actualizar la Tarea
     const fechaReal = fecha_ejecucion || new Date();
     await client.query(
       `UPDATE sisvillasol.tareas SET estado = 'HECHO', jornada = $1, fecha_ejecucion = $2 WHERE id_tarea = $3`,
@@ -263,63 +263,47 @@ const finalizarTarea = async (req, res) => {
 
     if (insumosUsados && insumosUsados.length > 0) {
       for (const item of insumosUsados) {
-        // A. Calcular costos para el historial
+        // A. Consultar el costo unitario real del insumo
         const insumoInfo = await client.query(
           "SELECT costo_unitario_promedio FROM sisvillasol.insumos WHERE id_insumo = $1",
           [item.id_insumo],
         );
+
         if (!insumoInfo.rows[0]) {
           throw new Error(`Insumo ${item.id_insumo} no encontrado`);
         }
-        // B. Obtener stock en query SEPARADO
-        const stockQuery = await client.query(
-          `SELECT cantidad_stock FROM sisvillasol.insumos WHERE id_insumo = $1`,
-          [item.id_insumo],
-        );
 
-        if (!insumoInfo.rows[0] || !stockQuery.rows[0]) {
-          throw new Error(`Insumo ${item.id_insumo} no encontrado`);
-        }
-
-        const costoPromedio =
+        // B. EL CÁLCULO CORRECTO DE COSTOS 💰
+        // Ya NO dividimos por el stock restante.
+        // Simplemente: Costo Total = Costo Unitario × Cantidad Usada
+        const costoPromedioUnitario =
           parseFloat(insumoInfo.rows[0].costo_unitario_promedio) || 0;
-        const stockAntesDeRestar =
-          parseFloat(stockQuery.rows[0].cantidad_stock) || 0;
         const cantidadUsada = parseFloat(item.cantidad) || 0;
 
+        let costoTotalCalculado = costoPromedioUnitario * cantidadUsada;
+
         console.log(
-          `📊 Insumo ID ${item.id_insumo}: Costo=${costoPromedio}, Stock=${stockAntesDeRestar}, Usado=${cantidadUsada}`,
+          `📊 Insumo ID ${item.id_insumo}: Usado=${cantidadUsada} x CostoUnitario=${costoPromedioUnitario} = TOTAL: ${costoTotalCalculado}`,
         );
 
-        let costoTotalCalculado = 0;
-
-        if (costoPromedio > 0 && stockAntesDeRestar > 0) {
-          const costoPorUnidad = costoPromedio / stockAntesDeRestar;
-          costoTotalCalculado = costoPorUnidad * cantidadUsada;
-          console.log(`   ✅ Costo calculado: ${costoTotalCalculado}`);
-        } else {
-          console.warn(
-            `   ⚠️ Error: Stock=${stockAntesDeRestar}, Costo=${costoPromedio}`,
-          );
-        }
-
+        // C. Guardar el consumo con el precio correcto
         await client.query(
           `INSERT INTO sisvillasol.consumo_insumos (id_tarea_consumo, id_insumo_consumo, cantidad_usada, costo_calculado) VALUES ($1, $2, $3, $4)`,
-          [id, item.id_insumo, item.cantidad, costoTotalCalculado],
+          [id, item.id_insumo, cantidadUsada, costoTotalCalculado],
         );
 
-        // 1. Restamos el stock y pedimos que nos devuelva cómo quedaron los números
+        // D. Restamos el stock
         const updateStock = await client.query(
           `UPDATE sisvillasol.insumos 
            SET cantidad_stock = cantidad_stock - $1 
            WHERE id_insumo = $2 
            RETURNING cantidad_stock, stock_minimo, estado_insumo`,
-          [item.cantidad, item.id_insumo],
+          [cantidadUsada, item.id_insumo],
         );
 
         const prod = updateStock.rows[0];
 
-        // 2. Lógica del Semáforo en el Backend (CEREBRO 🧠)
+        // E. Lógica del Semáforo en el Backend
         if (prod && prod.estado_insumo !== "FUERA DE MERCADO") {
           let nuevoEstado = prod.estado_insumo;
           const actual = parseFloat(prod.cantidad_stock);
@@ -331,7 +315,6 @@ const finalizarTarea = async (req, res) => {
             nuevoEstado = "NORMAL";
           }
 
-          // 3. Si el estado cambió, lo actualizamos inmediatamente
           if (nuevoEstado !== prod.estado_insumo) {
             await client.query(
               `UPDATE sisvillasol.insumos SET estado_insumo = $1 WHERE id_insumo = $2`,
@@ -339,13 +322,11 @@ const finalizarTarea = async (req, res) => {
             );
           }
         }
-        // ---------------------------------------------------------------------
       }
     }
 
     await client.query("COMMIT");
 
-    // (Opcional) Si usas esta función externa, asegúrate de que no interfiera
     if (typeof actualizarEstadosLotes === "function") {
       await actualizarEstadosLotes();
     }
@@ -361,7 +342,8 @@ const finalizarTarea = async (req, res) => {
     client.release();
   }
 };
-// NUEVA FUNCION: Obtener insumos usados en una tarea específica
+
+// 8. OBTENER INSUMOS POR TAREA
 const obtenerInsumosPorTarea = async (req, res) => {
   const { id_tarea } = req.params;
   try {
@@ -386,10 +368,9 @@ const obtenerInsumosPorTarea = async (req, res) => {
   }
 };
 
-// NUEVA FUNCIÓN: Lógica para corregir cantidad y ajustar stock
+// 9. CORREGIR CANTIDAD INSUMO (TAMBIÉN CORRIGE EL COSTO CONTABLE 💵✅)
 const corregirCantidadInsumo = async (req, res) => {
   const { id_tarea, id_insumo, nueva_cantidad } = req.body;
-  // Validación básica
   if (!id_tarea || !id_insumo) {
     return res.status(400).json({ message: "Faltan datos (IDs)" });
   }
@@ -413,22 +394,29 @@ const corregirCantidadInsumo = async (req, res) => {
 
     const cantidadAnterior = parseFloat(resAntigua.rows[0].cantidad_usada);
     const cantidadNueva = parseFloat(nueva_cantidad);
-
-    // 2. Calcular la diferencia
-    // Si antes era 5 y ahora es 8, diferencia es 3 (hay que restar 3 más al stock)
-    // Si antes era 5 y ahora es 2, diferencia es -3 (hay que devolver 3 al stock)
     const diferencia = cantidadNueva - cantidadAnterior;
 
-    // 3. Actualizar el registro del consumo
+    // 2. Traer el precio unitario actual para recalcular el costo del historial
+    const resInsumo = await client.query(
+      `SELECT costo_unitario_promedio FROM sisvillasol.insumos WHERE id_insumo = $1`,
+      [id_insumo],
+    );
+    const costoUnitario = parseFloat(
+      resInsumo.rows[0]?.costo_unitario_promedio || 0,
+    );
+
+    // El nuevo costo de este consumo
+    const nuevoCostoTotalCalculado = cantidadNueva * costoUnitario;
+
+    // 3. Actualizar el registro del consumo CON SU NUEVO PRECIO
     await client.query(
       `UPDATE sisvillasol.consumo_insumos 
-             SET cantidad_usada = $1 
-             WHERE id_tarea_consumo = $2 AND id_insumo_consumo = $3`,
-      [cantidadNueva, id_tarea, id_insumo],
+             SET cantidad_usada = $1, costo_calculado = $2
+             WHERE id_tarea_consumo = $3 AND id_insumo_consumo = $4`,
+      [cantidadNueva, nuevoCostoTotalCalculado, id_tarea, id_insumo],
     );
 
     // 4. Actualizar el Stock en Bodega (restamos la diferencia)
-    // Si la diferencia es negativa (devolución), -- se convierte en +
     await client.query(
       `UPDATE sisvillasol.insumos 
              SET cantidad_stock = cantidad_stock - $1 
@@ -437,7 +425,9 @@ const corregirCantidadInsumo = async (req, res) => {
     );
 
     await client.query("COMMIT");
-    res.json({ message: "Cantidad corregida y stock ajustado exitosamente" });
+    res.json({
+      message: "Cantidad corregida y costos contables ajustados exitosamente",
+    });
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error corrigiendo insumo:", error);
@@ -446,6 +436,7 @@ const corregirCantidadInsumo = async (req, res) => {
     client.release();
   }
 };
+
 module.exports = {
   obtenerActividades,
   crearActividad,
