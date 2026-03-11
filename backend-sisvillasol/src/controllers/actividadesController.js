@@ -245,7 +245,7 @@ const obtenerLotesDetallados = async (req, res) => {
   }
 };
 
-// 7. FINALIZAR TAREA (CÁLCULO DE COSTOS CORREGIDO 💵✅)
+// 7. FINALIZAR TAREA (CÁLCULO DE COSTOS 💵✅)
 const finalizarTarea = async (req, res) => {
   const { id } = req.params;
   const { insumosUsados, jornada, fecha_ejecucion } = req.body;
@@ -254,7 +254,6 @@ const finalizarTarea = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // 1. Actualizar la Tarea
     const fechaReal = fecha_ejecucion || new Date();
     await client.query(
       `UPDATE sisvillasol.tareas SET estado = 'HECHO', jornada = $1, fecha_ejecucion = $2 WHERE id_tarea = $3`,
@@ -263,58 +262,61 @@ const finalizarTarea = async (req, res) => {
 
     if (insumosUsados && insumosUsados.length > 0) {
       for (const item of insumosUsados) {
-        // A. Consultar el costo unitario real del insumo
         const insumoInfo = await client.query(
-          "SELECT costo_unitario_promedio FROM sisvillasol.insumos WHERE id_insumo = $1",
+          "SELECT costo_unitario_promedio, cantidad_stock FROM sisvillasol.insumos WHERE id_insumo = $1",
           [item.id_insumo],
         );
 
-        if (!insumoInfo.rows[0]) {
+        if (!insumoInfo.rows[0])
           throw new Error(`Insumo ${item.id_insumo} no encontrado`);
-        }
 
-        // B. EL CÁLCULO CORRECTO DE COSTOS 💰
-        // Ya NO dividimos por el stock restante.
-        // Simplemente: Costo Total = Costo Unitario × Cantidad Usada
-        const costoPromedioUnitario =
+        // 1. Obtenemos el Valor Total de la Bodega y el Stock Actual
+        const valorTotalInventario =
           parseFloat(insumoInfo.rows[0].costo_unitario_promedio) || 0;
+        const stockAntes = parseFloat(insumoInfo.rows[0].cantidad_stock) || 0;
         const cantidadUsada = parseFloat(item.cantidad) || 0;
 
-        let costoTotalCalculado = costoPromedioUnitario * cantidadUsada;
+        let costoTotalCalculado = 0;
+
+        if (stockAntes > 0) {
+          // 2. Aquí está tu magia original: Calculamos a cómo sale cada unidad (Ej: 720.000 / 120 = 6.000)
+          const precioUnitarioReal = valorTotalInventario / stockAntes;
+          // 3. Multiplicamos por lo usado (Ej: 6.000 * 17 = 102.000)
+          costoTotalCalculado = precioUnitarioReal * cantidadUsada;
+        }
 
         console.log(
-          `📊 Insumo ID ${item.id_insumo}: Usado=${cantidadUsada} x CostoUnitario=${costoPromedioUnitario} = TOTAL: ${costoTotalCalculado}`,
+          `📊 Gasto ID ${item.id_insumo}: Usado=${cantidadUsada} | Costo Final Calculado=${costoTotalCalculado}`,
         );
 
-        // C. Guardar el consumo con el precio correcto
+        // 4. Guardamos el historial del gasto
         await client.query(
           `INSERT INTO sisvillasol.consumo_insumos (id_tarea_consumo, id_insumo_consumo, cantidad_usada, costo_calculado) VALUES ($1, $2, $3, $4)`,
           [id, item.id_insumo, cantidadUsada, costoTotalCalculado],
         );
 
-        // D. Restamos el stock
+        // 5. Restamos el stock Y le restamos el dinero al inventario
+        const nuevoValorInventario = Math.max(
+          0,
+          valorTotalInventario - costoTotalCalculado,
+        );
+
         const updateStock = await client.query(
           `UPDATE sisvillasol.insumos 
-           SET cantidad_stock = cantidad_stock - $1 
-           WHERE id_insumo = $2 
+           SET cantidad_stock = cantidad_stock - $1,
+               costo_unitario_promedio = $2 
+           WHERE id_insumo = $3 
            RETURNING cantidad_stock, stock_minimo, estado_insumo`,
-          [cantidadUsada, item.id_insumo],
+          [cantidadUsada, nuevoValorInventario, item.id_insumo],
         );
 
         const prod = updateStock.rows[0];
-
-        // E. Lógica del Semáforo en el Backend
+        // Lógica del semáforo
         if (prod && prod.estado_insumo !== "FUERA DE MERCADO") {
-          let nuevoEstado = prod.estado_insumo;
-          const actual = parseFloat(prod.cantidad_stock);
-          const minimo = parseFloat(prod.stock_minimo);
-
-          if (actual <= minimo) {
-            nuevoEstado = "BAJO STOCK";
-          } else {
-            nuevoEstado = "NORMAL";
-          }
-
+          let nuevoEstado =
+            parseFloat(prod.cantidad_stock) <= parseFloat(prod.stock_minimo)
+              ? "BAJO STOCK"
+              : "NORMAL";
           if (nuevoEstado !== prod.estado_insumo) {
             await client.query(
               `UPDATE sisvillasol.insumos SET estado_insumo = $1 WHERE id_insumo = $2`,
@@ -324,13 +326,9 @@ const finalizarTarea = async (req, res) => {
         }
       }
     }
-
     await client.query("COMMIT");
-
-    if (typeof actualizarEstadosLotes === "function") {
+    if (typeof actualizarEstadosLotes === "function")
       await actualizarEstadosLotes();
-    }
-
     res.json({
       mensaje: "Tarea finalizada y stock actualizado CORRECTAMENTE 📉✅",
     });
@@ -371,17 +369,17 @@ const obtenerInsumosPorTarea = async (req, res) => {
 // 9. CORREGIR CANTIDAD INSUMO (TAMBIÉN CORRIGE EL COSTO CONTABLE 💵✅)
 const corregirCantidadInsumo = async (req, res) => {
   const { id_tarea, id_insumo, nueva_cantidad } = req.body;
-  if (!id_tarea || !id_insumo) {
+  if (!id_tarea || !id_insumo)
     return res.status(400).json({ message: "Faltan datos (IDs)" });
-  }
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // 1. Obtener la cantidad que había antes
+    // 1. Ver qué teníamos antes
     const resAntigua = await client.query(
-      `SELECT cantidad_usada FROM sisvillasol.consumo_insumos 
-             WHERE id_tarea_consumo = $1 AND id_insumo_consumo = $2`,
+      `SELECT cantidad_usada, costo_calculado FROM sisvillasol.consumo_insumos 
+       WHERE id_tarea_consumo = $1 AND id_insumo_consumo = $2`,
       [id_tarea, id_insumo],
     );
 
@@ -393,40 +391,40 @@ const corregirCantidadInsumo = async (req, res) => {
     }
 
     const cantidadAnterior = parseFloat(resAntigua.rows[0].cantidad_usada);
+    const costoAnterior = parseFloat(resAntigua.rows[0].costo_calculado);
+
+    // 2. Averiguamos a cómo pagó la unidad en ese momento exacto
+    let precioUnitarioReal = 0;
+    if (cantidadAnterior > 0) {
+      precioUnitarioReal = costoAnterior / cantidadAnterior;
+    }
+
     const cantidadNueva = parseFloat(nueva_cantidad);
-    const diferencia = cantidadNueva - cantidadAnterior;
+    const nuevoCostoCalculado = cantidadNueva * precioUnitarioReal;
 
-    // 2. Traer el precio unitario actual para recalcular el costo del historial
-    const resInsumo = await client.query(
-      `SELECT costo_unitario_promedio FROM sisvillasol.insumos WHERE id_insumo = $1`,
-      [id_insumo],
-    );
-    const costoUnitario = parseFloat(
-      resInsumo.rows[0]?.costo_unitario_promedio || 0,
-    );
+    const diferenciaCantidad = cantidadNueva - cantidadAnterior; // Ej: subió 3 unidades
+    const diferenciaCosto = nuevoCostoCalculado - costoAnterior; // Ej: cuesta 18.000 pesos más
 
-    // El nuevo costo de este consumo
-    const nuevoCostoTotalCalculado = cantidadNueva * costoUnitario;
-
-    // 3. Actualizar el registro del consumo CON SU NUEVO PRECIO
+    // 3. Actualizar registro de consumo
     await client.query(
       `UPDATE sisvillasol.consumo_insumos 
-             SET cantidad_usada = $1, costo_calculado = $2
-             WHERE id_tarea_consumo = $3 AND id_insumo_consumo = $4`,
-      [cantidadNueva, nuevoCostoTotalCalculado, id_tarea, id_insumo],
+       SET cantidad_usada = $1, costo_calculado = $2 
+       WHERE id_tarea_consumo = $3 AND id_insumo_consumo = $4`,
+      [cantidadNueva, nuevoCostoCalculado, id_tarea, id_insumo],
     );
 
-    // 4. Actualizar el Stock en Bodega (restamos la diferencia)
+    // 4. Actualizar Bodega (Restamos el stock extra y el dinero extra)
     await client.query(
       `UPDATE sisvillasol.insumos 
-             SET cantidad_stock = cantidad_stock - $1 
-             WHERE id_insumo = $2`,
-      [diferencia, id_insumo],
+       SET cantidad_stock = cantidad_stock - $1,
+           costo_unitario_promedio = costo_unitario_promedio - $2
+       WHERE id_insumo = $3`,
+      [diferenciaCantidad, diferenciaCosto, id_insumo],
     );
 
     await client.query("COMMIT");
     res.json({
-      message: "Cantidad corregida y costos contables ajustados exitosamente",
+      message: "Cantidad y costos corregidos en bodega exitosamente",
     });
   } catch (error) {
     await client.query("ROLLBACK");
