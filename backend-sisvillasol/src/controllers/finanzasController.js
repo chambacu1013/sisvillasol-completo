@@ -294,11 +294,11 @@ const obtenerDetalleManoObra = async (req, res) => {
   const anio = year || new Date().getFullYear();
   try {
     const query = `
-      SELECT t.id_tarea, t.fecha_programada, u.nombre, u.apellido, t.costo_mano_obra
+      SELECT t.id_tarea, t.fecha_ejecucion, u.nombre, u.apellido, t.costo_mano_obra
       FROM sisvillasol.tareas t
       LEFT JOIN sisvillasol.usuarios u ON t.id_usuario_asignado = u.id_usuario
-      WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1 AND t.costo_mano_obra > 0
-      ORDER BY t.fecha_programada DESC
+      WHERE EXTRACT(YEAR FROM t.fecha_ejecucion) = $1 AND t.costo_mano_obra > 0
+      ORDER BY t.fecha_ejecucion DESC
     `;
     const response = await pool.query(query, [anio]);
     res.json(response.rows);
@@ -319,8 +319,8 @@ const obtenerDetalleInsumos = async (req, res) => {
       JOIN sisvillasol.tareas t ON ci.id_tarea_consumo = t.id_tarea
       JOIN sisvillasol.insumos i ON ci.id_insumo_consumo = i.id_insumo
       LEFT JOIN sisvillasol.unidades un ON i.id_unidad = un.id_unidad
-      WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1
-      ORDER BY t.fecha_programada DESC
+      WHERE EXTRACT(YEAR FROM t.fecha_ejecucion) = $1
+      ORDER BY t.fecha_ejecucion DESC
     `;
     const response = await pool.query(query, [anio]);
     res.json(response.rows);

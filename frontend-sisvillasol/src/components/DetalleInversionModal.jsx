@@ -55,9 +55,10 @@ function DetalleInversionModal({ open, onClose, tipoDetalle, datosDetalle, anioS
                             </TableHead>
                             <TableBody>
                                 {datosDetalle.map((fila, i) => (
+                                    
                                     <TableRow key={i} hover>
                                         <TableCell>
-                                            {fila.fecha ? new Date(fila.fecha).toLocaleDateString('es-CO', { timeZone: 'UTC' }) : '---'}
+                                            {fila.fecha_ejecucion ? new Date(fila.fecha_ejecucion).toLocaleDateString('es-CO', { timeZone: 'UTC' }) : '---'}
                                         </TableCell>
                                         {tipoDetalle === 'Mano de Obra' ? (
                                             <>
