@@ -230,7 +230,7 @@ const eliminarVenta = async (req, res) => {
   }
 };
 
-// 7. TORTAS (DISTRIBUCIÓN) - Corregida y Optimizada
+// 7. TORTAS (DISTRIBUCIÓN)
 const obtenerDistribucionFinanciera = async (req, res) => {
   const { year } = req.query;
   const anio = year || new Date().getFullYear();
@@ -286,6 +286,49 @@ const obtenerDistribucionFinanciera = async (req, res) => {
     res.status(500).send("Error en reportes de torta");
   }
 };
+// --- DETALLES DE INVERSIÓN AL HACER CLIC EN LA TORTA ---
+
+// 8. Detalle Mano de Obra
+const obtenerDetalleManoObra = async (req, res) => {
+  const { year } = req.query;
+  const anio = year || new Date().getFullYear();
+  try {
+    const query = `
+      SELECT t.id_tarea, t.fecha_programada, u.nombre, u.apellido, t.costo_mano_obra
+      FROM sisvillasol.tareas t
+      LEFT JOIN sisvillasol.usuarios u ON t.id_usuario_asignado = u.id_usuario
+      WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1 AND t.costo_mano_obra > 0
+      ORDER BY t.fecha_programada DESC
+    `;
+    const response = await pool.query(query, [anio]);
+    res.json(response.rows);
+  } catch (error) {
+    console.error("Error Detalle Mano Obra:", error.message);
+    res.status(500).send("Error al cargar detalle");
+  }
+};
+
+// 9. Detalle Insumos
+const obtenerDetalleInsumos = async (req, res) => {
+  const { year } = req.query;
+  const anio = year || new Date().getFullYear();
+  try {
+    const query = `
+      SELECT ci.id_consumo, t.fecha_ejecucion, i.nombre as nombre_insumo, ci.cantidad_usada, un.nombre_unidad, ci.costo_calculado
+      FROM sisvillasol.consumo_insumos ci
+      JOIN sisvillasol.tareas t ON ci.id_tarea_consumo = t.id_tarea
+      JOIN sisvillasol.insumos i ON ci.id_insumo_consumo = i.id_insumo
+      LEFT JOIN sisvillasol.unidades un ON i.id_unidad = un.id_unidad
+      WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1
+      ORDER BY t.fecha_programada DESC
+    `;
+    const response = await pool.query(query, [anio]);
+    res.json(response.rows);
+  } catch (error) {
+    console.error("Error Detalle Insumos:", error.message);
+    res.status(500).send("Error al cargar detalle");
+  }
+};
 
 module.exports = {
   obtenerResumenFinanciero,
@@ -295,4 +338,6 @@ module.exports = {
   actualizarVenta,
   eliminarVenta,
   obtenerDistribucionFinanciera,
+  obtenerDetalleManoObra,
+  obtenerDetalleInsumos,
 };

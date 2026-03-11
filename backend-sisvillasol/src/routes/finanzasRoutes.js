@@ -8,6 +8,8 @@ const {
   obtenerGraficaAnual,
   actualizarVenta,
   obtenerDistribucionFinanciera,
+  obtenerDetalleManoObra,
+  obtenerDetalleInsumos,
 } = require("../controllers/finanzasController");
 const verificarToken = require("../middleware/authMiddleware");
 
@@ -18,4 +20,6 @@ router.post("/ventas", verificarToken, crearVenta); // Crear
 router.delete("/ventas/:id", verificarToken, eliminarVenta); // Borrar
 router.put("/ventas/:id", verificarToken, actualizarVenta);
 router.get("/distribucion", obtenerDistribucionFinanciera);
+router.get("/detalle-mano-obra", obtenerDetalleManoObra);
+router.get("/detalle-insumos", obtenerDetalleInsumos);
 module.exports = router;

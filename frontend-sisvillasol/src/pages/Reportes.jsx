@@ -36,6 +36,7 @@ import api from '../services/api';
 import Swal from 'sweetalert2';
 
 import NuevaVentaModal from '../components/NuevaVentaModal';
+import DetalleInversionModal from '../components/DetalleInversionModal';
 
 function Reportes() {
     // --- ESTADOS ---
@@ -65,6 +66,10 @@ function Reportes() {
     const [dataTortas, setDataTortas] = useState({ cultivos: [], gastos: [] });
     //grafica de barras para kilos por lote hasta qui me enrede gemini!!!!!
     const [dataKilos, setDataKilos] = useState([]);
+    // --- ESTADOS PARA EL NUEVO MODAL DE DETALLE DE INVERSIÓN ---
+    const [modalDetalleOpen, setModalDetalleOpen] = useState(false);
+    const [tipoDetalle, setTipoDetalle] = useState(''); 
+    const [datosDetalle, setDatosDetalle] = useState([]);
 
     // COLORES PARA LAS GRÁFICAS
     const COLORES_CULTIVOS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -265,6 +270,22 @@ function Reportes() {
     const handleAbrirEditar = (venta) => {
         setVentaEditar(venta);
         setModalOpen(true);
+    };
+    // --- FUNCIÓN MAGICA: CLIC EN LA TORTA DE INVERSIÓN ---
+    const handleClickTortaGastos = async (data) => {
+        const tipoGasto = data.name; 
+        setTipoDetalle(tipoGasto);
+        setDatosDetalle([]);
+        setModalDetalleOpen(true);
+
+        try {
+            let endpoint = tipoGasto === 'Mano de Obra' ? '/finanzas/detalle-mano-obra' : '/finanzas/detalle-insumos';
+            const res = await api.get(`${endpoint}?year=${anioSeleccionado}`);
+            setDatosDetalle(res.data);
+        } catch (error) {
+            console.error(`Error cargando detalle de ${tipoGasto}`, error);
+            Swal.fire('Error', 'No se pudieron cargar los detalles.', 'error');
+        }
     };
     return (
        <Box sx={{ px: 0, py: 3 }}> 
@@ -543,40 +564,18 @@ function Reportes() {
                         </ResponsiveContainer>
                     </Paper>
                 </Box>
-
-                {/* 2. TORTA GASTOS */}
-                <Box sx={{ 
-                    flex: '1 1 calc(25% - 4px)',
-                    minWidth: 0,
-                    '@media (max-width: 900px)': {
-                        flex: '1 1 100%'
-                    }
-                }}>
-                    <Paper sx={{ 
-                        p: 1, 
-                        borderRadius: 2, 
-                        boxShadow: 3, 
-                        height: 500, 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center' 
-                    }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>
-                            💸 Inversión
-                        </Typography>
+                {/* 2. TORTA GASTOS (CON EVENTO ONCLICK AÑADIDO) */}
+                <Box sx={{ flex: '1 1 calc(25% - 4px)', minWidth: 0, '@media (max-width: 900px)': { flex: '1 1 100%' } }}>
+                    <Paper sx={{ p: 1, borderRadius: 2, boxShadow: 3, height: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#555', mb: 1 }}>💸 Inversión (Clic para ver detalles)</Typography>
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
-                                    data={dataTortas.gastos}
-                                    cx="50%" cy="45%"
-                                    innerRadius={50}
-                                    outerRadius={110}
-                                    dataKey="value"
-                                    stroke="none"
+                                    data={dataTortas.gastos} cx="50%" cy="45%" innerRadius={50} outerRadius={110} dataKey="value" stroke="none"
+                                    onClick={handleClickTortaGastos} 
+                                    style={{ cursor: 'pointer', outline: 'none' }} 
                                 >
-                                    {dataTortas.gastos.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORES_GASTOS[index % COLORES_GASTOS.length]} />
-                                    ))}
+                                    {dataTortas.gastos.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORES_GASTOS[index % COLORES_GASTOS.length]} />)}
                                 </Pie>
                                 <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
                                 <Legend verticalAlign="bottom" height={170} iconType="circle"/>
@@ -663,6 +662,13 @@ function Reportes() {
                 ventaEditar={ventaEditar} 
                 onSuccess={recargarDatosAnuales} // Al guardar, recargamos gráficas y tablas
                 listaLotes={listaLotes} // Le pasamos la lista para que no tenga que consultarla de nuevo
+            />
+            <DetalleInversionModal
+                open={modalDetalleOpen}
+                onClose={() => setModalDetalleOpen(false)}
+                tipoDetalle={tipoDetalle}
+                datosDetalle={datosDetalle}
+                anioSeleccionado={anioSeleccionado}
             />
         </Box>
     );
