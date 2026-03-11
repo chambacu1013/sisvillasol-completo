@@ -226,9 +226,6 @@ const getHistorialPorLote = async (req, res) => {
   }
 };
 
-// NO OLVIDES AGREGARLO AL module.exports AL FINAL DEL ARCHIVO
-// module.exports = { ..., getHistorialPorLote };
-
 // 6. INFO LOTES (Se mantiene porque el Mapa de actividades usa esto)
 const obtenerLotesDetallados = async (req, res) => {
   try {
