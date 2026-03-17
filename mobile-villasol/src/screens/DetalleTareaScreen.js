@@ -26,16 +26,14 @@ export default function DetalleTareaScreen({ route, navigation }) {
   const [cantidadInput, setCantidadInput] = useState("");
   const [insumoTemporal, setInsumoTemporal] = useState(null);
   const [unidadSeleccionada, setUnidadSeleccionada] = useState("");
+
   // Estado Jornada
   const [jornadaSeleccionada, setJornadaSeleccionada] = useState("COMPLETA");
+
   // Estado Fecha
   const [fechaEjecucion, setFechaEjecucion] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [insumos, setInsumos] = useState([]);
-
-  const [modalEditarVisible, setModalEditarVisible] = useState(false);
-  const [insumoAEditar, setInsumoAEditar] = useState(null);
-  const [nuevaCantidad, setNuevaCantidad] = useState("");
 
   const { tarea } = route.params || {};
 
@@ -46,6 +44,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
       </View>
     );
   }
+
   useEffect(() => {
     if (tarea?.estado === "HECHO") {
       cargarInsumosUsados();
@@ -58,14 +57,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
         return;
       }
 
-      // 2. Si el modal de editar está abierto, ATRÁS solo cierra ese modal
-      if (modalEditarVisible) {
-        e.preventDefault();
-        setModalEditarVisible(false);
-        return;
-      }
-
-      // 3. Si no hay modales abiertos, pero tiene insumos sin guardar
+      // 2. Si no hay modales abiertos, pero tiene insumos sin guardar
       if (tarea?.estado === "PENDIENTE" && insumosSeleccionados.length > 0) {
         e.preventDefault();
         Alert.alert(
@@ -85,17 +77,10 @@ export default function DetalleTareaScreen({ route, navigation }) {
       // Si no pasa nada de lo anterior, el usuario sale de la pantalla tranquilamente
     });
     return unsubscribe;
-  }, [
-    navigation,
-    modalVisible,
-    modalEditarVisible,
-    insumosSeleccionados,
-    tarea,
-  ]);
+  }, [navigation, modalVisible, insumosSeleccionados, tarea]);
 
   const cargarInsumosUsados = async () => {
     try {
-      // Usamos LA MISMA RUTA que arreglamos en el backend hace un momento
       const res = await api.get(`/actividades/insumos-tarea/${tarea.id_tarea}`);
       setInsumos(res.data);
     } catch (error) {
@@ -136,120 +121,50 @@ export default function DetalleTareaScreen({ route, navigation }) {
     }
   };
 
-  // Abrir el modal de edición para un insumo ya usado
-  const abrirEdicion = (insumo) => {
-    setInsumoAEditar(insumo);
-    setNuevaCantidad(
-      (insumo.cantidad_usada || insumo.cantidad || 0).toString(),
-    );
-    setModalEditarVisible(true);
-  };
-
-  // Guardar edición de cantidad de insumo usado (disponible globalmente)
-  const guardarEdicionInsumo = async () => {
-    if (!nuevaCantidad || isNaN(nuevaCantidad)) {
-      Alert.alert("Error", "Ingresa una cantidad válida");
-      return;
-    }
-    try {
-      // CORRECCIÓN: Usamos la nueva ruta y enviamos los IDs exactos
-      await api.put(`/actividades/corregir-insumo`, {
-        id_tarea: tarea.id_tarea, // ID de la tarea global
-        id_insumo: insumoAEditar.id_insumo, // ID del insumo específico
-        nueva_cantidad: parseFloat(nuevaCantidad),
-      });
-
-      Toast.show({
-        type: "success",
-        text1: "Actualizado",
-        text2: "Inventario recalculado correctamente 🔄",
-      });
-
-      setModalEditarVisible(false);
-      cargarInsumosUsados(); // Recarga la lista para ver el cambio
-    } catch (error) {
-      console.error(error);
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "No se pudo actualizar. Verifica conexión.",
-      });
-    }
-  };
-
   const calcularFactor = (unidadBase, unidadUso) => {
-    // Si son iguales, no hay conversión (1 a 1)
     if (unidadBase === unidadUso) return 1;
 
-    // --- CONVERSIONES DE VOLUMEN (Base: Galón = 4 Litros según tu indicación) ---
-
-    // Tienes GALÓN en stock, pero gastas LITROS
-    if (unidadBase === "Galon" && unidadUso === "Litros") return 0.25; // 1 Litro es 0.25 Galón
+    // --- CONVERSIONES DE VOLUMEN ---
+    if (unidadBase === "Galon" && unidadUso === "Litros") return 0.25;
     if (unidadBase === "Galon" && unidadUso === "Mililitros") return 0.00025;
-
-    // Tienes LITROS en stock, pero gastas GALÓN
-    if (unidadBase === "Litros" && unidadUso === "Galon") return 4; // 1 Galón son 4 Litros
+    if (unidadBase === "Litros" && unidadUso === "Galon") return 4;
     if (unidadBase === "Litros" && unidadUso === "Mililitros") return 0.001;
-
-    // Tienes MILILITROS en stock
     if (unidadBase === "Mililitros" && unidadUso === "Litros") return 1000;
 
-    // --- CONVERSIONES DE PESO (Base: Bulto = 40 Kg ESTÁNDAR) ---
+    // --- CONVERSIONES DE PESO ---
     const PESO_BULTO_KG = 40;
-
-    // Tienes BULTOS en stock, pero gastas KILOS
     if (unidadBase === "Bultos" && unidadUso === "Kilogramos")
-      return 1 / PESO_BULTO_KG; // Ej: 1 Kg = 0.02 Bultos
+      return 1 / PESO_BULTO_KG;
     if (unidadBase === "Bultos" && unidadUso === "Gramos")
       return 1 / (PESO_BULTO_KG * 1000);
-
-    // Tienes KILOS en stock, pero gastas BULTOS
     if (unidadBase === "Kilogramos" && unidadUso === "Bultos")
       return PESO_BULTO_KG;
     if (unidadBase === "Kilogramos" && unidadUso === "Gramos") return 0.001;
-
-    // Tienes GRAMOS en stock
     if (unidadBase === "Gramos" && unidadUso === "Kilogramos") return 1000;
 
-    // --- CONVERSIONES DE LONGITUD (Rollo vs Metros) ---
-    // Asumiremos un rollo estándar de 100m, SI NO ES ASÍ, BORRA ESTAS LINEAS
-    // O mejor, manejamos 1 a 1 si no sabemos la longitud del rollo.
-    // Por ahora, dejemos que Rollo y Metros sean independientes si no tienes el dato exacto,
-    // pero si sabes que 1 Rollo = 100 Metros:
-    /*
-    if (unidadBase === "Rollo" && unidadUso === "Metros") return 0.01; 
-    */
-
-    return 1; // Si no encuentra conversión, asume 1 a 1
+    return 1;
   };
 
   const obtenerOpcionesPosibles = (unidadBase) => {
     switch (unidadBase) {
-      // --- VOLUMEN ---
       case "Galon":
-        return ["Galon", "Litros", "Mililitros"]; // Puedo sacar litros de un galón
+        return ["Galon", "Litros", "Mililitros"];
       case "Litros":
         return ["Litros", "Mililitros", "Galon"];
       case "Mililitros":
         return ["Mililitros", "Litros"];
-
-      // --- PESO ---
       case "Bultos":
-        return ["Bultos", "Kilogramos", "Gramos"]; // Puedo sacar kilos de un bulto
+        return ["Bultos", "Kilogramos", "Gramos"];
       case "Kilogramos":
         return ["Kilogramos", "Gramos"];
       case "Gramos":
         return ["Gramos", "Kilogramos"];
-
-      // --- LONGITUD ---
       case "Rollo":
         return ["Rollo", "Metros"];
       case "Metros":
         return ["Metros", "Rollo"];
-
-      // --- OTROS ---
       default:
-        return [unidadBase]; // Unidades, etc.
+        return [unidadBase];
     }
   };
 
@@ -268,7 +183,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
     );
     const cantidadRealADescontar = cantidadIngresada * factor;
 
-    // Validación de Stock CON TOAST ROJO 🔴
+    // Validación de Stock
     if (cantidadRealADescontar > parseFloat(insumoTemporal.cantidad_stock)) {
       Toast.show({
         type: "error",
@@ -291,7 +206,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
 
     limpiarModal();
 
-    // Feedback visual rápido
     Toast.show({
       type: "success",
       text1: "Agregado",
@@ -308,7 +222,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
   };
 
   const handleFinalizarTarea = async () => {
-    // ESTA SE QUEDA COMO ALERT PORQUE NECESITA BOTONES DE CONFIRMACIÓN
     Alert.alert(
       "Confirmar Finalización",
       insumosSeleccionados.length > 0
@@ -323,7 +236,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
 
   const enviarDatos = async () => {
     try {
-      // Tomamos la fecha del selector (fechaEjecucion) y extraemos año-mes-dia local
       const anio = fechaEjecucion.getFullYear();
       const mes = String(fechaEjecucion.getMonth() + 1).padStart(2, "0");
       const dia = String(fechaEjecucion.getDate()).padStart(2, "0");
@@ -337,7 +249,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
         fecha_ejecucion: fechaFinalLocal,
       });
 
-      // TOAST VERDE DE ÉXITO ✅
       Toast.show({
         type: "success",
         text1: "¡Excelente trabajo!",
@@ -345,10 +256,9 @@ export default function DetalleTareaScreen({ route, navigation }) {
         visibilityTime: 3000,
       });
 
-      navigation.goBack(); // Regresa a la lista
+      navigation.goBack();
     } catch (error) {
       console.error(error);
-      // TOAST ROJO DE ERROR ❌
       Toast.show({
         type: "error",
         text1: "Error",
@@ -360,9 +270,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
   const renderOpcionesUnidad = () => {
     if (!insumoTemporal) return null;
     const opciones = obtenerOpcionesPosibles(insumoTemporal.nombre_unidad);
-    // Las funciones de edición `abrirEdicion` y `guardarEdicionInsumo`
-    // se definen en el scope del componente para ser accesibles
-    // desde el listado y desde el modal.
 
     return (
       <View style={styles.pickerContainer}>
@@ -412,6 +319,8 @@ export default function DetalleTareaScreen({ route, navigation }) {
         </View>
         <Text style={styles.descripcion}>{tarea.descripcion}</Text>
       </View>
+
+      {/* --- INSUMOS YA USADOS (SOLO LECTURA) --- */}
       {tarea.estado === "HECHO" && insumos.length > 0 && (
         <View style={{ marginTop: 20, paddingHorizontal: 10 }}>
           <Text
@@ -436,7 +345,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                // Sombrita suave para que se vea moderno
                 elevation: 2,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 1 },
@@ -444,7 +352,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
                 shadowRadius: 1.41,
               }}
             >
-              {/* Lado Izquierdo: Nombre y Categoría */}
               <View style={{ flex: 1 }}>
                 <Text
                   style={{ fontSize: 16, fontWeight: "600", color: "#333" }}
@@ -463,7 +370,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
                 </Text>
               </View>
 
-              {/* Lado Derecho: Cantidad */}
               <View
                 style={{
                   backgroundColor: "#e8f5e9",
@@ -476,22 +382,11 @@ export default function DetalleTareaScreen({ route, navigation }) {
                   {insumo.cantidad_usada} {insumo.unidad_medida}
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={() => abrirEdicion(insumo)}
-                style={{
-                  padding: 5,
-                  backgroundColor: "#fff3e0",
-                  borderRadius: 50,
-                }}
-              >
-                <MaterialIcons name="edit" size={20} color="#f57c00" />
-              </TouchableOpacity>
             </View>
           ))}
         </View>
       )}
 
-      {/* Mensaje si está HECHO pero no gastó nada */}
       {tarea.estado === "HECHO" && insumos.length === 0 && (
         <View style={{ marginTop: 20, alignItems: "center" }}>
           <Text style={{ color: "#888", fontStyle: "italic" }}>
@@ -500,6 +395,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
         </View>
       )}
 
+      {/* --- FORMULARIO PARA FINALIZAR TAREA PENDIENTE --- */}
       {tarea.estado === "PENDIENTE" && (
         <View style={styles.insumosSection}>
           <Text style={styles.tituloSeccion}>📦 Insumos / Bodega</Text>
@@ -546,7 +442,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
         </View>
       )}
 
-      {/* --- SELECCIÓN DE FECHA REAL --- */}
       {tarea.estado === "PENDIENTE" && (
         <View style={styles.card}>
           <Text style={styles.tituloSeccion}>
@@ -590,7 +485,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
         </View>
       )}
 
-      {/* --- SELECCIÓN DE JORNADA --- */}
       {tarea.estado === "PENDIENTE" && (
         <View style={styles.card}>
           <Text style={styles.tituloSeccion}>
@@ -603,7 +497,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
               marginTop: 10,
             }}
           >
-            {/* Opción MAÑANA */}
             <TouchableOpacity
               onPress={() => setJornadaSeleccionada("MANANA")}
               style={estiloJornada(
@@ -618,7 +511,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
               </Text>
             </TouchableOpacity>
 
-            {/* Opción TARDE */}
             <TouchableOpacity
               onPress={() => setJornadaSeleccionada("TARDE")}
               style={estiloJornada(
@@ -633,7 +525,6 @@ export default function DetalleTareaScreen({ route, navigation }) {
               </Text>
             </TouchableOpacity>
 
-            {/* Opción COMPLETA */}
             <TouchableOpacity
               onPress={() => setJornadaSeleccionada("COMPLETA")}
               style={estiloJornada(
@@ -661,7 +552,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
         </TouchableOpacity>
       )}
 
-      {/* MODAL */}
+      {/* MODAL INSUMOS */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -742,91 +633,10 @@ export default function DetalleTareaScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
-      {/* --- MODAL PARA EDITAR CANTIDAD --- */}
-      <Modal
-        visible={modalEditarVisible}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setModalEditarVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { width: "80%" }]}>
-            <Text style={styles.modalTitle}>Corregir Cantidad</Text>
-
-            {insumoAEditar && (
-              <Text style={{ textAlign: "center", marginBottom: 10 }}>
-                Insumo:{" "}
-                <Text style={{ fontWeight: "bold" }}>
-                  {insumoAEditar.nombre_insumo}
-                </Text>
-              </Text>
-            )}
-
-            {/* --- BLOQUE DE CANTIDAD + UNIDAD --- */}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                marginVertical: 10,
-              }}
-            >
-              <TextInput
-                style={[
-                  styles.inputCantidad,
-                  {
-                    flex: 1, // Que ocupe espacio
-                    color: "#000", // Letras negras
-                    backgroundColor: "#fff",
-                    textAlign: "center",
-                  },
-                ]}
-                value={nuevaCantidad}
-                onChangeText={setNuevaCantidad}
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#999"
-                autoFocus={true}
-              />
-
-              {/* UNIDAD AL LADO */}
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  marginLeft: 10,
-                  color: "#333",
-                  minWidth: 50,
-                }}
-              >
-                {insumoAEditar?.unidad_medida}
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
-              <TouchableOpacity
-                style={[styles.btnModal, { backgroundColor: "#d32f2f" }]}
-                onPress={() => setModalEditarVisible(false)}
-              >
-                <Text style={{ color: "white" }}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.btnModal, { backgroundColor: "#1976d2" }]}
-                onPress={guardarEdicionInsumo}
-              >
-                <Text style={{ color: "white", fontWeight: "bold" }}>
-                  Guardar
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 }
 
-// Función auxiliar para estilos de botones de jornada
 const estiloJornada = (seleccionado, bgColor, borderColor) => ({
   backgroundColor: seleccionado ? bgColor : "#f5f5f5",
   borderColor: seleccionado ? borderColor : "#e0e0e0",

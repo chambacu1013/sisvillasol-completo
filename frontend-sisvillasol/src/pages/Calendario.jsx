@@ -10,6 +10,7 @@ import moment from 'moment';
 import 'moment/dist/locale/es'; 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Swal from 'sweetalert2';
+
 // ÍCONOS
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close'; 
@@ -17,9 +18,11 @@ import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import CancelIcon from '@mui/icons-material/Cancel'; 
+import EditIcon from '@mui/icons-material/Edit'; // NUEVO ÍCONO AGREGADO
 
 import api from '../services/api';
 import '../../public/Calendario.css'; // Estilos personalizados
+
 moment.locale('es');
 const localizer = momentLocalizer(moment);
 
@@ -81,9 +84,14 @@ function Calendario() {
     const [nuevaNota, setNuevaNota] = useState('');
     const [insumosUsados, setInsumosUsados] = useState([]);
 
-    // Estado para "NO REALIZADO"
+    // Estados para "NO REALIZADO"
     const [modalMotivoOpen, setModalMotivoOpen] = useState(false);
     const [motivoNoRealizado, setMotivoNoRealizado] = useState('');
+
+    // --- NUEVOS ESTADOS PARA EDITAR INSUMOS ---
+    const [modalEditarInsumoOpen, setModalEditarInsumoOpen] = useState(false);
+    const [insumoAEditar, setInsumoAEditar] = useState(null);
+    const [nuevaCantidadInsumo, setNuevaCantidadInsumo] = useState('');
 
     useEffect(() => {
         cargarDatos();
@@ -93,9 +101,6 @@ function Calendario() {
 
     useEffect(() => {
         if (tareaEditar) {
-           
-            // Si la tarea ya se hizo, mostramos en el campo "Fecha" el día que se hizo.
-            // Si está pendiente, mostramos el día programado.
             let fechaDelFormulario = tareaEditar.resource.fecha_programada;
             if (tareaEditar.resource.estado === 'HECHO' && tareaEditar.resource.fecha_ejecucion) {
                 fechaDelFormulario = tareaEditar.resource.fecha_ejecucion;
@@ -118,32 +123,24 @@ function Calendario() {
     const cargarDatos = async () => {
         try {
             const res = await api.get('/actividades');
-            
-            // --- AQUÍ ESTÁ LA CORRECCIÓN DE LA FECHA ---
             const eventosFormatoCalendario = res.data.map(tarea => {
-                
-                // LÓGICA MAESTRA:
-                // Si está HECHO y tiene fecha de ejecución, usamos esa.
-                // Si no, usamos la programada.
                 let fechaParaMostrar = tarea.fecha_programada;
                 if (tarea.estado === 'HECHO' && tarea.fecha_ejecucion) {
                     fechaParaMostrar = tarea.fecha_ejecucion;
                 }
 
-                if (!fechaParaMostrar) return null; // Seguridad por si viene vacío
+                if (!fechaParaMostrar) return null; 
                 const fechaString = fechaParaMostrar.toString().split('T')[0];
                 const [anio, mes, dia] = fechaString.split('-');
                 const fechaFixed = new Date(parseInt(anio), parseInt(mes) - 1, parseInt(dia));
               
-                // Asignamos horas ficticias para forzar el orden: Mañana -> Completa -> Tarde
                 if (tarea.jornada === 'MANANA') {
-                    fechaFixed.setHours(6, 0, 0);  // Primero
+                    fechaFixed.setHours(6, 0, 0);  
                 } else if (tarea.jornada === 'COMPLETA') {
-                    fechaFixed.setHours(10, 0, 0); // Medio
+                    fechaFixed.setHours(10, 0, 0); 
                 } else if (tarea.jornada === 'TARDE') {
-                    fechaFixed.setHours(14, 0, 0); // Último
+                    fechaFixed.setHours(14, 0, 0); 
                 }
-                // ---------------------------------------------
 
                 return {
                     title: `${tarea.nombre_tipo_actividad || 'Tarea'} - ${tarea.nombre_lote || 'Sin Lote'} (${tarea.nombre_responsable || '?'})`,
@@ -152,7 +149,7 @@ function Calendario() {
                     allDay: true, 
                     resource: tarea 
                 };
-            }).filter(Boolean); // Filtramos nulos por si acaso
+            }).filter(Boolean); 
 
             setEventos(eventosFormatoCalendario);
         } catch (error) { console.error("Error cargando calendario:", error); }
@@ -208,18 +205,12 @@ function Calendario() {
         try {
             if (tareaEditar) {
                 const datosAEnviar = { ...datos };
-                // Si la tarea ya se hizo, el usuario está corrigiendo la FECHA DE EJECUCIÓN.
-                // (El campo visual 'fecha_programada' en el state contiene la fecha que eligió el usuario)
                 if (datos.estado === 'HECHO') {
                     datosAEnviar.fecha_ejecucion = datos.fecha_programada;
-                    
-                    // TRUCO: Mantenemos la fecha programada original (si existe) para no perder el historial
-                    // de "cuándo se suponía que debía ser".
                     if (tareaEditar.resource.fecha_programada) {
                         datosAEnviar.fecha_programada = tareaEditar.resource.fecha_programada;
                     }
                 }
-
                 await api.put(`/actividades/${tareaEditar.resource.id_tarea}`, datosAEnviar);
                 Swal.fire({ icon: 'success', title: '¡Actualizado!', timer: 2000, showConfirmButton: false });
             } else {
@@ -252,6 +243,41 @@ function Calendario() {
             setModalMotivoOpen(false); setMotivoNoRealizado(''); setModalOpen(false); setTareaEditar(null); cargarDatos();
         } catch (error) {
             console.error(error); Swal.fire({ icon: 'error', title: 'Error', text: 'Falló la actualización.' });
+        }
+    };
+
+    // --- LÓGICA DE CORRECCIÓN DE INSUMOS (SOLO ADMIN/WEB) ---
+    const handleAbrirEditarInsumo = (item) => {
+        setInsumoAEditar(item);
+        setNuevaCantidadInsumo(item.cantidad_usada);
+        setModalEditarInsumoOpen(true);
+    };
+
+    const handleGuardarEdicionInsumo = async () => {
+        if (!nuevaCantidadInsumo || isNaN(nuevaCantidadInsumo)) {
+            Swal.fire('Error', 'Ingresa una cantidad válida', 'error');
+            return;
+        }
+        try {
+            const idTarea = tareaEditar?.resource?.id_tarea || tareaEditar?.id_tarea;
+            
+            // Reutilizamos la misma ruta que ya funciona perfectamente en el backend
+            await api.put('/actividades/corregir-insumo', {
+                id_tarea: idTarea,
+                id_insumo: insumoAEditar.id_insumo,
+                nueva_cantidad: parseFloat(nuevaCantidadInsumo)
+            });
+            
+            Swal.fire({ icon: 'success', title: 'Cantidad Actualizada', timer: 1500, showConfirmButton: false });
+            setModalEditarInsumoOpen(false);
+            
+            // Refrescamos la lista de insumos del modal de la tarea
+            const result = await api.get(`/actividades/insumos-tarea/${idTarea}`);
+            setInsumosUsados(result.data);
+
+        } catch (error) {
+            console.error("Error corrigiendo insumo:", error);
+            Swal.fire('Error', 'No se pudo corregir el insumo. Revisa la consola.', 'error');
         }
     };
 
@@ -296,7 +322,6 @@ function Calendario() {
                     <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1b5e20' }}>Calendario de Actividades</Typography>
                     <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#1b5e20' }} 
                     onClick={() => { setTareaEditar(null); 
-                        // AHORA LIMPIAMOS AQUÍ MANUALMENTE
         setDatos({
             id_tipo_actividad: '', descripcion: '', 
             id_lote: '', id_usuario: '', estado: 'PENDIENTE', 
@@ -353,7 +378,7 @@ function Calendario() {
                 </Grid>
             </Box>
 
-            {/* --- MODAL DETALLE --- */}
+            {/* --- MODAL DETALLE DE LA TAREA --- */}
             <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="md" fullWidth>
                 <DialogTitle sx={{ bgcolor: '#1b5e20', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     {tareaEditar ? (
@@ -388,32 +413,26 @@ function Calendario() {
                             </TextField>
                         </Box>
 
-                       {/* SELECTOR DE ESTADO (LÓGICA VISUAL NUEVA) */}
                         {tareaEditar && (
                             datos.estado === 'HECHO' ? (
-                                // OPCIÓN A: Si ya está HECHO, mostramos campo BLOQUEADO (Solo lectura)
                                 <TextField
                                     fullWidth
                                     label="Estado de la Tarea"
                                     value="HECHO ✅"
                                     InputProps={{
-                                        readOnly: true, // No permite escribir ni desplegar
-                                        style: { color: '#2e7d32', fontWeight: 'bold' } // Texto Verde Fuerte
+                                        readOnly: true, 
+                                        style: { color: '#2e7d32', fontWeight: 'bold' } 
                                     }}
-                                    sx={{ 
-                                        bgcolor: '#e8f5e9', // Fondo Verde Suave
-                                        '& .MuiInputBase-input': { cursor: 'default' } // Cursor normal
-                                    }}
+                                    sx={{ bgcolor: '#e8f5e9', '& .MuiInputBase-input': { cursor: 'default' } }}
                                 />
                             ) : (
-                                // OPCIÓN B: Si es PENDIENTE, mostramos el SELECTOR normal
                                 <TextField 
                                     select 
                                     fullWidth 
                                     label="Estado de la Tarea" 
                                     value={datos.estado} 
                                     onChange={(e) => setDatos({...datos, estado: e.target.value})} 
-                                    sx={{ bgcolor: '#fff3e0' }} // Fondo Naranja suave para Pendiente
+                                    sx={{ bgcolor: '#fff3e0' }} 
                                 >
                                     <MenuItem value="PENDIENTE">PENDIENTE ⏳</MenuItem>
                                     <MenuItem value="HECHO">HECHO ✅</MenuItem>
@@ -426,16 +445,46 @@ function Calendario() {
 
                         <TextField fullWidth multiline rows={3} label="Observaciones" value={datos.descripcion} onChange={(e) => setDatos({...datos, descripcion: e.target.value})} />
                         
-                        {/* TABLA DE INSUMOS */}
+                        {/* --- TABLA DE INSUMOS (AHORA CON BOTÓN DE EDITAR) --- */}
                         {datos.estado === 'HECHO' && insumosUsados.length > 0 && (
                             <Box sx={{ mt: 3, p: 2, bgcolor: '#f1f8e9', borderRadius: 2, border: '1px solid #c5e1a5' }}>
                                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#33691e', mb: 1 }}>🧪 Insumos Aplicados</Typography>
                                 <Table size="small">
-                                    <TableHead><TableRow><TableCell><b>Producto</b></TableCell><TableCell><b>Categoría</b></TableCell><TableCell align="right"><b>Dosis</b></TableCell></TableRow></TableHead>
-                                    <TableBody>{insumosUsados.map((item, i) => (<TableRow key={i}><TableCell>{item.nombre_insumo}</TableCell><TableCell><Chip label={item.nombre_categoria} size="small" variant="outlined" /></TableCell><TableCell align="right" sx={{ fontWeight: 'bold' }}>{item.cantidad_usada} {item.unidad_medida}</TableCell></TableRow>))}</TableBody>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><b>Producto</b></TableCell>
+                                            <TableCell><b>Categoría</b></TableCell>
+                                            <TableCell align="right"><b>Dosis</b></TableCell>
+                                            <TableCell align="center"><b>Corregir</b></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {insumosUsados.map((item, i) => (
+                                            <TableRow key={i}>
+                                                <TableCell>{item.nombre_insumo}</TableCell>
+                                                <TableCell>
+                                                    <Chip label={item.nombre_categoria} size="small" variant="outlined" />
+                                                </TableCell>
+                                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                                                    {item.cantidad_usada} {item.unidad_medida}
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    <IconButton 
+                                                        color="primary" 
+                                                        size="small" 
+                                                        onClick={() => handleAbrirEditarInsumo(item)}
+                                                        title="Modificar cantidad gastada"
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
                                 </Table>
                             </Box>
                         )}
+                        
                         {datos.estado === 'HECHO' && insumosUsados.length === 0 && (
                              <Typography variant="caption" sx={{ mt: 1, display: 'block', fontStyle: 'italic', color: 'gray' }}>* Tarea marcada como HECHO sin consumo de insumos (Manual o Labor sin insumos).</Typography>
                         )}
@@ -448,9 +497,32 @@ function Calendario() {
                     ) : <Box></Box>}
 
                     <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Button onClick={() => setModalOpen(false)} color="inherit">Cancelar</Button>
+                        <Button onClick={() => setModalOpen(false)} color="inherit">Cerrar</Button>
                         <Button variant="contained" onClick={handleGuardar} sx={{ bgcolor: '#1b5e20' }}>{tareaEditar ? 'Actualizar' : 'Guardar'}</Button>
                     </Box>
+                </DialogActions>
+            </Dialog>
+
+            {/* --- NUEVO: MODAL SECUNDARIO PARA CORREGIR EL INSUMO --- */}
+            <Dialog open={modalEditarInsumoOpen} onClose={() => setModalEditarInsumoOpen(false)} maxWidth="xs" fullWidth>
+                <DialogTitle sx={{ bgcolor: '#1976d2', color: 'white' }}>✏️ Corregir Cantidad</DialogTitle>
+                <DialogContent>
+                    <Typography sx={{ mt: 2, mb: 2 }}>Insumo: <br/><b>{insumoAEditar?.nombre_insumo}</b></Typography>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        label="Nueva Cantidad Usada"
+                        type="numeric"
+                        value={nuevaCantidadInsumo}
+                        onChange={(e) => setNuevaCantidadInsumo(e.target.value)}
+                        InputProps={{
+                            endAdornment: <InputAdornment position="end">{insumoAEditar?.unidad_medida}</InputAdornment>,
+                        }}
+                    />
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setModalEditarInsumoOpen(false)} color="inherit">Cancelar</Button>
+                    <Button onClick={handleGuardarEdicionInsumo} variant="contained" sx={{ bgcolor: '#1976d2' }}>Guardar Cambio</Button>
                 </DialogActions>
             </Dialog>
 
@@ -469,4 +541,5 @@ function Calendario() {
         </Box>
     );
 }
+
 export default Calendario;
