@@ -93,6 +93,15 @@ export default function LotesScreen() {
             <MaterialIcons name="aspect-ratio" size={18} color="#555" />
             <Text style={styles.infoText}>{item.area_hectareas} Ha</Text>
           </View>
+
+          {/* NUEVO: CANTIDAD DE ÁRBOLES */}
+          <View style={styles.infoItem}>
+            <FontAwesome5 name="tree" size={16} color="#555" />
+            <Text style={styles.infoText}>
+              {item.cantidad_arboles || 0} árboles
+            </Text>
+          </View>
+
           <View style={styles.infoItem}>
             <MaterialIcons name="timer" size={18} color="#555" />
             <Text style={styles.infoText}>
@@ -154,7 +163,13 @@ const styles = StyleSheet.create({
   body: { gap: 5 },
   variedad: { fontSize: 18, fontWeight: "600", color: "#1b5e20" },
   cientifico: { fontStyle: "italic", color: "#757575", marginBottom: 5 },
-  infoRow: { flexDirection: "row", gap: 20, marginVertical: 8 },
+  // Cambié flexWrap a 'wrap' para que si la pantalla es muy pequeña los datos bajen solitos y no se corten
+  infoRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 15,
+    marginVertical: 8,
+  },
   infoItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   infoText: { fontWeight: "500", color: "#444" },
   ubicacion: { fontSize: 11, color: "#9e9e9e", marginTop: 5 },

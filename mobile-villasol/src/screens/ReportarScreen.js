@@ -20,6 +20,9 @@ export default function ReportarScreen({ navigation }) {
   const [lotes, setLotes] = useState([]);
   const [tipos, setTipos] = useState([]);
 
+  // NUEVO ESTADO: Llave maestra para dejar salir al usuario sin alerta cuando guarda con éxito
+  const [guardadoExitoso, setGuardadoExitoso] = useState(false);
+
   // Estado para saber si es Franklin
   const [isFranklin, setIsFranklin] = useState(false);
 
@@ -31,13 +34,19 @@ export default function ReportarScreen({ navigation }) {
 
   useEffect(() => {
     cargarListas();
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-      // Si el formulario está vacío, lo dejamos salir normal sin molestar
-      if (!form.id_tipo_actividad && !form.id_lote && !form.descripcion) {
+      // 🛑 LA CORRECCIÓN: Si guardó exitosamente O el formulario está vacío, lo dejamos salir sin molestar
+      if (
+        guardadoExitoso ||
+        (!form.id_tipo_actividad && !form.id_lote && !form.descripcion)
+      ) {
         return;
       }
 
-      // Si hay algo escrito, detenemos la acción de salir
+      // Si hay algo escrito y NO ha guardado, detenemos la acción de salir
       e.preventDefault();
 
       // Mostramos la alerta nativa del celular
@@ -49,7 +58,7 @@ export default function ReportarScreen({ navigation }) {
           {
             text: "Sí, salir",
             style: "destructive",
-            // Si dice que sí, forzamos la salida que intentó hacer
+            // Si dice que sí, forzamos la salida
             onPress: () => navigation.dispatch(e.data.action),
           },
         ],
@@ -57,7 +66,7 @@ export default function ReportarScreen({ navigation }) {
     });
 
     return unsubscribe;
-  }, [navigation, form]);
+  }, [navigation, form, guardadoExitoso]); // Agregamos la llave maestra a las dependencias
 
   const cargarListas = async () => {
     try {
@@ -83,8 +92,6 @@ export default function ReportarScreen({ navigation }) {
         if (loteFranklin) {
           // Pre-llenamos el formulario y bloqueamos selección
           setForm((prev) => ({ ...prev, id_lote: loteFranklin.id_lote }));
-          // Opcional: Avisar discretamente
-          console.log("Modo Franklin activado: Lote 9 seleccionado.");
         }
       }
     } catch (error) {
@@ -137,7 +144,14 @@ export default function ReportarScreen({ navigation }) {
         text1: "¡Registrado!",
         text2: "Labor guardada ✅",
       });
-      navigation.goBack();
+
+      // 🛑 AQUÍ ACTIVAMOS LA LLAVE MAESTRA ANTES DE SALIR
+      setGuardadoExitoso(true);
+
+      // Le damos un microsegundo a React para que asimile la llave antes de cambiar de pantalla
+      setTimeout(() => {
+        navigation.goBack();
+      }, 100);
     } catch (error) {
       console.error(error);
       Toast.show({
@@ -186,7 +200,6 @@ export default function ReportarScreen({ navigation }) {
         </View>
 
         {/* 2. LOTE (CONDICIONAL PARA FRANKLIN) */}
-        {/* Si NO es Franklin, muestra el select. Si ES Franklin, muestra solo texto fijo. */}
         {!isFranklin ? (
           <>
             <Text style={styles.label}>¿En qué lote?</Text>
@@ -209,7 +222,6 @@ export default function ReportarScreen({ navigation }) {
             </View>
           </>
         ) : (
-          // VERSIÓN FRANKLIN (SOLO TEXTO)
           <View
             style={{
               marginTop: 15,
