@@ -1,44 +1,9 @@
 const pool = require("../config/db");
 
-// --- FUNCIÓN DE MANTENIMIENTO AUTOMÁTICO (MEJORADA 🧠) ---
 const actualizarEstadosLotes = async () => {
-  try {
-    // 1. CASTIGO 😡: Si hay tareas viejas (> 4 días), poner en RIESGO
-    const castigo = await pool.query(`
-            UPDATE sisvillasol.lotes l
-            SET estado_sanitario = 'RIESGO'
-            FROM sisvillasol.tareas t
-            WHERE l.id_lote = t.id_lote_tarea
-            AND t.estado = 'PENDIENTE' 
-            AND t.fecha_programada::DATE < (CURRENT_DATE - INTERVAL '4 days')
-            AND l.estado_sanitario = 'OPTIMO'
-        `);
-
-    if (castigo.rowCount > 0) {
-      console.log(
-        `⚠️ ALERTA: ${castigo.rowCount} lotes pasaron a RIESGO por descuido.`,
-      );
-    }
-
-    // 2. PREMIO 😇: Si YA NO hay tareas viejas, volver a OPTIMO
-    const premio = await pool.query(`
-            UPDATE sisvillasol.lotes l
-            SET estado_sanitario = 'OPTIMO'
-            WHERE l.estado_sanitario = 'RIESGO'
-            AND NOT EXISTS (
-                SELECT 1 FROM sisvillasol.tareas t
-                WHERE t.id_lote_tarea = l.id_lote
-                AND t.estado = 'PENDIENTE'
-                AND t.fecha_programada::DATE < (CURRENT_DATE - INTERVAL '4 days')
-            );
-        `);
-
-    if (premio.rowCount > 0) {
-      console.log(`✅ EXCELENTE: ${premio.rowCount} lotes volvieron a OPTIMO.`);
-    }
-  } catch (error) {
-    console.error("Error actualizando estados de lotes:", error);
-  }
+  console.log(
+    "Auditoría de estados omitida: Usando nuevo catálogo agronómico.",
+  );
 };
 
 // 1. OBTENER TAREAS
@@ -173,12 +138,12 @@ const actualizarTarea = async (req, res) => {
 // 4. DATOS FORMULARIO
 const obtenerDatosFormulario = async (req, res) => {
   try {
-    await actualizarEstadosLotes();
-
     const lotes = await pool.query(`
-        SELECT l.id_lote, l.nombre_lote, c.nombre_variedad, l.estado_sanitario
+        SELECT l.id_lote, l.nombre_lote, c.nombre_variedad, 
+        ce.clasificacion as estado_sanitario 
         FROM sisvillasol.lotes l
         LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+        LEFT JOIN sisvillasol.catalogo_estados_lote ce ON l.id_estado_actual = ce.id_estado
         ORDER BY l.nombre_lote ASC
     `);
     const usuarios = await pool.query(
@@ -229,13 +194,14 @@ const getHistorialPorLote = async (req, res) => {
 // 6. INFO LOTES
 const obtenerLotesDetallados = async (req, res) => {
   try {
-    await actualizarEstadosLotes();
     const response = await pool.query(`
             SELECT l.id_lote, l.nombre_lote, l.area_hectareas,
-            l.estado_sanitario, l.ubicacion,l.cantidad_arboles,
+            ce.clasificacion as estado_sanitario, ce.nombre_estado, -- NUEVO
+            l.ubicacion, l.cantidad_arboles,
             c.nombre_variedad, c.nombre_cientifico, c.dias_estimados_cosecha
             FROM sisvillasol.lotes l
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
+            LEFT JOIN sisvillasol.catalogo_estados_lote ce ON l.id_estado_actual = ce.id_estado
             ORDER BY l.nombre_lote ASC
         `);
     res.json(response.rows);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,9 @@ export default function DetalleTareaScreen({ route, navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [listaInsumos, setListaInsumos] = useState([]);
   const [insumosSeleccionados, setInsumosSeleccionados] = useState([]);
+
+  // 🛑 LA LLAVE MAESTRA ULTRARRÁPIDA 🛑
+  const isSavingRef = useRef(false);
 
   // Estados del Formulario Modal
   const [cantidadInput, setCantidadInput] = useState("");
@@ -50,14 +53,19 @@ export default function DetalleTareaScreen({ route, navigation }) {
       cargarInsumosUsados();
     }
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-      // 1. Si el modal principal está abierto, ATRÁS solo cierra el modal
+      // 🛑 1. EVALUAMOS LA LLAVE MAESTRA PRIMERO: Si ya guardó, lo dejamos salir al instante
+      if (isSavingRef.current) {
+        return;
+      }
+
+      // 2. Si el modal principal está abierto, ATRÁS solo cierra el modal
       if (modalVisible) {
         e.preventDefault();
         limpiarModal();
         return;
       }
 
-      // 2. Si no hay modales abiertos, pero tiene insumos sin guardar
+      // 3. Si no hay modales abiertos, pero tiene insumos sin guardar y NO ha guardado
       if (tarea?.estado === "PENDIENTE" && insumosSeleccionados.length > 0) {
         e.preventDefault();
         Alert.alert(
@@ -255,6 +263,9 @@ export default function DetalleTareaScreen({ route, navigation }) {
         text2: "Tarea finalizada e inventario actualizado 🚜",
         visibilityTime: 3000,
       });
+
+      // 🛑 ACTIVAMOS EL INTERRUPTOR INMEDIATO
+      isSavingRef.current = true;
 
       navigation.goBack();
     } catch (error) {

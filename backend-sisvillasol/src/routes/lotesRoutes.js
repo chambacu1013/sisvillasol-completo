@@ -1,10 +1,14 @@
 const { Router } = require("express");
 const router = Router();
-const { obtenerLotes, crearLote } = require("../controllers/lotesController");
+const {
+  obtenerLotes,
+  obtenerCatalogoEstados,
+  actualizarEstadoLote,
+} = require("../controllers/lotesController");
 const verificarToken = require("../middleware/authMiddleware"); // <--- EL VIGILANTE
 
 // Todas las rutas protegidas
 router.get("/", verificarToken, obtenerLotes);
-router.post("/", verificarToken, crearLote);
-
+router.get("/catalogo-estados", verificarToken, obtenerCatalogoEstados);
+router.put("/estado/:id_lote", verificarToken, actualizarEstadoLote);
 module.exports = router;
