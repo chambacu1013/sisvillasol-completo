@@ -242,6 +242,21 @@ const MapaFinca = () => {
                                 <Typography variant="subtitle2" color="textSecondary">Área:</Typography>
                                 <Typography variant="h6" sx={{ fontSize: '1rem' }}>{loteSeleccionado.area_hectareas} Has</Typography>
                             </Grid>
+                            
+                            {/* COLUMNA NUEVA DE ÁRBOLES 🌳 */}
+                            <Grid item xs={6} sm={3}>
+                                <Typography variant="subtitle2" color="textSecondary">N° Árboles:</Typography>
+                                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold', color: '#2e7d32' }}>
+                                    {loteSeleccionado.cantidad_arboles || 0} 🌳
+                                </Typography>
+                            </Grid>
+
+                            <Grid item xs={6} sm={3}>
+                                <Typography variant="subtitle2" color="textSecondary">Cosecha Estimada:</Typography>
+                                <Typography variant="h6" sx={{ fontSize: '1rem' }}>
+                                    {loteSeleccionado.dias_estimados_cosecha || 'N/A'} días
+                                </Typography>
+                            </Grid>
                         </Grid>
 
                         <Divider sx={{ mb: 2 }} />
