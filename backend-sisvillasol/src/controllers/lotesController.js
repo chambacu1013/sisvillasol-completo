@@ -8,11 +8,13 @@ const obtenerLotes = async (req, res) => {
                 l.id_lote, 
                 l.nombre_lote, 
                 l.area_hectareas, 
-                ce.clasificacion as estado_sanitario, -- Mantenemos este nombre para que React sepa si es Verde o Rojo
+                ce.clasificacion as estado_sanitario,
                 ce.nombre_estado,
                 ce.categoria,
                 ce.descripcion as descripcion_estado,
                 c.nombre_variedad,
+                l.cantidad_arboles,
+                c.dias_estimados_cosecha,
                 l.ubicacion as coordenadas
             FROM sisvillasol.lotes l
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
