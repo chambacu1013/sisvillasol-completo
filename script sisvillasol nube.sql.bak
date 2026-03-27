@@ -86,6 +86,14 @@ CREATE TABLE sisvillasol.cultivos (
     nombre_cientifico VARCHAR(100) NOT NULL,
     dias_estimados_cosecha INT NOT NULL-- Para alertas de recolección
 );
+--9. Tabla de catalogo de estados de los lotes
+CREATE TABLE sisvillasol.catalogo_estados_lote (
+    id_estado SERIAL PRIMARY KEY,
+    clasificacion VARCHAR(20) NOT NULL, -- Determina el color: 'OPTIMO' (Verde) o 'ALERTA' (Rojo)
+    categoria VARCHAR(50) NOT NULL,     -- Agrupación: 'CICLO FENOLOGICO', 'FISIOLOGICO', 'HONGO', 'PLAGA'
+    nombre_estado VARCHAR(100) NOT NULL,
+    descripcion TEXT
+);
 -- 9. Tabla de Lotes (Terreno)
 CREATE TABLE sisvillasol.lotes (
     id_lote SERIAL PRIMARY KEY,
@@ -93,7 +101,7 @@ CREATE TABLE sisvillasol.lotes (
     nombre_lote VARCHAR(50) NOT NULL, -- Ej: 'Lote 1 A'
     area_hectareas DECIMAL(5,2) NOT NULL,
     ubicacion TEXT NOT NULL, -- Para el Mapa (longitud, latitud)
-    estado_sanitario VARCHAR(50) DEFAULT 'OPTIMO' -- 'OPTIMO', 'EN_TRATAMIENTO', 'CUARENTENA'
+    id_estado_actual INT REFERENCES sisvillasol.catalogo_estados_lote(id_estado) DEFAULT 1;
 );
 ALTER TABLE sisvillasol.lotes 
 ADD COLUMN cantidad_arboles INTEGER DEFAULT 0;

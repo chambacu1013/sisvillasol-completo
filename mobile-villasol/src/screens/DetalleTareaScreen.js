@@ -321,12 +321,13 @@ export default function DetalleTareaScreen({ route, navigation }) {
       <View style={styles.card}>
         <View style={styles.row}>
           <MaterialIcons name="place" size={24} color="#555" />
-          <Text style={styles.textoDetalle}>
-            {tarea.nombre_lote}{" "}
-            <Text style={{ fontWeight: "bold" }}>
-              ({tarea.nombre_variedad || "Sin Cultivo"})
+          {/* Contenedor con flex: 1 para evitar que el texto se salga de la pantalla */}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.textoDetalle}>{tarea.nombre_lote}</Text>
+            <Text style={{ fontWeight: "bold", marginTop: 2 }}>
+              🌱 {tarea.nombre_variedad || "Sin Cultivo"}
             </Text>
-          </Text>
+          </View>
         </View>
         <Text style={styles.descripcion}>{tarea.descripcion}</Text>
       </View>
