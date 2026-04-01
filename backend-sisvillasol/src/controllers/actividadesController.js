@@ -3,8 +3,6 @@ const pool = require("../config/db");
 // 1. OBTENER TAREAS
 const obtenerActividades = async (req, res) => {
   try {
-    await actualizarEstadosLotes(); // Auditoría automática
-
     const response = await pool.query(`
             SELECT 
                 t.id_tarea, 
@@ -121,7 +119,6 @@ const actualizarTarea = async (req, res) => {
         id,
       ],
     );
-    await actualizarEstadosLotes();
     res.json({ mensaje: "¡Tarea actualizada! 📝" });
   } catch (error) {
     console.error(error);
@@ -287,8 +284,6 @@ const finalizarTarea = async (req, res) => {
       }
     }
     await client.query("COMMIT");
-    if (typeof actualizarEstadosLotes === "function")
-      await actualizarEstadosLotes();
     res.json({
       mensaje: "Tarea finalizada y stock actualizado CORRECTAMENTE 📉✅",
     });
@@ -403,7 +398,6 @@ module.exports = {
   obtenerLotesDetallados,
   finalizarTarea,
   getHistorialPorLote,
-  actualizarEstadosLotes,
   obtenerInsumosPorTarea,
   corregirCantidadInsumo,
 };
