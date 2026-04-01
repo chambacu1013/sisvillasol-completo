@@ -1,11 +1,5 @@
 const pool = require("../config/db");
 
-const actualizarEstadosLotes = async () => {
-  console.log(
-    "Auditoría de estados omitida: Usando nuevo catálogo agronómico.",
-  );
-};
-
 // 1. OBTENER TAREAS
 const obtenerActividades = async (req, res) => {
   try {

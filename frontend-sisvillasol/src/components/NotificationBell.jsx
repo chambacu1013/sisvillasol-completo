@@ -46,20 +46,19 @@ const NotificationBell = () => {
                 }
             });
 
-            // 2. OBTENER LOTES CON PROBLEMAS (Actualizados por la lógica SQL)
-            // Asegúrate de que este endpoint traiga el campo 'estado_sanitario'
+           // 2. OBTENER LOTES CON PROBLEMAS (Catálogo Agronómico)
             const resLotes = await api.get('/actividades/datos-formulario'); 
             const lotes = resLotes.data.lotes || [];
 
             lotes.forEach(lote => {
-                // Si el SQL lo marcó como EN_TRATAMIENTO o CUARENTENA
-                if (['EN_TRATAMIENTO', 'CUARENTENA', 'RIESGO'].includes(lote.estado_sanitario)) {
+                // CORRECCIÓN: Ahora el sistema lee la clasificación real del catálogo
+                if (['ALERTA'].includes(lote.estado_sanitario)) {
                     nuevasAlertas.push({
                         id: `lote-${lote.id_lote}`,
                         tipo: 'LOTE',
-                        titulo: `¡Lote en ${lote.estado_sanitario}!`,
-                        mensaje: `${lote.nombre_lote} tiene tareas atrasadas o químicos.`,
-                        ruta: '/lotes'
+                        titulo: `¡${lote.nombre_lote} en ALERTA!`,
+                        mensaje: `Se reportó un problema sanitario en ${lote.nombre_variedad || 'el cultivo'}. Revisa el mapa.`,
+                        ruta: '/lotes' // Asegúrate de que esta ruta apunte a tu mapa
                     });
                 }
             });
