@@ -12,6 +12,7 @@ const {
   getHistorialPorLote,
   obtenerInsumosPorTarea,
   corregirCantidadInsumo,
+  eliminarInsumoConsumido,
 } = require("../controllers/actividadesController");
 
 const verificarToken = require("../middleware/authMiddleware");
@@ -30,5 +31,10 @@ router.post("/", verificarToken, crearActividad);
 router.get("/historial-lote/:id_lote", verificarToken, getHistorialPorLote);
 router.put("/finalizar/:id", verificarToken, finalizarTarea);
 router.put("/:id", verificarToken, actualizarTarea);
+router.delete(
+  "/eliminar-insumo/:id_tarea/:id_insumo",
+  verificarToken,
+  eliminarInsumoConsumido,
+);
 
 module.exports = router;

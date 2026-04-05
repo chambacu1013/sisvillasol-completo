@@ -168,7 +168,35 @@ function Calendario() {
             setNotas(res.data);
         } catch (error) { console.error("Error cargando notas:", error); }
     };
-
+const handleEliminarInsumo = async (item) => {
+        Swal.fire({
+            title: '¿Eliminar este insumo?',
+            text: `Se devolverán ${item.cantidad_usada} ${item.unidad_medida} de ${item.nombre_insumo} a la bodega.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d32f2f',
+            cancelButtonColor: '#757575',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const idTarea = tareaEditar?.resource?.id_tarea || tareaEditar?.id_tarea;
+                    
+                    await api.delete(`/actividades/eliminar-insumo/${idTarea}/${item.id_insumo}`);
+                    
+                    Swal.fire({ icon: 'success', title: 'Insumo devuelto a bodega', timer: 1500, showConfirmButton: false });
+                    
+                    // Refrescamos la lista de insumos para que desaparezca de la tabla
+                    const resultInsumos = await api.get(`/actividades/insumos-tarea/${idTarea}`);
+                    setInsumosUsados(resultInsumos.data);
+                } catch (error) {
+                    console.error("Error eliminando insumo:", error);
+                    Swal.fire('Error', 'No se pudo eliminar el insumo. Revisa la consola.', 'error');
+                }
+            }
+        });
+    };
     // --- NOTAS ---
     const handleGuardarNota = async () => {
         if (!nuevaNota.trim()) {
@@ -468,7 +496,7 @@ function Calendario() {
                                                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>
                                                     {item.cantidad_usada} {item.unidad_medida}
                                                 </TableCell>
-                                                <TableCell align="center">
+                                               <TableCell align="center">
                                                     <IconButton 
                                                         color="primary" 
                                                         size="small" 
@@ -476,6 +504,14 @@ function Calendario() {
                                                         title="Modificar cantidad gastada"
                                                     >
                                                         <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton 
+                                                        color="error" 
+                                                        size="small" 
+                                                        onClick={() => handleEliminarInsumo(item)}
+                                                        title="Eliminar insumo y devolver a bodega"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
                                                     </IconButton>
                                                 </TableCell>
                                             </TableRow>

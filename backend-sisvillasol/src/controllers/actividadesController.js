@@ -389,7 +389,57 @@ const corregirCantidadInsumo = async (req, res) => {
     client.release();
   }
 };
+// 10. ELIMINAR INSUMO CONSUMIDO (DEVUELVE STOCK Y COSTO A BODEGA 🔄💵)
+const eliminarInsumoConsumido = async (req, res) => {
+  const { id_tarea, id_insumo } = req.params;
 
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // 1. Ver qué cantidad y costo vamos a devolver
+    const resAntigua = await client.query(
+      `SELECT cantidad_usada, costo_calculado FROM sisvillasol.consumo_insumos 
+       WHERE id_tarea_consumo = $1 AND id_insumo_consumo = $2`,
+      [id_tarea, id_insumo],
+    );
+
+    if (resAntigua.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res
+        .status(404)
+        .json({ message: "Insumo no encontrado en esta tarea" });
+    }
+
+    const cantidadDevolver = parseFloat(resAntigua.rows[0].cantidad_usada);
+    const costoDevolver = parseFloat(resAntigua.rows[0].costo_calculado);
+
+    // 2. Eliminar el registro de la tabla pivote
+    await client.query(
+      `DELETE FROM sisvillasol.consumo_insumos 
+       WHERE id_tarea_consumo = $1 AND id_insumo_consumo = $2`,
+      [id_tarea, id_insumo],
+    );
+
+    // 3. Devolver la cantidad física y el valor monetario a la Bodega
+    await client.query(
+      `UPDATE sisvillasol.insumos 
+       SET cantidad_stock = cantidad_stock + $1,
+           costo_unitario_promedio = costo_unitario_promedio + $2
+       WHERE id_insumo = $3`,
+      [cantidadDevolver, costoDevolver, id_insumo],
+    );
+
+    await client.query("COMMIT");
+    res.json({ message: "Insumo eliminado y devuelto a bodega exitosamente" });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Error eliminando insumo:", error);
+    res.status(500).send("Error al eliminar insumo");
+  } finally {
+    client.release();
+  }
+};
 module.exports = {
   obtenerActividades,
   crearActividad,
@@ -400,4 +450,5 @@ module.exports = {
   getHistorialPorLote,
   obtenerInsumosPorTarea,
   corregirCantidadInsumo,
+  eliminarInsumoConsumido,
 };
