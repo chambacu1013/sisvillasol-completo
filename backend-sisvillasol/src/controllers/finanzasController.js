@@ -15,7 +15,7 @@ const obtenerResumenFinanciero = async (req, res) => {
 
     // B. GASTOS DE MANO DE OBRA (TAREAS)
     const tareasRes = await pool.query(
-      "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_programada) = $1",
+      "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_ejecucion) = $1",
       [anio],
     );
     const totalManoObra = Number(tareasRes.rows[0].total || 0);
@@ -26,7 +26,7 @@ const obtenerResumenFinanciero = async (req, res) => {
       `SELECT SUM(ci.costo_calculado) as total 
        FROM sisvillasol.consumo_insumos ci
        JOIN sisvillasol.tareas t ON ci.id_tarea_consumo = t.id_tarea
-       WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1`,
+       WHERE EXTRACT(YEAR FROM t.fecha_ejecucion) = $1`,
       [anio],
     );
     const totalInsumos = Number(insumosRes.rows[0].total || 0);
@@ -85,17 +85,17 @@ const obtenerGraficaAnual = async (req, res) => {
 
     // 2. MANO DE OBRA POR MES
     const manoObraRes = await pool.query(
-      `SELECT EXTRACT(MONTH FROM fecha_programada) as mes, SUM(costo_mano_obra) as total
-       FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_programada) = $1 GROUP BY mes`,
+      `SELECT EXTRACT(MONTH FROM fecha_ejecucion) as mes, SUM(costo_mano_obra) as total
+       FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_ejecucion) = $1 GROUP BY mes`,
       [anio],
     );
 
     // 3. INSUMOS POR MES (¡EL QUE FALTABA!) 🧪
     const insumosRes = await pool.query(
-      `SELECT EXTRACT(MONTH FROM t.fecha_programada) as mes, SUM(ci.costo_calculado) as total
+      `SELECT EXTRACT(MONTH FROM t.fecha_ejecucion) as mes, SUM(ci.costo_calculado) as total
        FROM sisvillasol.consumo_insumos ci
        JOIN sisvillasol.tareas t ON ci.id_tarea_consumo = t.id_tarea
-       WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1
+       WHERE EXTRACT(YEAR FROM t.fecha_ejecucion) = $1
        GROUP BY mes`,
       [anio],
     );
@@ -256,7 +256,7 @@ const obtenerDistribucionFinanciera = async (req, res) => {
 
     // 2. MANO DE OBRA
     const manoObra = await pool.query(
-      "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_programada) = $1",
+      "SELECT SUM(costo_mano_obra) as total FROM sisvillasol.tareas WHERE EXTRACT(YEAR FROM fecha_ejecucion) = $1",
       [anio],
     );
 
@@ -266,7 +266,7 @@ const obtenerDistribucionFinanciera = async (req, res) => {
             SELECT SUM(ci.costo_calculado) as total 
             FROM sisvillasol.consumo_insumos ci
             JOIN sisvillasol.tareas t ON ci.id_tarea_consumo = t.id_tarea
-            WHERE EXTRACT(YEAR FROM t.fecha_programada) = $1
+            WHERE EXTRACT(YEAR FROM t.fecha_ejecucion) = $1
         `,
       [anio],
     );
