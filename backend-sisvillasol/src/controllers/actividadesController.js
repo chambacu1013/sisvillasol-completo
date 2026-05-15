@@ -322,64 +322,125 @@ const obtenerInsumosPorTarea = async (req, res) => {
 };
 
 // 9. CORREGIR CANTIDAD INSUMO (TAMBIÉN CORRIGE EL COSTO CONTABLE 💵✅)
+// 9. CORREGIR CANTIDAD INSUMO ✅
 const corregirCantidadInsumo = async (req, res) => {
   const { id_tarea, id_insumo, nueva_cantidad } = req.body;
-  if (!id_tarea || !id_insumo)
-    return res.status(400).json({ message: "Faltan datos (IDs)" });
+
+  // ✅ NUEVO: validar nueva_cantidad también
+  if (!id_tarea || !id_insumo || nueva_cantidad === undefined) {
+    return res
+      .status(400)
+      .json({ message: "Faltan datos (IDs y nueva_cantidad)" });
+  }
+
+  const cantidadNueva = parseFloat(nueva_cantidad);
+  if (isNaN(cantidadNueva) || cantidadNueva <= 0) {
+    return res
+      .status(400)
+      .json({ message: "nueva_cantidad debe ser un número positivo" });
+  }
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // 1. Ver qué teníamos antes
-    const resAntigua = await client.query(
-      `SELECT cantidad_usada, costo_calculado FROM sisvillasol.consumo_insumos 
+    // PASO 1 ─ Leer consumo anterior
+    const resConsumo = await client.query(
+      `SELECT cantidad_usada, costo_calculado
+       FROM sisvillasol.consumo_insumos
        WHERE id_tarea_consumo = $1 AND id_insumo_consumo = $2`,
       [id_tarea, id_insumo],
     );
 
-    if (resAntigua.rowCount === 0) {
+    if (resConsumo.rowCount === 0) {
       await client.query("ROLLBACK");
       return res
         .status(404)
         .json({ message: "Insumo no encontrado en esta tarea" });
     }
 
-    const cantidadAnterior = parseFloat(resAntigua.rows[0].cantidad_usada);
-    const costoAnterior = parseFloat(resAntigua.rows[0].costo_calculado);
+    const cantidadAnterior = parseFloat(resConsumo.rows[0].cantidad_usada);
+    const costoAnterior = parseFloat(resConsumo.rows[0].costo_calculado);
 
-    // 2. Averiguamos a cómo pagó la unidad en ese momento exacto
-    let precioUnitarioReal = 0;
-    if (cantidadAnterior > 0) {
-      precioUnitarioReal = costoAnterior / cantidadAnterior;
-    }
-
-    const cantidadNueva = parseFloat(nueva_cantidad);
-    const nuevoCostoCalculado = cantidadNueva * precioUnitarioReal;
-
-    const diferenciaCantidad = cantidadNueva - cantidadAnterior; // Ej: subió 3 unidades
-    const diferenciaCosto = nuevoCostoCalculado - costoAnterior; // Ej: cuesta 18.000 pesos más
-
-    // 3. Actualizar registro de consumo
-    await client.query(
-      `UPDATE sisvillasol.consumo_insumos 
-       SET cantidad_usada = $1, costo_calculado = $2 
-       WHERE id_tarea_consumo = $3 AND id_insumo_consumo = $4`,
-      [cantidadNueva, nuevoCostoCalculado, id_tarea, id_insumo],
+    // ✅ NUEVO PASO 2 ─ Leer bodega actual con bloqueo (evita race conditions)
+    const resInsumo = await client.query(
+      `SELECT cantidad_stock, costo_unitario_promedio
+       FROM sisvillasol.insumos
+       WHERE id_insumo = $1
+       FOR UPDATE`,
+      [id_insumo],
     );
 
-    // 4. Actualizar Bodega (Restamos el stock extra y el dinero extra)
+    if (resInsumo.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res
+        .status(404)
+        .json({ message: "Insumo no encontrado en bodega" });
+    }
+
+    const stockActual = parseFloat(resInsumo.rows[0].cantidad_stock);
+    const valorTotalActual = parseFloat(
+      resInsumo.rows[0].costo_unitario_promedio,
+    );
+
+    // ✅ PASO 3 ─ REVERSAR el consumo anterior: devolvemos al inventario lo que se había tomado
+    //    Así el inventario queda como si nunca se hubiera consumido ese insumo
+    const stockTrasDevolucion = stockActual + cantidadAnterior;
+    const valorTrasDevolucion = valorTotalActual + costoAnterior;
+
+    // ✅ PASO 4 ─ Calcular el precio unitario REAL desde la bodega (no del histórico corrupto)
+    //    costo_unitario_promedio = valor total en bodega (según regla de negocio de tu DB)
+    //    precio por unidad       = valor_total / cantidad_stock
+    if (stockTrasDevolucion <= 0) {
+      await client.query("ROLLBACK");
+      return res
+        .status(400)
+        .json({ message: "Error: stock inconsistente en bodega" });
+    }
+    const precioUnitarioActual = valorTrasDevolucion / stockTrasDevolucion;
+
+    // ✅ PASO 5 ─ Verificar que haya stock suficiente para la nueva cantidad
+    const stockResultante = stockTrasDevolucion - cantidadNueva;
+    if (stockResultante < 0) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: `Stock insuficiente. Disponible: ${stockTrasDevolucion.toFixed(2)}, solicitado: ${cantidadNueva}`,
+      });
+    }
+
+    // ✅ PASO 6 ─ Calcular el nuevo costo con el precio correcto de bodega
+    const nuevoCosto = cantidadNueva * precioUnitarioActual;
+
+    // PASO 7 ─ Actualizar registro de consumo
     await client.query(
-      `UPDATE sisvillasol.insumos 
-       SET cantidad_stock = cantidad_stock - $1,
-           costo_unitario_promedio = costo_unitario_promedio - $2
+      `UPDATE sisvillasol.consumo_insumos
+       SET cantidad_usada = $1, costo_calculado = $2
+       WHERE id_tarea_consumo = $3 AND id_insumo_consumo = $4`,
+      [cantidadNueva, nuevoCosto, id_tarea, id_insumo],
+    );
+
+    // PASO 8 ─ Actualizar bodega con valores ABSOLUTOS (no deltas)
+    //    ❌ ANTES: stock - diferencia  → acumula errores previos
+    //    ✅ AHORA: valor directo       → siempre coherente con los pasos anteriores
+    await client.query(
+      `UPDATE sisvillasol.insumos
+       SET cantidad_stock          = $1,
+           costo_unitario_promedio = $2
        WHERE id_insumo = $3`,
-      [diferenciaCantidad, diferenciaCosto, id_insumo],
+      [stockResultante, valorTrasDevolucion - nuevoCosto, id_insumo],
     );
 
     await client.query("COMMIT");
     res.json({
-      message: "Cantidad y costos corregidos en bodega exitosamente",
+      message: "Corrección aplicada exitosamente ✅",
+      detalle: {
+        cantidad_anterior: cantidadAnterior,
+        cantidad_nueva: cantidadNueva,
+        costo_anterior: costoAnterior,
+        costo_nuevo: nuevoCosto,
+        precio_unitario_usado: precioUnitarioActual,
+        stock_resultante: stockResultante,
+      },
     });
   } catch (error) {
     await client.query("ROLLBACK");
