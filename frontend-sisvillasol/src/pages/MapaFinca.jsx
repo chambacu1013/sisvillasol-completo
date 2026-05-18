@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import mapaImagen from '../../public/mapa_villasol.jpeg';
 import { 
     Box, Typography, Paper, Chip, CircularProgress, Popover,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, Button,
@@ -195,7 +196,7 @@ const MapaFinca = () => {
                 >
                     <Box 
                         component="img"
-                        src="../public/mapa_villasol.jpeg" // Asegúrate de que la ruta coincida con tu carpeta public
+                        src={mapaImagen}
                         alt="Mapa Gráfico Finca Villasol"
                         sx={{
                             maxWidth: '100%',
@@ -206,15 +207,32 @@ const MapaFinca = () => {
                 </Box>
             ) : (
                 // 2. TU MAPA ORIGINAL DE LEAFLET
-                <MapContainer 
-                    center={[5.0, -73.0]} // Aquí van tus coordenadas originales
-                    zoom={15} 
-                    style={{ height: '600px', width: '100%', zIndex: 1, borderRadius: '8px', boxShadow: '0px 4px 10px rgba(0,0,0,0.1)' }}
-                >
-                    {/* ... Aquí adentro dejas TODO lo que ya tenías: TileLayer, Markers, etc ... */}
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {/* ... tus marcadores iterados ... */}
-                </MapContainer>
+                 <MapContainer 
+                        center={centroFinca} zoom={24} style={{ height: '100%', width: '100%' }}
+                        dragging={false} scrollWheelZoom={false} doubleClickZoom={false} 
+                        touchZoom={false} zoomControl={false} keyboard={false}
+                    >
+                        <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
+                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" opacity={0.3} />
+
+                        {lotes.map((lote) => {
+                            if (!lote.coordenadas) return null;
+                            const partes = lote.coordenadas.split(',');
+                            if (partes.length < 2) return null;
+                            const lng = parseFloat(partes[0].trim()); const lat = parseFloat(partes[1].trim());
+                            if (isNaN(lat) || isNaN(lng)) return null;
+
+                            return (
+                                <Marker 
+                                    key={lote.id_lote} position={[lat, lng]}
+                                    icon={lote.estado_sanitario === 'ALERTA' ? redIcon : greenIcon}
+                                    eventHandlers={{ click: () => handleSelectLote(lote) }}
+                                >
+                                    <Tooltip direction="top" offset={[0, -20]} opacity={1}>{lote.nombre_lote}</Tooltip>
+                                </Marker>
+                            );
+                        })}
+                    </MapContainer>
             )}
                 
                 <Box sx={{ mt: 2, display: 'flex', gap: 3, justifyContent: 'center' }}>
