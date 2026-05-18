@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import mapaImagen from '../../public/mapa_villasol.jpeg';
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { 
     Box, Typography, Paper, Chip, CircularProgress, Popover,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, Button,
@@ -185,25 +186,35 @@ const MapaFinca = () => {
                     sx={{ 
                         width: '100%', 
                         height: '600px', 
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
                         backgroundColor: '#e0e0e0', 
                         borderRadius: '8px', 
                         overflow: 'hidden',
-                        boxShadow: 3
+                        boxShadow: 3,
+                        cursor: 'grab', // Cambia el cursor para indicar que se puede arrastrar
+                        '&:active': { cursor: 'grabbing' } // Cursor cuando se está arrastrando
                     }}
                 >
-                    <Box 
-                        component="img"
-                        src={mapaImagen}
-                        alt="Mapa Gráfico Finca Villasol"
-                        sx={{
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            objectFit: 'contain'
-                        }}
-                    />
+                    <TransformWrapper
+                        initialScale={1}
+                        initialPositionX={0}
+                        initialPositionY={0}
+                        minScale={1} // Qué tan lejos se puede alejar (1 = tamaño original)
+                        maxScale={4} // Qué tanto se puede acercar (4x)
+                        centerOnInit={true}
+                        wheel={{ step: 0.1 }} // Suavidad del zoom con la rueda del ratón
+                    >
+                        <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
+                            <img 
+                                src={mapaImagen} 
+                                alt="Mapa Gráfico Finca Villasol"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain'
+                                }}
+                            />
+                        </TransformComponent>
+                    </TransformWrapper>
                 </Box>
             ) : (
                 // 2. TU MAPA ORIGINAL DE LEAFLET INTEGRADO
