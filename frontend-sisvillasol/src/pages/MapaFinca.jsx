@@ -3,7 +3,8 @@ import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
     Box, Typography, Paper, Chip, CircularProgress, Popover,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, Button
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, Button,
+    Switch, FormControlLabel
 } from '@mui/material';
 import Grid from '@mui/material/Grid'; 
 import AgricultureIcon from '@mui/icons-material/Agriculture';
@@ -41,6 +42,7 @@ const greenIcon = new L.Icon({
 
 const MapaFinca = () => {
     const [lotes, setLotes] = useState([]);
+    const [verMapaDiseñado, setVerMapaDiseñado] = useState(false);
     const [loading, setLoading] = useState(true);
     const [loteSeleccionado, setLoteSeleccionado] = useState(null);
     const [historialLote, setHistorialLote] = useState([]);
@@ -157,34 +159,63 @@ const MapaFinca = () => {
                     🗺️ Mapa Agronómico y Fitosanitario
                 </Typography>
 
-                <Box sx={{ height: '500px', width: '100%', borderRadius: '10px', overflow: 'hidden' }}>
-                    <MapContainer 
-                        center={centroFinca} zoom={24} style={{ height: '100%', width: '100%' }}
-                        dragging={false} scrollWheelZoom={false} doubleClickZoom={false} 
-                        touchZoom={false} zoomControl={false} keyboard={false}
-                    >
-                        <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
-                        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" opacity={0.3} />
+                {/* --- SWITCH PARA CAMBIAR DE MAPA --- */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mt: 1 }}>
+                <FormControlLabel
+                    control={
+                        <Switch 
+                            checked={verMapaDiseñado} 
+                            onChange={(e) => setVerMapaDiseñado(e.target.checked)} 
+                            color="success" 
+                        />
+                    }
+                    label={
+                        <Typography sx={{ fontWeight: 'bold', color: verMapaDiseñado ? '#2e7d32' : '#1976d2' }}>
+                            {verMapaDiseñado ? "Ver Mapa Satelital (Interactivo)" : "Ver Mapa Diseñado (Gráfico)"}
+                        </Typography>
+                    }
+                />
+            </Box>
 
-                        {lotes.map((lote) => {
-                            if (!lote.coordenadas) return null;
-                            const partes = lote.coordenadas.split(',');
-                            if (partes.length < 2) return null;
-                            const lng = parseFloat(partes[0].trim()); const lat = parseFloat(partes[1].trim());
-                            if (isNaN(lat) || isNaN(lng)) return null;
-
-                            return (
-                                <Marker 
-                                    key={lote.id_lote} position={[lat, lng]}
-                                    icon={lote.estado_sanitario === 'ALERTA' ? redIcon : greenIcon}
-                                    eventHandlers={{ click: () => handleSelectLote(lote) }}
-                                >
-                                    <Tooltip direction="top" offset={[0, -20]} opacity={1}>{lote.nombre_lote}</Tooltip>
-                                </Marker>
-                            );
-                        })}
-                    </MapContainer>
+            {/* --- RENDERIZADO CONDICIONAL DE LOS MAPAS --- */}
+            {verMapaDiseñado ? (
+                // 1. EL MAPA DEL DISEÑADOR (IMAGEN ESTÁTICA)
+                <Box 
+                    sx={{ 
+                        width: '100%', 
+                        height: '600px', // Ajusta la altura según necesites
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: '#e0e0e0', 
+                        borderRadius: '8px', 
+                        overflow: 'hidden',
+                        boxShadow: 3
+                    }}
+                >
+                    <Box 
+                        component="img"
+                        src="../public/mapa_villasol.jpeg" // Asegúrate de que la ruta coincida con tu carpeta public
+                        alt="Mapa Gráfico Finca Villasol"
+                        sx={{
+                            maxWidth: '100%',
+                            maxHeight: '100%',
+                            objectFit: 'contain'
+                        }}
+                    />
                 </Box>
+            ) : (
+                // 2. TU MAPA ORIGINAL DE LEAFLET
+                <MapContainer 
+                    center={[5.0, -73.0]} // Aquí van tus coordenadas originales
+                    zoom={15} 
+                    style={{ height: '600px', width: '100%', zIndex: 1, borderRadius: '8px', boxShadow: '0px 4px 10px rgba(0,0,0,0.1)' }}
+                >
+                    {/* ... Aquí adentro dejas TODO lo que ya tenías: TileLayer, Markers, etc ... */}
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    {/* ... tus marcadores iterados ... */}
+                </MapContainer>
+            )}
                 
                 <Box sx={{ mt: 2, display: 'flex', gap: 3, justifyContent: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
