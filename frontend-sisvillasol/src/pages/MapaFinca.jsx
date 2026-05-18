@@ -182,57 +182,38 @@ const MapaFinca = () => {
             {/* --- RENDERIZADO CONDICIONAL DE LOS MAPAS --- */}
             {verMapaDiseñado ? (
                 // 1. EL MAPA DEL DISEÑADOR (IMAGEN ESTÁTICA)
-              <Box 
+                <Box 
                     sx={{ 
-                        position: 'relative', // CLAVE: Necesario para que los botones floten sobre la imagen
                         width: '100%', 
                         height: '600px', 
                         backgroundColor: '#e0e0e0', 
                         borderRadius: '8px', 
                         overflow: 'hidden',
-                        boxShadow: 3
+                        boxShadow: 3,
+                        cursor: 'grab', // Cambia el cursor para indicar que se puede arrastrar
+                        '&:active': { cursor: 'grabbing' } // Cursor cuando se está arrastrando
                     }}
                 >
                     <TransformWrapper
                         initialScale={1}
-                        minScale={0.5} // Permite alejar un poco más
-                        maxScale={8}   // Permite acercar muchísimo más
+                        initialPositionX={0}
+                        initialPositionY={0}
+                        minScale={1} // Qué tan lejos se puede alejar (1 = tamaño original)
+                        maxScale={4} // Qué tanto se puede acercar (4x)
                         centerOnInit={true}
+                        wheel={{ step: 0.1 }} // Suavidad del zoom con la rueda del ratón
                     >
-                        {({ zoomIn, zoomOut, resetTransform }) => (
-                            <>
-                                {/* BOTONES DE CONTROL FLOTANTES */}
-                                <Box 
-                                    sx={{ 
-                                        position: 'absolute', 
-                                        top: 15, 
-                                        right: 15, 
-                                        zIndex: 10, 
-                                        display: 'flex', 
-                                        flexDirection: 'column', 
-                                        gap: 1 
-                                    }}
-                                >
-                                    <Button variant="contained" color="success" onClick={() => zoomIn()}>+</Button>
-                                    <Button variant="contained" color="success" onClick={() => zoomOut()}>-</Button>
-                                    <Button variant="contained" color="inherit" onClick={() => resetTransform()}>Reset</Button>
-                                </Box>
-
-                                {/* CONTENEDOR DEL MAPA */}
-                                <TransformComponent wrapperStyle={{ width: "100%", height: "600px" }}>
-                                    <img 
-                                        src={mapaImagen} 
-                                        alt="Mapa Gráfico Finca Villasol"
-                                        style={{
-                                            width: "100%",
-                                            height: "600px",
-                                            objectFit: "contain",
-                                            cursor: "grab"
-                                        }}
-                                    />
-                                </TransformComponent>
-                            </>
-                        )}
+                        <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
+                            <img 
+                                src={mapaImagen} 
+                                alt="Mapa Gráfico Finca Villasol"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain'
+                                }}
+                            />
+                        </TransformComponent>
                     </TransformWrapper>
                 </Box>
             ) : (
