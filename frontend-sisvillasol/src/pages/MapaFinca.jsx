@@ -160,7 +160,7 @@ const MapaFinca = () => {
                     🗺️ Mapa Agronómico y Fitosanitario
                 </Typography>
 
-                {/* --- SWITCH PARA CAMBIAR DE MAPA --- */}
+               {/* --- SWITCH PARA CAMBIAR DE MAPA --- */}
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mt: 1 }}>
                 <FormControlLabel
                     control={
@@ -184,7 +184,7 @@ const MapaFinca = () => {
                 <Box 
                     sx={{ 
                         width: '100%', 
-                        height: '600px', // Ajusta la altura según necesites
+                        height: '600px', 
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -206,8 +206,9 @@ const MapaFinca = () => {
                     />
                 </Box>
             ) : (
-                // 2. TU MAPA ORIGINAL DE LEAFLET
-                 <MapContainer 
+                // 2. TU MAPA ORIGINAL DE LEAFLET INTEGRADO
+                <Box sx={{ height: '600px', width: '100%', borderRadius: '8px', overflow: 'hidden', boxShadow: 3 }}>
+                    <MapContainer 
                         center={centroFinca} zoom={24} style={{ height: '100%', width: '100%' }}
                         dragging={false} scrollWheelZoom={false} doubleClickZoom={false} 
                         touchZoom={false} zoomControl={false} keyboard={false}
@@ -233,6 +234,7 @@ const MapaFinca = () => {
                             );
                         })}
                     </MapContainer>
+                </Box>
             )}
                 
                 <Box sx={{ mt: 2, display: 'flex', gap: 3, justifyContent: 'center' }}>
