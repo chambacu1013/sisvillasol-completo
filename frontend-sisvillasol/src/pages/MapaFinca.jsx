@@ -182,10 +182,12 @@ const MapaFinca = () => {
             {/* --- RENDERIZADO CONDICIONAL DE LOS MAPAS --- */}
             {verMapaDiseñado ? (
                 // 1. EL MAPA DEL DISEÑADOR (IMAGEN ESTÁTICA)
-               <Box 
+              <Box 
                     sx={{ 
+                        position: 'relative', // CLAVE: Necesario para que los botones floten sobre la imagen
                         width: '100%', 
                         height: '600px', 
+                        backgroundColor: '#e0e0e0', 
                         borderRadius: '8px', 
                         overflow: 'hidden',
                         boxShadow: 3
@@ -193,39 +195,44 @@ const MapaFinca = () => {
                 >
                     <TransformWrapper
                         initialScale={1}
-                        minScale={1}
-                        maxScale={5} // Aumenté el zoom máximo un poco más para que vean los detalles
+                        minScale={0.5} // Permite alejar un poco más
+                        maxScale={8}   // Permite acercar muchísimo más
                         centerOnInit={true}
-                        wheel={{ step: 0.1 }}
                     >
-                        {/* Pasamos los estilos del Box directamente al Wrapper para mejor control */}
-                        <TransformComponent 
-                            wrapperStyle={{ 
-                                width: "100%", 
-                                height: "600px", 
-                                backgroundColor: "#e0e0e0", 
-                                cursor: "grab" 
-                            }}
-                            contentStyle={{ 
-                                width: "100%", 
-                                height: "100%", 
-                                display: "flex", 
-                                justifyContent: "center", 
-                                alignItems: "center" 
-                            }}
-                        >
-                            <img 
-                                src={mapaImagen} 
-                                alt="Mapa Gráfico Finca Villasol"
-                                draggable={false} // <-- CLAVE 1: Evita que el navegador intente "arrastrar" el archivo
-                                style={{
-                                    maxWidth: '100%',
-                                    maxHeight: '100%',
-                                    objectFit: 'contain',
-                                    pointerEvents: 'none' // <-- CLAVE 2: Evita bloqueos del ratón sobre la imagen
-                                }}
-                            />
-                        </TransformComponent>
+                        {({ zoomIn, zoomOut, resetTransform }) => (
+                            <>
+                                {/* BOTONES DE CONTROL FLOTANTES */}
+                                <Box 
+                                    sx={{ 
+                                        position: 'absolute', 
+                                        top: 15, 
+                                        right: 15, 
+                                        zIndex: 10, 
+                                        display: 'flex', 
+                                        flexDirection: 'column', 
+                                        gap: 1 
+                                    }}
+                                >
+                                    <Button variant="contained" color="success" onClick={() => zoomIn()}>+</Button>
+                                    <Button variant="contained" color="success" onClick={() => zoomOut()}>-</Button>
+                                    <Button variant="contained" color="inherit" onClick={() => resetTransform()}>Reset</Button>
+                                </Box>
+
+                                {/* CONTENEDOR DEL MAPA */}
+                                <TransformComponent wrapperStyle={{ width: "100%", height: "600px" }}>
+                                    <img 
+                                        src={mapaImagen} 
+                                        alt="Mapa Gráfico Finca Villasol"
+                                        style={{
+                                            width: "100%",
+                                            height: "600px",
+                                            objectFit: "contain",
+                                            cursor: "grab"
+                                        }}
+                                    />
+                                </TransformComponent>
+                            </>
+                        )}
                     </TransformWrapper>
                 </Box>
             ) : (
