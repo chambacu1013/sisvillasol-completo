@@ -564,8 +564,8 @@ export default function DetalleTareaScreen({ route, navigation }) {
         <TouchableOpacity
           style={styles.btnFinalizar}
           onPress={handleFinalizarTarea}
+          disabled={loadingFinalizar}
         >
-          <MaterialIcons name="check-circle" size={28} color="white" />
           {loadingFinalizar ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
