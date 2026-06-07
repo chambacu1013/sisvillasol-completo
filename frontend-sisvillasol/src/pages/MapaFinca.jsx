@@ -184,6 +184,7 @@ const MapaFinca = () => {
                 // 1. EL MAPA DEL DISEÑADOR (IMAGEN ESTÁTICA)
                 <Box 
                     sx={{ 
+                        position: 'relative',
                         width: '100%', 
                         height: '600px', 
                         backgroundColor: '#e0e0e0', 
@@ -194,18 +195,64 @@ const MapaFinca = () => {
                         '&:active': { cursor: 'grabbing' } // Cursor cuando se está arrastrando
                     }}
                 >
-                    <TransformWrapper
-                        initialScale={1}
-                        initialPositionX={0}
-                        initialPositionY={0}
-                        minScale={1} // Qué tan lejos se puede alejar (1 = tamaño original)
-                        maxScale={4} // Qué tanto se puede acercar (4x)
-                        centerOnInit={true}
-                        wheel={{ step: 0.1 }} // Suavidad del zoom con la rueda del ratón
-                    >
-                        <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
-                            <img 
-                                src={mapaImagen} 
+            <TransformWrapper
+                initialScale={1}
+                initialPositionX={0}
+                initialPositionY={0}
+                minScale={1}
+                maxScale={4}
+                centerOnInit={true}
+                wheel={{ disabled: true }}
+            >
+                {({ zoomIn, zoomOut, resetTransform }) => (
+                    <>
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 15,
+                                right: 15,
+                                zIndex: 999,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 1
+                            }}
+                        >
+                            <Button
+                                variant="contained"
+                                color="success"
+                                onClick={() => zoomIn()}
+                                sx={{ minWidth: 40 }}
+                            >
+                                +
+                            </Button>
+
+                            <Button
+                                variant="contained"
+                                color="warning"
+                                onClick={() => zoomOut()}
+                                sx={{ minWidth: 40 }}
+                            >
+                                −
+                            </Button>
+
+                            <Button
+                                variant="contained"
+                                color="info"
+                                onClick={() => resetTransform()}
+                                sx={{ minWidth: 40 }}
+                            >
+                                ⟳
+                            </Button>
+                        </Box>
+
+                        <TransformComponent
+                            wrapperStyle={{
+                                width: "100%",
+                                height: "100%"
+                            }}
+                        >
+                            <img
+                                src={mapaImagen}
                                 alt="Mapa Gráfico Finca Villasol"
                                 style={{
                                     width: '100%',
@@ -214,7 +261,9 @@ const MapaFinca = () => {
                                 }}
                             />
                         </TransformComponent>
-                    </TransformWrapper>
+                    </>
+                )}
+            </TransformWrapper>
                 </Box>
             ) : (
                 // 2. TU MAPA ORIGINAL DE LEAFLET INTEGRADO
