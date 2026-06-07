@@ -153,7 +153,16 @@ export default function ReportarScreen({ navigation }) {
         navigation.goBack();
       }, 100);
     } catch (error) {
-      console.error(error);
+      if (error.code === "ECONNABORTED") {
+        Toast.show({
+          type: "info",
+          text1: "Procesando...",
+          text2: "La conexión es lenta. Verifique la tarea en unos segundos.",
+        });
+
+        return;
+      }
+
       Toast.show({
         type: "error",
         text1: "Error",

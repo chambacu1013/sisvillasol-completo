@@ -9,6 +9,7 @@ import {
   Modal,
   TextInput,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
@@ -37,7 +38,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
   const [fechaEjecucion, setFechaEjecucion] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [insumos, setInsumos] = useState([]);
-
+  const [loadingFinalizar, setLoadingFinalizar] = useState(false);
   const { tarea } = route.params || {};
 
   if (!tarea) {
@@ -138,44 +139,46 @@ export default function DetalleTareaScreen({ route, navigation }) {
     if (unidadBase === "Litros" && unidadUso === "Galon") return 4;
     if (unidadBase === "Litros" && unidadUso === "Mililitros") return 0.001;
     if (unidadBase === "Mililitros" && unidadUso === "Litros") return 1000;
-
     // --- CONVERSIONES DE PESO ---
-    const PESO_BULTO_KG = 40;
-    if (unidadBase === "Bultos" && unidadUso === "Kilogramos")
-      return 1 / PESO_BULTO_KG;
-    if (unidadBase === "Bultos" && unidadUso === "Gramos")
-      return 1 / (PESO_BULTO_KG * 1000);
-    if (unidadBase === "Kilogramos" && unidadUso === "Bultos")
-      return PESO_BULTO_KG;
+
     if (unidadBase === "Kilogramos" && unidadUso === "Gramos") return 0.001;
     if (unidadBase === "Gramos" && unidadUso === "Kilogramos") return 1000;
 
     return 1;
   };
-
   const obtenerOpcionesPosibles = (unidadBase) => {
     switch (unidadBase) {
+      // VOLUMEN
       case "Galon":
         return ["Galon", "Litros", "Mililitros"];
+
       case "Litros":
-        return ["Litros", "Mililitros", "Galon"];
+        return ["Litros", "Mililitros"];
+
       case "Mililitros":
-        return ["Mililitros", "Litros"];
+        return ["Mililitros"];
+
+      // PESO
       case "Bultos":
-        return ["Bultos", "Kilogramos", "Gramos"];
+        return ["Bultos"];
+
       case "Kilogramos":
         return ["Kilogramos", "Gramos"];
+
       case "Gramos":
-        return ["Gramos", "Kilogramos"];
+        return ["Gramos"];
+
+      // LONGITUD
       case "Rollo":
-        return ["Rollo", "Metros"];
+        return ["Rollo"];
+
       case "Metros":
-        return ["Metros", "Rollo"];
+        return ["Metros"];
+
       default:
         return [unidadBase];
     }
   };
-
   const seleccionarInsumo = (item) => {
     setInsumoTemporal(item);
     setUnidadSeleccionada(item.nombre_unidad);
@@ -244,6 +247,7 @@ export default function DetalleTareaScreen({ route, navigation }) {
 
   const enviarDatos = async () => {
     try {
+      setLoadingFinalizar(true);
       const anio = fechaEjecucion.getFullYear();
       const mes = String(fechaEjecucion.getMonth() + 1).padStart(2, "0");
       const dia = String(fechaEjecucion.getDate()).padStart(2, "0");
@@ -275,6 +279,8 @@ export default function DetalleTareaScreen({ route, navigation }) {
         text1: "Error",
         text2: "No se pudo finalizar. Revisa tu conexión 📡",
       });
+    } finally {
+      setLoadingFinalizar(false);
     }
   };
 
@@ -560,7 +566,14 @@ export default function DetalleTareaScreen({ route, navigation }) {
           onPress={handleFinalizarTarea}
         >
           <MaterialIcons name="check-circle" size={28} color="white" />
-          <Text style={styles.textoBtnFinalizar}>FINALIZAR TAREA</Text>
+          {loadingFinalizar ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <MaterialIcons name="check-circle" size={28} color="white" />
+              <Text style={styles.textoBtnFinalizar}>FINALIZAR TAREA</Text>
+            </>
+          )}
         </TouchableOpacity>
       )}
 

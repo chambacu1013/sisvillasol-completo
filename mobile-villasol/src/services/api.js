@@ -7,7 +7,7 @@ const API_URL = "https://backend-villasol.onrender.com/api";
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000, // Esperar máx 10 segundos
+  timeout: 30000, // Esperar máx 10 segundos
 });
 
 // Interceptor para añadir el token de autenticación (Bearer) a cada petición
@@ -26,7 +26,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 export default api;
