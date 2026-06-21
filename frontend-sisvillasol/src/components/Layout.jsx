@@ -59,7 +59,7 @@ function Layout() {
         switch(location.pathname) {
             case '/dashboard': return 'Panel de Control'; 
             case '/inicio': return 'Identidad Corporativa';
-            case '/lotes': return 'Gestión de Lotes';
+            case '/lotes': return 'Seguimiento de Lotes';
             case '/calendario': return 'Calendario de Actividades';
             case '/inventario': return 'Inventario de Insumos';
             case '/reportes': return 'Reportes Financieros';
