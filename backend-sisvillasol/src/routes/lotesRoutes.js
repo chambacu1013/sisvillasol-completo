@@ -9,6 +9,7 @@ const verificarToken = require("../middleware/authMiddleware"); // <--- EL VIGIL
 
 // Todas las rutas protegidas
 router.get("/", verificarToken, obtenerLotes);
+router.get("/resumen-arboles", verificarToken, obtenerLotes); // Nueva ruta para obtener el resumen de árboles
 router.get("/catalogo-estados", verificarToken, obtenerCatalogoEstados);
 router.put("/estado/:id_lote", verificarToken, actualizarEstadoLote);
 module.exports = router;

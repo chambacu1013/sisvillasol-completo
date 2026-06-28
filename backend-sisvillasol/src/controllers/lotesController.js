@@ -19,6 +19,7 @@ const obtenerLotes = async (req, res) => {
             FROM sisvillasol.lotes l
             LEFT JOIN sisvillasol.cultivos c ON l.id_cultivo_actual = c.id_cultivo
             LEFT JOIN sisvillasol.catalogo_estados_lote ce ON l.id_estado_actual = ce.id_estado
+            ORDER BY l.nombre_lote ASC;
         `);
     res.json(response.rows);
   } catch (error) {

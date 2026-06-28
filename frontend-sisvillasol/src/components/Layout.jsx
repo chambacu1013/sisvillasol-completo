@@ -4,11 +4,12 @@ import Sidebar from './Sidebar';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import EditarEmpresaModal from './EditarEmpresaModal';
 import NotificationBell from './NotificationBell'; 
-
+import ModalResumenArboles from './ModalResumenArboles'; 
 // Iconos
 import BusinessIcon from '@mui/icons-material/Business';
 import LogoutIcon from '@mui/icons-material/Logout';
-import MenuIcon from '@mui/icons-material/Menu'; 
+import MenuIcon from '@mui/icons-material/Menu';
+import ForestIcon from '@mui/icons-material/Forest';
 
 const drawerWidth = 240; 
 
@@ -28,6 +29,7 @@ function Layout() {
     const [anchorEl, setAnchorEl] = useState(null);
     const openMenu = Boolean(anchorEl);
     const [modalOpen, setModalOpen] = useState(false);
+    const [modalArbolesOpen, setModalArbolesOpen] = useState(false);
 
     useEffect(() => {
         const nombre = localStorage.getItem('usuarioNombre') || 'Usuario';
@@ -163,6 +165,11 @@ function Layout() {
                             <ListItemIcon><BusinessIcon fontSize="small" /></ListItemIcon>
                             Configurar identidad corporativa
                         </MenuItem>
+                        {/* --- NUEVO BOTÓN DE RESUMEN DE ÁRBOLES --- */}
+                        <MenuItem onClick={() => setModalArbolesOpen(true)}>
+                            <ListItemIcon><ForestIcon fontSize="small" /></ListItemIcon>
+                            Resumen de Árboles
+                        </MenuItem>
                         <MenuItem onClick={handleLogout}>
                             <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
                             Salir
@@ -196,6 +203,10 @@ function Layout() {
                     open={modalOpen} 
                     onClose={() => setModalOpen(false)}
                     alGuardar={() => window.location.reload()} 
+                />
+                <ModalResumenArboles 
+                    open={modalArbolesOpen} 
+                    handleClose={() => setModalArbolesOpen(false)} 
                 />
             </Box>
         </Box>
