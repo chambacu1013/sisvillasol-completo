@@ -3,6 +3,7 @@ node_modules/
 dist/
 .expo/
 .DS_Store
-*.sql
+script sisvillasol.sql
 archived/
 archive/
+.vscode/
