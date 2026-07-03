@@ -149,16 +149,19 @@ const NuevoProductoAgricolaModal = ({
             }
           >
             <MenuItem value="1 KG">1 KG</MenuItem>
+            <MenuItem value="1 GR">1 GR</MenuItem>
             <MenuItem value="50 KG">50 KG</MenuItem>
             <MenuItem value="10 GR"> 10 GR</MenuItem>
             <MenuItem value="120 GR"> 120 GR</MenuItem>
             <MenuItem value="100 GR"> 100 GR</MenuItem>
+            <MenuItem value="500 GR"> 500 GR</MenuItem>
             <MenuItem value="1 LT">1 LT</MenuItem>
             <MenuItem value="4 LT">4 LT</MenuItem>
             <MenuItem value="5 LT">5 LT</MenuItem>
             <MenuItem value="ML">ML</MenuItem>
             <MenuItem value="250 CC">250 CC</MenuItem>
             <MenuItem value="100 CC">100 CC</MenuItem>
+            <MenuItem value="120 CC">120 CC</MenuItem>
             <MenuItem value="UN">UN</MenuItem>
           </TextField>
 

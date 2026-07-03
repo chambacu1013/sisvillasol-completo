@@ -111,6 +111,7 @@ export default function FacturaForm({
 
     setProductos([
       {
+        producto_id: null,
         producto: "",
         cantidad: "",
         unidad: "",
@@ -182,7 +183,8 @@ export default function FacturaForm({
     setProductos([
       ...productos,
       {
-        producto: null,
+        producto_id: null,
+        producto: "",
         cantidad: "",
         unidad: "",
         valor_unitario: "",
@@ -268,7 +270,15 @@ export default function FacturaForm({
       return Swal.fire("Detalle", "Existe un producto incompleto.", "warning");
     }
 
-    onGuardar(datosFactura);
+    const guardado = await onGuardar(datosFactura);
+
+    if (guardado) {
+
+        limpiarFormulario();
+
+        onClose();
+
+    }
   };
 
   const cerrarFormulario = () => {

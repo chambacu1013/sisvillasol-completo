@@ -209,9 +209,8 @@ GUARDAR FACTURA
 
       setFacturaEditar(null);
 
-      setModalOpen(false);
-
       obtenerFacturas(anioSeleccionado);
+      return true;
     } catch (error) {
       console.error(error);
 
@@ -222,6 +221,7 @@ GUARDAR FACTURA
           error.response?.data?.mensaje ||
           "No fue posible registrar la factura.",
       });
+      return false;
     }
   };
 
