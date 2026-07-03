@@ -236,7 +236,7 @@ export default function FacturaForm({
       subtotal: Number(item.subtotal),
     })),
   };
-  const guardar = () => {
+  const guardar = async () => {
     if (!factura.numero_factura.trim()) {
       return Swal.fire(
         "Número de factura",
@@ -263,7 +263,9 @@ export default function FacturaForm({
 
     const productoVacio = productos.some(
       (p) =>
-        !p.producto || Number(p.cantidad) <= 0 || Number(p.valor_unitario) <= 0,
+        !p.producto_id ||
+        Number(p.cantidad) <= 0 ||
+        Number(p.valor_unitario) <= 0,
     );
 
     if (productoVacio) {
@@ -273,11 +275,9 @@ export default function FacturaForm({
     const guardado = await onGuardar(datosFactura);
 
     if (guardado) {
+      limpiarFormulario();
 
-        limpiarFormulario();
-
-        onClose();
-
+      onClose();
     }
   };
 
