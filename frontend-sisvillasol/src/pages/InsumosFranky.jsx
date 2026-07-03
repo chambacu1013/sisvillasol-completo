@@ -413,8 +413,8 @@ ELIMINAR FACTURA
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
-            setFacturaEditar(null); // limpia primero
-            setTimeout(() => setModalOpen(true), 0);
+            setFacturaEditar(null);
+            setModalOpen(true);
           }}
         >
           Nueva Factura
