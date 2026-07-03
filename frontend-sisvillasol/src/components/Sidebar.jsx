@@ -10,7 +10,7 @@ import InventoryIcon from '@mui/icons-material/Inventory2';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import PeopleIcon from '@mui/icons-material/People';
 import LogoutIcon from '@mui/icons-material/Logout';
-
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 const drawerWidth = 240; // Ancho FIJO siempre
 
 const menuItems = [
@@ -20,6 +20,7 @@ const menuItems = [
     { text: 'Inventario', icon: <InventoryIcon />, path: '/inventario' },
     { text: 'Reportes', icon: <AssessmentIcon />, path: '/reportes' },
     { text: 'Gestión de usuarios', icon: <PeopleIcon />, path: '/usuarios' },
+    { text: "Gestión Insumos Franky", icon: <ReceiptLongIcon />, path: "/insumos-franky" },
 ];
 
 // NOTA: Ya no usamos 'open' para nada visual. Solo 'mobileOpen'.

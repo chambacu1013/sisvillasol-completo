@@ -7,6 +7,7 @@ import Usuarios from './pages/Usuarios';
 import Calendario from './pages/Calendario';
 import Reportes from './pages/Reportes';
 import MapaFinca from './pages/MapaFinca';
+import InsumosFranky from "./pages/InsumosFranky";
 function App() {
   return (
     <BrowserRouter>
@@ -20,6 +21,8 @@ function App() {
             <Route path="/reportes" element={<Reportes/>} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/calendario" element={<Calendario />} />
+            <Route path="/insumos-franky" element={<InsumosFranky />}
+/>
         </Route>
 
       </Routes>

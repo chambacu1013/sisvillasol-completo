@@ -2,6 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "https://backend-villasol.onrender.com/api",
+  //baseURL: "http://localhost:3000/api",
 });
 
 // 1. INTERCEPTOR DE SALIDA (REQUEST)
@@ -14,7 +15,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // 2. INTERCEPTOR DE LLEGADA (RESPONSE)
@@ -46,7 +47,7 @@ api.interceptors.response.use(
       window.location.href = "/";
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
