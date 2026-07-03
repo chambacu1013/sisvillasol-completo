@@ -69,15 +69,12 @@ export default function FacturaTable({
                 </TableCell>
 
                 <TableCell>
-                  {new Date(item.fecha).toLocaleDateString(
-                    "es-CO",
-                    { timeZone: "UTC" },
-                    {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    },
-                  )}
+                  {new Date(item.fecha).toLocaleDateString("es-CO", {
+                    timeZone: "UTC",
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
                 </TableCell>
 
                 <TableCell>{item.agricultor}</TableCell>
