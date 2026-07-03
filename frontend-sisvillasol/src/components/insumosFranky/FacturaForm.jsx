@@ -120,55 +120,38 @@ export default function FacturaForm({
     ]);
   };
   useEffect(() => {
+    if (!open) return; // ← no hacer nada si el modal está cerrado
+
     if (facturaEditar) {
       setFactura({
         id: facturaEditar.id,
-
         numero_factura: facturaEditar.numero_factura,
-
         fecha: facturaEditar.fecha.substring(0, 10),
-
         hora: facturaEditar.hora,
-
         proveedor: facturaEditar.proveedor,
-
         cliente: facturaEditar.cliente,
-
         documento: facturaEditar.documento,
-
         agricultor: facturaEditar.agricultor,
-
         lote: facturaEditar.lote,
-
         direccion: facturaEditar.direccion,
-
         ciudad: facturaEditar.ciudad,
-
         forma_pago: facturaEditar.forma_pago,
-
         medio_pago: facturaEditar.medio_pago,
-
         observaciones: facturaEditar.observaciones || "",
       });
-
       setProductos(
         facturaEditar.detalle.map((item) => ({
-          producto_id: item.producto_id,
           producto: item.producto,
-
           cantidad: item.cantidad,
-
           unidad: item.unidad,
-
           valor_unitario: item.valor_unitario,
-
           subtotal: item.subtotal,
         })),
       );
     } else {
-      limpiarFormulario();
+      limpiarFormulario(); // ← esto se ejecuta al abrir con facturaEditar = null
     }
-  }, [facturaEditar]);
+  }, [facturaEditar, open]); // ← ahora escucha AMBOS
   const cambiarCampo = (e) => {
     const { name, value } = e.target;
 
