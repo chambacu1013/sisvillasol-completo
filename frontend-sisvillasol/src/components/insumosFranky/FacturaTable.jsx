@@ -14,6 +14,19 @@ import Visibility from "@mui/icons-material/Visibility";
 import Edit from "@mui/icons-material/Edit";
 import Delete from "@mui/icons-material/Delete";
 import TablePagination from "@mui/material/TablePagination";
+const formatearFecha = (fecha) => {
+  const [anio, mes, dia] = fecha.split("-");
+
+  return new Date(
+    Number(anio),
+    Number(mes) - 1,
+    Number(dia),
+  ).toLocaleDateString("es-CO", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+};
 export default function FacturaTable({
   facturas,
   onVer,
@@ -68,13 +81,7 @@ export default function FacturaTable({
                   <Chip label={item.numero_factura} color="primary" />
                 </TableCell>
 
-                <TableCell>
-                  {new Date(item.fecha).toLocaleDateString("es-CO", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </TableCell>
+                <TableCell>{formatearFecha(item.fecha)}</TableCell>
 
                 <TableCell>{item.agricultor}</TableCell>
 
