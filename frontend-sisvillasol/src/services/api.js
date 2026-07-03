@@ -3,7 +3,7 @@ import axios from "axios";
 const api = axios.create({
   //baseURL: "https://backend-villasol.onrender.com/api",
   baseURL: "https://backend-sisvillasol-v2.onrender.com/api",
-  //baseURL: "http://localhost:3000/api",
+  // baseURL: "http://localhost:3000/api",
 });
 
 // 1. INTERCEPTOR DE SALIDA (REQUEST)

@@ -153,10 +153,15 @@ const obtenerFactura = async (req, res) => {
     }
 
     const detalle = await pool.query(
-      `SELECT *
-       FROM sisvillasol.insumos_agricultor_detalle
-       WHERE factura_id=$1
-       ORDER BY id`,
+      `SELECT   d.id,
+        d.producto_id, p.nombre AS producto,
+        p.unidad, d.cantidad,  d.valor_unitario,
+        d.subtotal
+        FROM sisvillasol.insumos_agricultor_detalle d
+        INNER JOIN sisvillasol.productos_agricolas p
+            ON p.id = d.producto_id
+        WHERE d.factura_id = $1
+        ORDER BY d.id;`,
       [id],
     );
 
@@ -254,21 +259,18 @@ const crearFactura = async (req, res) => {
         `INSERT INTO sisvillasol.insumos_agricultor_detalle
         (
         factura_id,
-        producto,
+        producto_id,
         cantidad,
-        unidad,
         valor_unitario,
         subtotal
-        )
-
-        VALUES
-        ($1,$2,$3,$4,$5,$6)`,
+    )
+    VALUES
+    ($1,$2,$3,$4,$5)`,
 
         [
           facturaId,
-          item.producto,
+          item.producto_id,
           item.cantidad,
-          item.unidad,
           item.valor_unitario,
           item.subtotal,
         ],
@@ -374,21 +376,18 @@ const actualizarFactura = async (req, res) => {
         `INSERT INTO sisvillasol.insumos_agricultor_detalle
         (
         factura_id,
-        producto,
+        producto_id,
         cantidad,
-        unidad,
         valor_unitario,
         subtotal
-        )
-
-        VALUES
-        ($1,$2,$3,$4,$5,$6)`,
+    )
+    VALUES
+    ($1,$2,$3,$4,$5)`,
 
         [
           id,
-          item.producto,
+          item.producto_id,
           item.cantidad,
-          item.unidad,
           item.valor_unitario,
           item.subtotal,
         ],

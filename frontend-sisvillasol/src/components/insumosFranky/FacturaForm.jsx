@@ -19,7 +19,7 @@ import {
   TableRow,
   Divider,
 } from "@mui/material";
-
+import api from "../../services/api";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import Swal from "sweetalert2";
@@ -31,13 +31,28 @@ export default function FacturaForm({
 }) {
   const [productos, setProductos] = useState([
     {
-      producto: null,
+      producto_id: null,
+      producto: "",
       cantidad: "",
       unidad: "",
       valor_unitario: "",
       subtotal: 0,
     },
   ]);
+  const [catalogoProductos, setCatalogoProductos] = useState([]);
+  useEffect(() => {
+    cargarProductosAgricolas();
+  }, []);
+
+  const cargarProductosAgricolas = async () => {
+    try {
+      const response = await api.get("/productos-agricolas");
+
+      setCatalogoProductos(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const [factura, setFactura] = useState({
     id: null,
     numero_factura: "",
@@ -138,6 +153,7 @@ export default function FacturaForm({
 
       setProductos(
         facturaEditar.detalle.map((item) => ({
+          producto_id: item.producto_id,
           producto: item.producto,
 
           cantidad: item.cantidad,
@@ -181,16 +197,21 @@ export default function FacturaForm({
     setProductos(copia);
   };
 
-  const actualizarProducto = (index, campo, valor) => {
+  const actualizarProducto = (index, cambios) => {
     const copia = [...productos];
 
-    copia[index][campo] = valor;
+    const fila = {
+      ...copia[index],
+      ...cambios,
+    };
 
-    const cantidad = Number(copia[index].cantidad || 0);
+    const cantidad = Number(fila.cantidad || 0);
 
-    const precio = Number(copia[index].valor_unitario || 0);
+    const valorUnitario = Number(fila.valor_unitario || 0);
 
-    copia[index].subtotal = cantidad * precio;
+    fila.subtotal = cantidad * valorUnitario;
+
+    copia[index] = fila;
 
     setProductos(copia);
   };
@@ -204,11 +225,9 @@ export default function FacturaForm({
     total,
 
     detalle: productos.map((item) => ({
-      producto: item.producto,
+      producto_id: item.producto_id,
 
       cantidad: Number(item.cantidad),
-
-      unidad: item.unidad,
 
       valor_unitario: Number(item.valor_unitario),
 
@@ -403,14 +422,30 @@ export default function FacturaForm({
               {productos.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell>
-                    <TextField
-                      fullWidth
+                    <Autocomplete
                       size="small"
-                      placeholder="Nombre del producto"
-                      value={item.producto || ""}
-                      onChange={(e) =>
-                        actualizarProducto(index, "producto", e.target.value)
+                      options={catalogoProductos}
+                      getOptionLabel={(option) => option.nombre || ""}
+                      value={
+                        catalogoProductos.find(
+                          (p) => p.id === item.producto_id,
+                        ) || null
                       }
+                      onChange={(event, value) => {
+                        actualizarProducto(index, {
+                          producto_id: value?.id || null,
+
+                          producto: value?.nombre || "",
+
+                          unidad: value?.unidad || "",
+                        });
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder="Buscar producto..."
+                        />
+                      )}
                     />
                   </TableCell>
 
@@ -418,7 +453,9 @@ export default function FacturaForm({
                     <TextField
                       value={item.cantidad}
                       onChange={(e) =>
-                        actualizarProducto(index, "cantidad", e.target.value)
+                        actualizarProducto(index, {
+                          cantidad: e.target.value,
+                        })
                       }
                       size="small"
                     />
@@ -440,11 +477,9 @@ export default function FacturaForm({
                     <TextField
                       value={item.valor_unitario}
                       onChange={(e) =>
-                        actualizarProducto(
-                          index,
-                          "valor_unitario",
-                          e.target.value,
-                        )
+                        actualizarProducto(index, {
+                          valor_unitario: e.target.value,
+                        })
                       }
                       size="small"
                     />

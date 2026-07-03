@@ -13,6 +13,7 @@ const insumosRoutes = require("./routes/insumosRoutes");
 const ventasRoutes = require("./routes/ventasRoutes");
 const empresaRoutes = require("./routes/empresaRoutes");
 const insumosAgricultorRoutes = require("./routes/insumosAgricultorRoutes");
+const productosAgricolasRoutes = require("./routes/productosAgricolasRoutes");
 app.use(cors());
 app.use(express.json()); // Importante para recibir datos en POST
 
@@ -30,6 +31,7 @@ app.use("/api/actividades", require("./routes/actividadesRoutes"));
 app.use("/api/notas", require("./routes/notasRoutes"));
 app.use("/api/finanzas", require("./routes/finanzasRoutes"));
 app.use("/api/insumos-agricultor", insumosAgricultorRoutes);
+app.use("/api/productos-agricolas", productosAgricolasRoutes);
 app.listen(port, () => {
   console.log(`✅ Servidor corriendo en http://localhost:${port}`);
 });
