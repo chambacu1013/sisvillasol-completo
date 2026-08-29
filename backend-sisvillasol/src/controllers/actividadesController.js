@@ -1,5 +1,7 @@
 const pool = require("../config/db");
-
+const {
+  generarHistorialLotePDF,
+} = require("../service/historialLotePdfService");
 // 1. OBTENER TAREAS
 const obtenerActividades = async (req, res) => {
   try {
@@ -501,6 +503,124 @@ const eliminarInsumoConsumido = async (req, res) => {
     client.release();
   }
 };
+// 11. GENERAR PDF DEL HISTORIAL DE UN LOTE
+const generarPDFHistorialLote = async (req, res) => {
+  const { id_lote } = req.params;
+
+  try {
+    // =====================================================
+    // 1. OBTENER INFORMACIÓN DEL LOTE
+    // =====================================================
+
+    const loteResult = await pool.query(
+      `
+      SELECT
+        l.id_lote,
+        l.nombre_lote,
+        l.area_hectareas,
+        l.cantidad_arboles,
+        c.nombre_variedad,
+        ce.nombre_estado,
+        ce.clasificacion AS estado_sanitario
+      FROM sisvillasol.lotes l
+      LEFT JOIN sisvillasol.cultivos c
+        ON l.id_cultivo_actual = c.id_cultivo
+      LEFT JOIN sisvillasol.catalogo_estados_lote ce
+        ON l.id_estado_actual = ce.id_estado
+      WHERE l.id_lote = $1
+      `,
+      [id_lote],
+    );
+
+    if (loteResult.rowCount === 0) {
+      return res.status(404).json({
+        message: "El lote solicitado no existe.",
+      });
+    }
+
+    const lote = loteResult.rows[0];
+
+    // =====================================================
+    // 2. OBTENER HISTORIAL DE ACTIVIDADES
+    // =====================================================
+
+    const historialResult = await pool.query(
+      `
+      SELECT
+        t.id_tarea,
+        t.fecha_ejecucion,
+        t.descripcion,
+        ta.nombre_tipo_actividad,
+
+        u.nombre || ' ' || u.apellido AS nombre_agricultor,
+
+        (
+          SELECT json_agg(
+            json_build_object(
+              'nombre', i.nombre,
+              'cantidad', ci.cantidad_usada,
+              'unidad', un.nombre_unidad
+            )
+          )
+          FROM sisvillasol.consumo_insumos ci
+          JOIN sisvillasol.insumos i
+            ON ci.id_insumo_consumo = i.id_insumo
+          LEFT JOIN sisvillasol.unidades un
+            ON i.id_unidad = un.id_unidad
+          WHERE ci.id_tarea_consumo = t.id_tarea
+        ) AS insumos_usados
+
+      FROM sisvillasol.tareas t
+
+      LEFT JOIN sisvillasol.usuarios u
+        ON t.id_usuario_asignado = u.id_usuario
+
+      LEFT JOIN sisvillasol.tipos_actividad ta
+        ON t.id_tipo_actividad_tarea = ta.id_tipo_actividad
+
+      WHERE t.id_lote_tarea = $1
+        AND t.estado = 'HECHO'
+
+      ORDER BY t.fecha_ejecucion DESC
+      `,
+      [id_lote],
+    );
+
+    const historial = historialResult.rows;
+
+    // =====================================================
+    // 3. CONFIGURAR RESPUESTA PDF
+    // =====================================================
+
+    const nombreArchivo = `historial_${lote.nombre_lote
+      .replace(/\s+/g, "_")
+      .toLowerCase()}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+
+    res.setHeader("Content-Disposition", `inline; filename="${nombreArchivo}"`);
+
+    // =====================================================
+    // 4. GENERAR Y ENVIAR PDF
+    // =====================================================
+
+    const pdf = generarHistorialLotePDF(lote, historial);
+
+    pdf.pipe(res);
+
+    pdf.end();
+  } catch (error) {
+    console.error("Error generando PDF del historial:", error);
+
+    if (!res.headersSent) {
+      return res.status(500).json({
+        message: "Error generando el PDF del historial del lote.",
+      });
+    }
+
+    res.end();
+  }
+};
 module.exports = {
   obtenerActividades,
   crearActividad,
@@ -512,4 +632,5 @@ module.exports = {
   obtenerInsumosPorTarea,
   corregirCantidadInsumo,
   eliminarInsumoConsumido,
+  generarPDFHistorialLote,
 };
