@@ -240,31 +240,6 @@ const generarHistorialLotePDF = (lote, historial) => {
 
     doc.moveDown(0.3);
   });
-
-  // =========================================================
-  // PIE DE PÁGINA
-  // =========================================================
-
-  const rango = doc.bufferedPageRange();
-
-  for (let i = 0; i < rango.count; i++) {
-    doc.switchToPage(i);
-
-    doc
-      .font("Helvetica")
-      .fontSize(8)
-      .fillColor("#666666")
-      .text(
-        `Finca Villasol - Historial del lote ${lote.nombre_lote || ""}`,
-        40,
-        760,
-        {
-          width: 530,
-          align: "center",
-        },
-      );
-  }
-
   return doc;
 };
 
