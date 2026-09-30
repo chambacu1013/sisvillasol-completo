@@ -476,8 +476,11 @@ function Reportes() {
               <XAxis dataKey="name" />
               <YAxis
                 width={95}
-                domain={[0, "auto"]}
-                tickCount={5}
+                domain={[
+                  0,
+                  (dataMax) => Math.ceil(dataMax / 1000000) * 1000000,
+                ]}
+                tickCount={6}
                 tickFormatter={(val) => `$${val.toLocaleString()}`}
               />
               <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
