@@ -468,11 +468,14 @@ function Reportes() {
         </Box>
         <Box sx={{ height: 350, width: "100%" }}>
           <ResponsiveContainer>
-            <BarChart data={datosGrafica}>
+            <BarChart
+              data={datosGrafica}
+              margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" />
               <YAxis
-                width={70}
+                width={95}
                 domain={[0, "auto"]}
                 tickCount={5}
                 tickFormatter={(val) => `$${val.toLocaleString()}`}
@@ -481,7 +484,7 @@ function Reportes() {
               <Legend />
               <Bar
                 dataKey="Costos"
-                fill="#e91e63 "
+                fill="#e91e63"
                 name="Egresos"
                 radius={[4, 4, 0, 0]}
               />
