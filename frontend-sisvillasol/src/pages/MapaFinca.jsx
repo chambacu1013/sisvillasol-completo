@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import mapaImagen from "../../public/mapa_villasol.jpeg";
+//import mapaImagen from "../../public/mapa_villasol.jpeg";
+import mapaImagen from "../../public/mapa_villasol_v2.jpg";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
   Box,
