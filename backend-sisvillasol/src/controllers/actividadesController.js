@@ -475,7 +475,7 @@ const eliminarInsumoConsumido = async (req, res) => {
     const cantidadDevolver = parseFloat(resAntigua.rows[0].cantidad_usada);
     const costoDevolver = parseFloat(resAntigua.rows[0].costo_calculado);
 
-    // 2. Eliminar el registro de la tabla pivote
+    // 2. Eliminar el registro de la tabla pivotes
     await client.query(
       `DELETE FROM sisvillasol.consumo_insumos 
        WHERE id_tarea_consumo = $1 AND id_insumo_consumo = $2`,
