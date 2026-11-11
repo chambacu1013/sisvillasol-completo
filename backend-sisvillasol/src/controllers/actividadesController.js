@@ -549,6 +549,7 @@ const generarPDFHistorialLote = async (req, res) => {
       SELECT
         t.id_tarea,
         t.fecha_ejecucion,
+        t.jornada,
         t.descripcion,
         ta.nombre_tipo_actividad,
 

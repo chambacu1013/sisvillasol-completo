@@ -62,18 +62,20 @@ const generarHistorialLotePDF = (lote, historial) => {
 
   const columnas = {
     fecha: 40,
-    actividad: 100,
-    detalle: 190,
-    agricultor: 330,
-    insumos: 450,
+    jornada: 95,
+    actividad: 150,
+    detalle: 235,
+    agricultor: 335,
+    insumos: 440,
   };
 
   const anchos = {
-    fecha: 55,
-    actividad: 85,
-    detalle: 135,
-    agricultor: 115,
-    insumos: 115,
+    fecha: 50,
+    jornada: 50,
+    actividad: 80,
+    detalle: 95,
+    agricultor: 100,
+    insumos: 125,
   };
 
   const dibujarEncabezado = () => {
@@ -84,6 +86,9 @@ const generarHistorialLotePDF = (lote, historial) => {
       .fontSize(8)
       .text("Fecha", columnas.fecha, y, {
         width: anchos.fecha,
+      })
+      .text("Jornada", columnas.jornada, y, {
+        width: anchos.jornada,
       })
       .text("Actividad", columnas.actividad, y, {
         width: anchos.actividad,
@@ -129,7 +134,13 @@ const generarHistorialLotePDF = (lote, historial) => {
           timeZone: "UTC",
         })
       : "Sin fecha";
-
+    // Jornada
+    const jornada =
+      {
+        MANANA: "Mañana",
+        TARDE: "Tarde",
+        COMPLETA: "Completa",
+      }[fila.jornada] || "Sin jornada";
     // Actividad
     const actividad = fila.nombre_tipo_actividad || "Sin actividad";
 
@@ -161,6 +172,11 @@ const generarHistorialLotePDF = (lote, historial) => {
       font: "Helvetica",
       fontSize: 8,
     });
+    const alturaJornada = doc.heightOfString(jornada, {
+      width: anchos.jornada,
+      font: "Helvetica",
+      fontSize: 8,
+    });
 
     const alturaActividad = doc.heightOfString(actividad, {
       width: anchos.actividad,
@@ -189,6 +205,7 @@ const generarHistorialLotePDF = (lote, historial) => {
     const alturaFila =
       Math.max(
         alturaFecha,
+        alturaJornada,
         alturaActividad,
         alturaDetalle,
         alturaAgricultor,
@@ -220,6 +237,9 @@ const generarHistorialLotePDF = (lote, historial) => {
       .fontSize(8)
       .text(fecha, columnas.fecha, y, {
         width: anchos.fecha,
+      })
+      .text(jornada, columnas.jornada, y, {
+        width: anchos.jornada,
       })
       .text(actividad, columnas.actividad, y, {
         width: anchos.actividad,
